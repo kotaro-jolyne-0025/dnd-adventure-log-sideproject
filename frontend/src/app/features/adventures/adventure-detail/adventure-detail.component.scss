@@ -1,0 +1,154 @@
+.page-container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 16px 16px 80px;
+}
+
+/* Loading */
+.loading-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Cards */
+.detail-card {
+  margin-bottom: 16px;
+
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0;
+  }
+}
+
+.card-header-actions {
+  margin-left: auto;
+  padding-right: 8px;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  padding: 4px 0;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &.full-row {
+    grid-column: 1 / -1;
+  }
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: var(--mat-sys-outline);
+}
+
+.info-value {
+  font-size: 0.95rem;
+}
+
+.note-text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.empty-text {
+  color: var(--mat-sys-outline);
+  font-style: italic;
+  margin: 4px 0;
+}
+
+/* Resource Table */
+.resource-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th, td {
+    padding: 8px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  th {
+    font-size: 0.78rem;
+    color: var(--mat-sys-outline);
+    font-weight: 500;
+  }
+
+  .resource-label {
+    text-align: left;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .total-cell {
+    font-weight: 600;
+  }
+
+  .positive { color: #2e7d32; font-weight: 600; }
+  .negative { color: #c62828; font-weight: 600; }
+}
+
+/* Downtime Items */
+.downtime-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.downtime-text {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+/* Inline Dialog */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.inline-dialog {
+  width: 100%;
+  max-width: 440px;
+}
+
+.full-width {
+  width: 100%;
+}

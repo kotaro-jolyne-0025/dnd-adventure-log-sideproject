@@ -1,0 +1,114 @@
+<div class="page-container">
+  <div class="page-header">
+    <button mat-icon-button (click)="onBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ isEditMode() ? '編輯角色' : '新增角色' }}</h1>
+  </div>
+
+  <mat-card class="form-card">
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <!-- 基本資料區 -->
+        <section class="form-section">
+          <h2 class="section-title">基本資料</h2>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>角色名稱 *</mat-label>
+            <input matInput formControlName="name" placeholder="例：蓋歐克" />
+            @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+              <mat-error>角色名稱為必填</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>玩家名稱 *</mat-label>
+            <input matInput formControlName="playerName" placeholder="例：Arthur" />
+            @if (form.get('playerName')?.hasError('required') && form.get('playerName')?.touched) {
+              <mat-error>玩家名稱為必填</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>種族 *</mat-label>
+            <input matInput formControlName="race" placeholder="例：阿斯莫、精靈、人類" />
+            @if (form.get('race')?.hasError('required') && form.get('race')?.touched) {
+              <mat-error>種族為必填</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>派系（選填）</mat-label>
+            <input matInput formControlName="faction" placeholder="例：龍鱗刃、魔法師公會" />
+          </mat-form-field>
+        </section>
+
+        <!-- 職業/等級區 -->
+        <section class="form-section">
+          <div class="section-header">
+            <h2 class="section-title">職業 / 等級</h2>
+            <button type="button" mat-stroked-button color="primary" (click)="addClassLevel()">
+              <mat-icon>add</mat-icon>
+              新增職業
+            </button>
+          </div>
+
+          <div formArrayName="classesList" class="classes-list">
+            @for (ctrl of classesArray.controls; track $index) {
+              <div [formGroupName]="$index" class="class-row">
+                <mat-form-field appearance="outline" class="class-name-field">
+                  <mat-label>職業名稱 *</mat-label>
+                  <input matInput formControlName="className" placeholder="例：術師、聖武士" />
+                  @if (ctrl.get('className')?.hasError('required') && ctrl.get('className')?.touched) {
+                    <mat-error>職業名稱為必填</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="class-level-field">
+                  <mat-label>等級 *</mat-label>
+                  <input matInput type="number" formControlName="level"
+                    placeholder="1" min="1" max="20" />
+                  @if (ctrl.get('level')?.hasError('required') && ctrl.get('level')?.touched) {
+                    <mat-error>必填</mat-error>
+                  }
+                  @if (ctrl.get('level')?.hasError('min') && ctrl.get('level')?.touched) {
+                    <mat-error>最小 1</mat-error>
+                  }
+                  @if (ctrl.get('level')?.hasError('max') && ctrl.get('level')?.touched) {
+                    <mat-error>最大 20</mat-error>
+                  }
+                </mat-form-field>
+
+                <button type="button" mat-icon-button color="warn"
+                  [disabled]="classesArray.length <= 1"
+                  matTooltip="刪除此職業"
+                  (click)="removeClassLevel($index)">
+                  <mat-icon>remove_circle_outline</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (classesArray.length === 0) {
+            <p class="hint-text">至少需要一筆職業/等級</p>
+          }
+        </section>
+
+        <!-- 操作按鈕 -->
+        <div class="form-actions">
+          <button type="button" mat-stroked-button (click)="onBack()">取消</button>
+          <button type="submit" mat-flat-button color="primary" [disabled]="isSaving()">
+            @if (isSaving()) {
+              <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+            } @else {
+              <mat-icon>save</mat-icon>
+            }
+            {{ isEditMode() ? '儲存變更' : '建立角色' }}
+          </button>
+        </div>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

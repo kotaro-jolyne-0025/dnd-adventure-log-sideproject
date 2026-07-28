@@ -1,0 +1,75 @@
+.page-container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 16px 16px 80px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* Form Card */
+.form-card {
+  margin-bottom: 16px;
+  padding: 4px 0;
+}
+
+/* Fields */
+.field-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+
+  .flex-1 { flex: 1; min-width: 140px; }
+  .flex-2 { flex: 2; min-width: 200px; }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--mat-sys-outline);
+  margin: 0 0 12px;
+}
+
+/* Resource Row */
+.resource-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.resource-label {
+  min-width: 90px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.num-field {
+  width: 100px;
+  flex: 1;
+  min-width: 80px;
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}

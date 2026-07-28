@@ -1,0 +1,45 @@
+.loading-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+/* Character Header */
+.char-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 0;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.char-info {
+  flex: 1;
+}
+
+.char-name {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.char-meta {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--mat-sys-outline);
+}
+
+/* Tabs */
+.character-tabs {
+  max-width: 960px;
+  margin: 8px auto 0;
+}
+
+.tab-icon {
+  margin-right: 4px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
