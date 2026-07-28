@@ -1,0 +1,47 @@
+@if (isLoading()) {
+  <div class="loading-wrapper">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+}
+
+@if (!isLoading() && character()) {
+  <!-- Character Header -->
+  <div class="char-header">
+    <button mat-icon-button (click)="onBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="char-info">
+      <h1 class="char-name">{{ character()!.name }}</h1>
+      <p class="char-meta">
+        {{ character()!.race }} ・ {{ formatClasses(character()!) }}
+        @if (character()!.faction) { ・ {{ character()!.faction }} }
+      </p>
+    </div>
+    <button mat-icon-button (click)="onEdit()">
+      <mat-icon>edit</mat-icon>
+    </button>
+  </div>
+
+  <!-- Tab Nav -->
+  <mat-tab-group
+    [selectedIndex]="getActiveTab()"
+    (selectedIndexChange)="onTabChange($event)"
+    animationDuration="150ms"
+    class="character-tabs">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">menu_book</mat-icon>
+        冒險日誌
+      </ng-template>
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">inventory_2</mat-icon>
+        倉庫
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Routed child page -->
+  <router-outlet />
+}

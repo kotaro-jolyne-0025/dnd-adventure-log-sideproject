@@ -1,0 +1,79 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <mat-icon class="title-icon">person</mat-icon>
+      我的角色
+    </h1>
+    <button mat-fab extended color="primary" (click)="onCreateCharacter()">
+      <mat-icon>add</mat-icon>
+      新增角色
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-wrapper">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && characters().length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">person_off</mat-icon>
+      <p class="empty-title">尚無角色</p>
+      <p class="empty-desc">點擊新增開始建立您的第一個角色</p>
+      <button mat-flat-button color="primary" (click)="onCreateCharacter()">
+        <mat-icon>add</mat-icon>
+        建立第一個角色
+      </button>
+    </div>
+  }
+
+  <!-- Character Cards -->
+  @if (!isLoading() && characters().length > 0) {
+    <div class="card-grid">
+      @for (char of characters(); track char.id) {
+        <mat-card class="character-card" (click)="onViewCharacter(char.id)">
+          <mat-card-header>
+            <mat-card-title>{{ char.name }}</mat-card-title>
+            <mat-card-subtitle>{{ char.playerName }}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="char-info">
+              <div class="info-row">
+                <span class="info-label">種族</span>
+                <span class="info-value">{{ char.race }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">職業</span>
+                <span class="info-value classes">{{ formatClasses(char) }}</span>
+              </div>
+              @if (char.faction) {
+                <div class="info-row">
+                  <span class="info-label">派系</span>
+                  <span class="info-value">{{ char.faction }}</span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button mat-icon-button color="primary"
+              matTooltip="編輯角色"
+              (click)="onEditCharacter($event, char.id)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn"
+              matTooltip="刪除角色"
+              (click)="onDeleteCharacter($event, char)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

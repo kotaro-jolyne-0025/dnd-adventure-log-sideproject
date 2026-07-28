@@ -1,0 +1,178 @@
+<div class="page-container">
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-wrapper"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  @if (!isLoading() && entry()) {
+    <!-- Page Header -->
+    <div class="page-header">
+      <button mat-icon-button (click)="onBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2 class="page-title">
+        {{ entry()!.adventureName || entry()!.adventureCode || '冒險記錄' }}
+      </h2>
+      <button mat-icon-button color="primary" matTooltip="編輯" (click)="onEdit()">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button color="warn" matTooltip="刪除" (click)="onDelete()">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+
+    <!-- 📋 基本資訊 -->
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>📋 基本資訊</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">冒險代碼</span>
+            <span class="info-value">{{ entry()!.adventureCode || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">冒險名稱</span>
+            <span class="info-value">{{ entry()!.adventureName || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">遊玩日期</span>
+            <span class="info-value">
+              {{ entry()!.playDate ? (entry()!.playDate! | date:'yyyy/MM/dd') : '—' }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">DM 名稱</span>
+            <span class="info-value">{{ entry()!.dmName || '—' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 💰 資源變動 -->
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>💰 資源變動</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table class="resource-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>起始</th>
+              <th>變化</th>
+              <th>合計</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="resource-label">🪙 金幣</td>
+              <td>{{ entry()!.goldStart ?? '—' }}</td>
+              <td [class.positive]="(entry()!.goldChange ?? 0) > 0"
+                  [class.negative]="(entry()!.goldChange ?? 0) < 0">
+                {{ formatChange(entry()!.goldChange) }}
+              </td>
+              <td class="total-cell">{{ entry()!.goldTotal ?? '—' }}</td>
+            </tr>
+            <tr>
+              <td class="resource-label">🏕️ 休假天數</td>
+              <td>{{ entry()!.downtimeDaysStart ?? '—' }}</td>
+              <td [class.positive]="(entry()!.downtimeDaysChange ?? 0) > 0"
+                  [class.negative]="(entry()!.downtimeDaysChange ?? 0) < 0">
+                {{ formatChange(entry()!.downtimeDaysChange) }}
+              </td>
+              <td class="total-cell">{{ entry()!.downtimeDaysTotal ?? '—' }}</td>
+            </tr>
+            <tr>
+              <td class="resource-label">✨ 魔法物品</td>
+              <td>{{ entry()!.magicItemsStart ?? '—' }}</td>
+              <td [class.positive]="(entry()!.magicItemsChange ?? 0) > 0"
+                  [class.negative]="(entry()!.magicItemsChange ?? 0) < 0">
+                {{ formatChange(entry()!.magicItemsChange) }}
+              </td>
+              <td class="total-cell">{{ entry()!.magicItemsTotal ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 📝 冒險備註 -->
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>📝 冒險備註</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          @if (entry()!.notes) {
+            <div class="info-item full-row">
+              <span class="info-label">備註</span>
+              <p class="info-value note-text">{{ entry()!.notes }}</p>
+            </div>
+          }
+          @if (entry()!.renownChange) {
+            <div class="info-item">
+              <span class="info-label">靈魂幣使用</span>
+              <span class="info-value">{{ entry()!.renownChange }}</span>
+            </div>
+          }
+          @if (!entry()!.notes && !entry()!.renownChange) {
+            <p class="empty-text">（無備註）</p>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 🏕️ 休整期活動 -->
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>🏕️ 休整期活動</mat-card-title>
+        <div class="card-header-actions">
+          <button mat-stroked-button color="primary" (click)="onAddDowntime()">
+            <mat-icon>add</mat-icon>
+            新增活動
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        @if (entry()!.downtimeActivities.length === 0) {
+          <p class="empty-text">（無休整期活動）</p>
+        }
+        @for (dt of entry()!.downtimeActivities; track dt.id) {
+          <div class="downtime-item">
+            <span class="downtime-text">{{ dt.description }}</span>
+            <button mat-icon-button color="warn" (click)="onDeleteDowntime(dt.id)">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+  }<!-- end @if entry() -->
+</div>
+
+<!-- Add Downtime Dialog -->
+@if (showDowntimeDialog()) {
+  <div class="dialog-backdrop" (click)="showDowntimeDialog.set(false)">
+    <mat-card class="inline-dialog" (click)="$event.stopPropagation()">
+      <mat-card-header>
+        <mat-card-title>新增休整期活動</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>活動描述</mat-label>
+          <textarea matInput [(ngModel)]="newDowntimeText" rows="3"
+            placeholder="例：迎頭趕上 −10天 術師→5"></textarea>
+        </mat-form-field>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-button (click)="showDowntimeDialog.set(false)">取消</button>
+        <button mat-flat-button color="primary"
+          [disabled]="!newDowntimeText.trim()"
+          (click)="onSaveDowntime()">儲存</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+}

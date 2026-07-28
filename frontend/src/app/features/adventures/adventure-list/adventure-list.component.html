@@ -1,0 +1,69 @@
+<div class="page-container">
+  <!-- Header Actions -->
+  <div class="list-header">
+    <h2 class="section-title">冒險日誌</h2>
+    <button mat-flat-button color="primary" (click)="onAddEntry()">
+      <mat-icon>add</mat-icon>
+      新增冒險
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-wrapper">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && entries().length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">menu_book</mat-icon>
+      <p class="empty-title">尚無冒險記錄</p>
+      <p class="empty-desc">點擊新增開始記錄第一筆冒險</p>
+      <button mat-flat-button color="primary" (click)="onAddEntry()">
+        <mat-icon>add</mat-icon>
+        新增第一筆冒險
+      </button>
+    </div>
+  }
+
+  <!-- Adventure Table -->
+  @if (!isLoading() && entries().length > 0) {
+    <mat-card class="table-card">
+      <table mat-table [dataSource]="entries()" class="full-width">
+
+        <!-- 遊玩日期 -->
+        <ng-container matColumnDef="playDate">
+          <th mat-header-cell *matHeaderCellDef>遊玩日期</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.playDate ? (row.playDate | date:'yyyy/MM/dd') : '—' }}
+          </td>
+        </ng-container>
+
+        <!-- 冒險代碼 -->
+        <ng-container matColumnDef="adventureCode">
+          <th mat-header-cell *matHeaderCellDef>冒險代碼</th>
+          <td mat-cell *matCellDef="let row">{{ row.adventureCode || '—' }}</td>
+        </ng-container>
+
+        <!-- 冒險名稱 -->
+        <ng-container matColumnDef="adventureName">
+          <th mat-header-cell *matHeaderCellDef>冒險名稱</th>
+          <td mat-cell *matCellDef="let row">{{ row.adventureName || '—' }}</td>
+        </ng-container>
+
+        <!-- DM 名稱 -->
+        <ng-container matColumnDef="dmName">
+          <th mat-header-cell *matHeaderCellDef>DM</th>
+          <td mat-cell *matCellDef="let row">{{ row.dmName || '—' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+            class="clickable-row"
+            (click)="onViewEntry(row.id)"></tr>
+      </table>
+    </mat-card>
+  }
+</div>
