@@ -54,7 +54,7 @@
             </button>
           </div>
 
-          <div formArrayName="classesList" class="classes-list">
+          <div formArrayName="classLevels" class="classes-list">
             @for (ctrl of classesArray.controls; track $index) {
               <div [formGroupName]="$index" class="class-row">
                 <mat-form-field appearance="outline" class="class-name-field">
