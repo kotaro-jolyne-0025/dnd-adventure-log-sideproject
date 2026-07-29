@@ -37,7 +37,7 @@
       @for (char of characters(); track char.id) {
         <mat-card class="character-card" (click)="onViewCharacter(char.id)">
           <mat-card-header>
-            <mat-card-title>{{ char.name }}</mat-card-title>
+            <mat-card-title>{{ char.characterName }}</mat-card-title>
             <mat-card-subtitle>{{ char.playerName }}</mat-card-subtitle>
           </mat-card-header>
 

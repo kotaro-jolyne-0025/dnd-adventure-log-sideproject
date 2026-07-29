@@ -1,9 +1,11 @@
 // ── DowntimeActivity ─────────────────────────────────────────────────────────
 
 export interface DowntimeActivity {
-  id: number;
+  id: string;           // UUID
+  adventureEntryId?: string;
   description: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DowntimeActivityRequest {
@@ -13,23 +15,23 @@ export interface DowntimeActivityRequest {
 // ── AdventureEntry ───────────────────────────────────────────────────────────
 
 export interface AdventureEntry {
-  id: number;
-  characterId: number;
+  id: string;           // UUID
+  characterId: string;  // UUID
   adventureCode?: string;
   adventureName?: string;
-  playDate?: string;       // ISO date string YYYY-MM-DD
+  playDate?: string;            // ISO date YYYY-MM-DD
   dmName?: string;
-  goldStart?: number;
+  startingGold?: number;
   goldChange?: number;
   goldTotal?: number;
-  downtimeDaysStart?: number;
-  downtimeDaysChange?: number;
-  downtimeDaysTotal?: number;
-  magicItemsStart?: number;
+  startingDowntime?: number;
+  downtimeChange?: number;
+  downtimeTotal?: number;
+  startingMagicItems?: number;
   magicItemsChange?: number;
   magicItemsTotal?: number;
-  notes?: string;
-  renownChange?: string;
+  adventureNotes?: string;
+  soulCoinChargesUsed?: string;
   downtimeActivities: DowntimeActivity[];
   createdAt?: string;
   updatedAt?: string;
@@ -40,15 +42,15 @@ export interface AdventureEntryRequest {
   adventureName?: string | null;
   playDate?: string | null;
   dmName?: string | null;
-  goldStart?: number | null;
+  startingGold?: number | null;
   goldChange?: number | null;
   goldTotal?: number | null;
-  downtimeDaysStart?: number | null;
-  downtimeDaysChange?: number | null;
-  downtimeDaysTotal?: number | null;
-  magicItemsStart?: number | null;
+  startingDowntime?: number | null;
+  downtimeChange?: number | null;
+  downtimeTotal?: number | null;
+  startingMagicItems?: number | null;
   magicItemsChange?: number | null;
   magicItemsTotal?: number | null;
-  notes?: string | null;
-  renownChange?: string | null;
+  adventureNotes?: string | null;
+  soulCoinChargesUsed?: string | null;
 }

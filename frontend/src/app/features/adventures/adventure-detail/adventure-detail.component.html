@@ -68,7 +68,7 @@
           <tbody>
             <tr>
               <td class="resource-label">🪙 金幣</td>
-              <td>{{ entry()!.goldStart ?? '—' }}</td>
+              <td>{{ entry()!.startingGold ?? '—' }}</td>
               <td [class.positive]="(entry()!.goldChange ?? 0) > 0"
                   [class.negative]="(entry()!.goldChange ?? 0) < 0">
                 {{ formatChange(entry()!.goldChange) }}
@@ -77,16 +77,16 @@
             </tr>
             <tr>
               <td class="resource-label">🏕️ 休假天數</td>
-              <td>{{ entry()!.downtimeDaysStart ?? '—' }}</td>
-              <td [class.positive]="(entry()!.downtimeDaysChange ?? 0) > 0"
-                  [class.negative]="(entry()!.downtimeDaysChange ?? 0) < 0">
-                {{ formatChange(entry()!.downtimeDaysChange) }}
+              <td>{{ entry()!.startingDowntime ?? '—' }}</td>
+              <td [class.positive]="(entry()!.downtimeChange ?? 0) > 0"
+                  [class.negative]="(entry()!.downtimeChange ?? 0) < 0">
+                {{ formatChange(entry()!.downtimeChange) }}
               </td>
-              <td class="total-cell">{{ entry()!.downtimeDaysTotal ?? '—' }}</td>
+              <td class="total-cell">{{ entry()!.downtimeTotal ?? '—' }}</td>
             </tr>
             <tr>
               <td class="resource-label">✨ 魔法物品</td>
-              <td>{{ entry()!.magicItemsStart ?? '—' }}</td>
+              <td>{{ entry()!.startingMagicItems ?? '—' }}</td>
               <td [class.positive]="(entry()!.magicItemsChange ?? 0) > 0"
                   [class.negative]="(entry()!.magicItemsChange ?? 0) < 0">
                 {{ formatChange(entry()!.magicItemsChange) }}
@@ -105,19 +105,19 @@
       </mat-card-header>
       <mat-card-content>
         <div class="info-grid">
-          @if (entry()!.notes) {
+          @if (entry()!.adventureNotes) {
             <div class="info-item full-row">
               <span class="info-label">備註</span>
-              <p class="info-value note-text">{{ entry()!.notes }}</p>
+              <p class="info-value note-text">{{ entry()!.adventureNotes }}</p>
             </div>
           }
-          @if (entry()!.renownChange) {
+          @if (entry()!.soulCoinChargesUsed) {
             <div class="info-item">
               <span class="info-label">靈魂幣使用</span>
-              <span class="info-value">{{ entry()!.renownChange }}</span>
+              <span class="info-value">{{ entry()!.soulCoinChargesUsed }}</span>
             </div>
           }
-          @if (!entry()!.notes && !entry()!.renownChange) {
+          @if (!entry()!.adventureNotes && !entry()!.soulCoinChargesUsed) {
             <p class="empty-text">（無備註）</p>
           }
         </div>

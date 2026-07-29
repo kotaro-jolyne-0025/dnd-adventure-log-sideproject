@@ -11,7 +11,7 @@
       <mat-icon>arrow_back</mat-icon>
     </button>
     <div class="char-info">
-      <h1 class="char-name">{{ character()!.name }}</h1>
+      <h1 class="char-name">{{ character()!.characterName }}</h1>
       <p class="char-meta">
         {{ character()!.race }} ・ {{ formatClasses(character()!) }}
         @if (character()!.faction) { ・ {{ character()!.faction }} }

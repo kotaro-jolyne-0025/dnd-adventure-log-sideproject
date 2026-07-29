@@ -13,7 +13,7 @@ export class CharacterService {
     return this.http.get<Character[]>(this.base);
   }
 
-  getById(id: number): Observable<Character> {
+  getById(id: string): Observable<Character> {
     return this.http.get<Character>(`${this.base}/${id}`);
   }
 
@@ -21,11 +21,11 @@ export class CharacterService {
     return this.http.post<Character>(this.base, req);
   }
 
-  update(id: number, req: CharacterRequest): Observable<Character> {
+  update(id: string, req: CharacterRequest): Observable<Character> {
     return this.http.put<Character>(`${this.base}/${id}`, req);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 }

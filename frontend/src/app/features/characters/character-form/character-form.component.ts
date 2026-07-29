@@ -43,37 +43,37 @@ export class CharacterFormComponent implements OnInit {
 
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
-  private characterId: number | null = null;
+  private characterId: string | null = null;
 
   protected form: FormGroup = this.fb.group({
-    name: ['', Validators.required],
+    characterName: ['', Validators.required],
     playerName: ['', Validators.required],
     race: ['', Validators.required],
     faction: [''],
-    classesList: this.fb.array([this.createClassLevelGroup()]),
+    classLevels: this.fb.array([this.createClassLevelGroup()]),
   });
 
   get classesArray(): FormArray {
-    return this.form.get('classesList') as FormArray;
+    return this.form.get('classLevels') as FormArray;
   }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'new') {
       this.isEditMode.set(true);
-      this.characterId = Number(id);
+      this.characterId = id;
       this.loadCharacter(this.characterId);
     }
   }
 
-  private loadCharacter(id: number): void {
+  private loadCharacter(id: string): void {
     this.characterService.getById(id).subscribe({
       next: (character) => {
         // Clear default array and fill with existing data
         while (this.classesArray.length > 0) {
           this.classesArray.removeAt(0);
         }
-        character.classesList.forEach((cl) => {
+        character.classLevels.forEach((cl) => {
           this.classesArray.push(
             this.fb.group({
               className: [cl.className, Validators.required],
@@ -82,7 +82,7 @@ export class CharacterFormComponent implements OnInit {
           );
         });
         this.form.patchValue({
-          name: character.name,
+          characterName: character.characterName,
           playerName: character.playerName,
           race: character.race,
           faction: character.faction ?? '',
@@ -120,11 +120,11 @@ export class CharacterFormComponent implements OnInit {
     this.isSaving.set(true);
     const raw = this.form.getRawValue();
     const req: CharacterRequest = {
-      name: raw.name.trim(),
+      characterName: raw.characterName.trim(),
       playerName: raw.playerName.trim(),
       race: raw.race.trim(),
       faction: raw.faction?.trim() || null,
-      classesList: raw.classesList.map((cl: { className: string; level: number }) => ({
+      classLevels: raw.classLevels.map((cl: { className: string; level: number }) => ({
         className: cl.className.trim(),
         level: Number(cl.level),
       })),
@@ -144,7 +144,7 @@ export class CharacterFormComponent implements OnInit {
     } else {
       this.characterService.create(req).subscribe({
         next: (created) => {
-          this.snackBar.open(`角色「${created.name}」已建立！`, '關閉', { duration: 2500 });
+          this.snackBar.open(`角色「${created.characterName}」已建立！`, '關閉', { duration: 2500 });
           this.router.navigate(['/characters', created.id, 'adventures']);
         },
         error: () => {

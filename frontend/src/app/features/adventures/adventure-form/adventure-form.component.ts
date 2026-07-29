@@ -43,41 +43,40 @@ export class AdventureFormComponent implements OnInit {
 
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
-  private characterId!: number;
-  private entryId?: number;
+  private characterId!: string;
+  private entryId?: string;
 
   protected form: FormGroup = this.fb.group({
     adventureCode: [''],
     adventureName: [''],
     playDate: [null],
     dmName: [''],
-    goldStart: [null],
+    startingGold: [null],
     goldChange: [null],
     goldTotal: [null],
-    downtimeDaysStart: [null],
-    downtimeDaysChange: [null],
-    downtimeDaysTotal: [null],
-    magicItemsStart: [null],
+    startingDowntime: [null],
+    downtimeChange: [null],
+    downtimeTotal: [null],
+    startingMagicItems: [null],
     magicItemsChange: [null],
     magicItemsTotal: [null],
-    notes: [''],
-    renownChange: [''],
+    adventureNotes: [''],
+    soulCoinChargesUsed: [''],
   });
 
   ngOnInit(): void {
-    this.characterId = Number(
+    this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
-      this.route.snapshot.paramMap.get('characterId')
-    );
+      this.route.snapshot.paramMap.get('characterId') ?? '';
     const entryIdParam = this.route.snapshot.paramMap.get('entryId');
     if (entryIdParam) {
       this.isEditMode.set(true);
-      this.entryId = Number(entryIdParam);
+      this.entryId = entryIdParam;
       this.loadEntry(this.entryId);
     }
   }
 
-  private loadEntry(id: number): void {
+  private loadEntry(id: string): void {
     this.adventureService.getById(this.characterId, id).subscribe({
       next: (entry) => {
         this.form.patchValue({
@@ -85,17 +84,17 @@ export class AdventureFormComponent implements OnInit {
           adventureName: entry.adventureName ?? '',
           playDate: entry.playDate ? new Date(entry.playDate) : null,
           dmName: entry.dmName ?? '',
-          goldStart: entry.goldStart ?? null,
+          startingGold: entry.startingGold ?? null,
           goldChange: entry.goldChange ?? null,
           goldTotal: entry.goldTotal ?? null,
-          downtimeDaysStart: entry.downtimeDaysStart ?? null,
-          downtimeDaysChange: entry.downtimeDaysChange ?? null,
-          downtimeDaysTotal: entry.downtimeDaysTotal ?? null,
-          magicItemsStart: entry.magicItemsStart ?? null,
+          startingDowntime: entry.startingDowntime ?? null,
+          downtimeChange: entry.downtimeChange ?? null,
+          downtimeTotal: entry.downtimeTotal ?? null,
+          startingMagicItems: entry.startingMagicItems ?? null,
           magicItemsChange: entry.magicItemsChange ?? null,
           magicItemsTotal: entry.magicItemsTotal ?? null,
-          notes: entry.notes ?? '',
-          renownChange: entry.renownChange ?? '',
+          adventureNotes: entry.adventureNotes ?? '',
+          soulCoinChargesUsed: entry.soulCoinChargesUsed ?? '',
         });
       },
       error: () => {
@@ -107,6 +106,8 @@ export class AdventureFormComponent implements OnInit {
 
   private buildRequest(): AdventureEntryRequest {
     const raw = this.form.getRawValue();
+    const toNum = (v: unknown): number | null =>
+      v !== '' && v !== null && v !== undefined ? Number(v) : null;
     const toDateStr = (val: Date | null): string | null => {
       if (!val) return null;
       const d = val instanceof Date ? val : new Date(val);
@@ -117,17 +118,17 @@ export class AdventureFormComponent implements OnInit {
       adventureName: raw.adventureName?.trim() || null,
       playDate: toDateStr(raw.playDate),
       dmName: raw.dmName?.trim() || null,
-      goldStart: raw.goldStart !== '' && raw.goldStart !== null ? Number(raw.goldStart) : null,
-      goldChange: raw.goldChange !== '' && raw.goldChange !== null ? Number(raw.goldChange) : null,
-      goldTotal: raw.goldTotal !== '' && raw.goldTotal !== null ? Number(raw.goldTotal) : null,
-      downtimeDaysStart: raw.downtimeDaysStart !== '' && raw.downtimeDaysStart !== null ? Number(raw.downtimeDaysStart) : null,
-      downtimeDaysChange: raw.downtimeDaysChange !== '' && raw.downtimeDaysChange !== null ? Number(raw.downtimeDaysChange) : null,
-      downtimeDaysTotal: raw.downtimeDaysTotal !== '' && raw.downtimeDaysTotal !== null ? Number(raw.downtimeDaysTotal) : null,
-      magicItemsStart: raw.magicItemsStart !== '' && raw.magicItemsStart !== null ? Number(raw.magicItemsStart) : null,
-      magicItemsChange: raw.magicItemsChange !== '' && raw.magicItemsChange !== null ? Number(raw.magicItemsChange) : null,
-      magicItemsTotal: raw.magicItemsTotal !== '' && raw.magicItemsTotal !== null ? Number(raw.magicItemsTotal) : null,
-      notes: raw.notes?.trim() || null,
-      renownChange: raw.renownChange?.trim() || null,
+      startingGold: toNum(raw.startingGold),
+      goldChange: toNum(raw.goldChange),
+      goldTotal: toNum(raw.goldTotal),
+      startingDowntime: toNum(raw.startingDowntime),
+      downtimeChange: toNum(raw.downtimeChange),
+      downtimeTotal: toNum(raw.downtimeTotal),
+      startingMagicItems: toNum(raw.startingMagicItems),
+      magicItemsChange: toNum(raw.magicItemsChange),
+      magicItemsTotal: toNum(raw.magicItemsTotal),
+      adventureNotes: raw.adventureNotes?.trim() || null,
+      soulCoinChargesUsed: raw.soulCoinChargesUsed?.trim() || null,
     };
   }
 

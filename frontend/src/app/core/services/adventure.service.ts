@@ -15,55 +15,57 @@ export class AdventureService {
   private readonly base = `${environment.apiUrl}/characters`;
 
   // ── AdventureEntry ───────────────────────────────────────────────────────
+  // 後端路徑：/api/characters/{id}/entries
 
-  getAllByCharacter(characterId: number): Observable<AdventureEntry[]> {
+  getAllByCharacter(characterId: string): Observable<AdventureEntry[]> {
     return this.http.get<AdventureEntry[]>(
-      `${this.base}/${characterId}/adventure-entries`
+      `${this.base}/${characterId}/entries`
     );
   }
 
-  getById(characterId: number, entryId: number): Observable<AdventureEntry> {
+  getById(characterId: string, entryId: string): Observable<AdventureEntry> {
     return this.http.get<AdventureEntry>(
-      `${this.base}/${characterId}/adventure-entries/${entryId}`
+      `${environment.apiUrl}/entries/${entryId}`
     );
   }
 
-  create(characterId: number, req: AdventureEntryRequest): Observable<AdventureEntry> {
+  create(characterId: string, req: AdventureEntryRequest): Observable<AdventureEntry> {
     return this.http.post<AdventureEntry>(
-      `${this.base}/${characterId}/adventure-entries`,
+      `${this.base}/${characterId}/entries`,
       req
     );
   }
 
   update(
-    characterId: number,
-    entryId: number,
+    characterId: string,
+    entryId: string,
     req: AdventureEntryRequest
   ): Observable<AdventureEntry> {
     return this.http.put<AdventureEntry>(
-      `${this.base}/${characterId}/adventure-entries/${entryId}`,
+      `${environment.apiUrl}/entries/${entryId}`,
       req
     );
   }
 
-  delete(characterId: number, entryId: number): Observable<void> {
+  delete(characterId: string, entryId: string): Observable<void> {
     return this.http.delete<void>(
-      `${this.base}/${characterId}/adventure-entries/${entryId}`
+      `${environment.apiUrl}/entries/${entryId}`
     );
   }
 
   // ── DowntimeActivity ────────────────────────────────────────────────────
+  // 後端路徑：/api/entries/{entryId}/downtime-activities
 
-  addDowntime(entryId: number, req: DowntimeActivityRequest): Observable<DowntimeActivity> {
+  addDowntime(entryId: string, req: DowntimeActivityRequest): Observable<DowntimeActivity> {
     return this.http.post<DowntimeActivity>(
-      `${environment.apiUrl}/adventure-entries/${entryId}/downtime-activities`,
+      `${environment.apiUrl}/entries/${entryId}/downtime-activities`,
       req
     );
   }
 
-  deleteDowntime(entryId: number, downtimeId: number): Observable<void> {
+  deleteDowntime(entryId: string, downtimeId: string): Observable<void> {
     return this.http.delete<void>(
-      `${environment.apiUrl}/adventure-entries/${entryId}/downtime-activities/${downtimeId}`
+      `${environment.apiUrl}/downtime-activities/${downtimeId}`
     );
   }
 }

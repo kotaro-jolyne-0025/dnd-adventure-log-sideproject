@@ -16,8 +16,8 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>角色名稱 *</mat-label>
-            <input matInput formControlName="name" placeholder="例：蓋歐克" />
-            @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+            <input matInput formControlName="characterName" placeholder="例：蓋歐克" />
+            @if (form.get('characterName')?.hasError('required') && form.get('characterName')?.touched) {
               <mat-error>角色名稱為必填</mat-error>
             }
           </mat-form-field>

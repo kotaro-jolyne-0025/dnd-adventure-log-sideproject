@@ -9,33 +9,35 @@ export class InventoryService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/characters`;
 
-  getAllByCharacter(characterId: number): Observable<InventoryItem[]> {
+  // 後端路徑：/api/characters/{id}/inventory
+
+  getAllByCharacter(characterId: string): Observable<InventoryItem[]> {
     return this.http.get<InventoryItem[]>(
-      `${this.base}/${characterId}/inventory-items`
+      `${this.base}/${characterId}/inventory`
     );
   }
 
-  create(characterId: number, req: InventoryItemRequest): Observable<InventoryItem> {
+  create(characterId: string, req: InventoryItemRequest): Observable<InventoryItem> {
     return this.http.post<InventoryItem>(
-      `${this.base}/${characterId}/inventory-items`,
+      `${this.base}/${characterId}/inventory`,
       req
     );
   }
 
   update(
-    characterId: number,
-    itemId: number,
+    characterId: string,
+    itemId: string,
     req: InventoryItemRequest
   ): Observable<InventoryItem> {
     return this.http.put<InventoryItem>(
-      `${this.base}/${characterId}/inventory-items/${itemId}`,
+      `${this.base}/${characterId}/inventory/${itemId}`,
       req
     );
   }
 
-  delete(characterId: number, itemId: number): Observable<void> {
+  delete(characterId: string, itemId: string): Observable<void> {
     return this.http.delete<void>(
-      `${this.base}/${characterId}/inventory-items/${itemId}`
+      `${this.base}/${characterId}/inventory/${itemId}`
     );
   }
 }

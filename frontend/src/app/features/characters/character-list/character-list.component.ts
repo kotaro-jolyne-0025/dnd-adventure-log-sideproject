@@ -60,12 +60,12 @@ export class CharacterListComponent implements OnInit {
     this.router.navigate(['/characters/new']);
   }
 
-  protected onEditCharacter(event: Event, id: number): void {
+  protected onEditCharacter(event: Event, id: string): void {
     event.stopPropagation();
     this.router.navigate(['/characters', id, 'edit']);
   }
 
-  protected onViewCharacter(id: number): void {
+  protected onViewCharacter(id: string): void {
     this.router.navigate(['/characters', id, 'adventures']);
   }
 
@@ -73,7 +73,7 @@ export class CharacterListComponent implements OnInit {
     event.stopPropagation();
     const data: ConfirmDialogData = {
       title: '刪除角色',
-      message: `確定要刪除「${character.name}」嗎？此操作將一併刪除所有冒險記錄且無法復原。`,
+      message: `確定要刪除「${character.characterName}」嗎？此操作將一併刪除所有冒險記錄且無法復原。`,
       confirmText: '確認刪除',
       cancelText: '取消',
     };
@@ -84,7 +84,7 @@ export class CharacterListComponent implements OnInit {
         if (!confirmed) return;
         this.characterService.delete(character.id).subscribe({
           next: () => {
-            this.snackBar.open(`已刪除角色「${character.name}」`, '關閉', { duration: 3000 });
+            this.snackBar.open(`已刪除角色「${character.characterName}」`, '關閉', { duration: 3000 });
             this.loadCharacters();
           },
           error: () => {
@@ -95,7 +95,7 @@ export class CharacterListComponent implements OnInit {
   }
 
   protected formatClasses(character: Character): string {
-    return character.classesList
+    return character.classLevels
       .map((c) => `${c.className} ${c.level}`)
       .join(' / ');
   }

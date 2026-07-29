@@ -23,8 +23,8 @@ export const RARITY_COLORS: Record<ItemRarity, string> = {
 };
 
 export interface InventoryItem {
-  id: number;
-  characterId: number;
+  id: string;           // UUID
+  characterId: string;  // UUID
   itemName: string;
   itemType: ItemType;
   rarity?: ItemRarity;

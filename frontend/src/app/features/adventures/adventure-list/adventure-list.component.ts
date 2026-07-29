@@ -32,16 +32,15 @@ export class AdventureListComponent implements OnInit {
 
   protected entries = signal<AdventureEntry[]>([]);
   protected isLoading = signal(true);
-  protected characterId!: number;
+  protected characterId!: string;
 
   protected displayedColumns = ['playDate', 'adventureCode', 'adventureName', 'dmName'];
 
   ngOnInit(): void {
     // characterId comes from the parent shell route param
-    this.characterId = Number(
+    this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
-      this.route.snapshot.paramMap.get('id')
-    );
+      this.route.snapshot.paramMap.get('id') ?? '';
     this.loadEntries();
   }
 

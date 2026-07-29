@@ -1,20 +1,21 @@
 // ── CharacterClassLevel ──────────────────────────────────────────────────────
 
 export interface CharacterClassLevel {
-  id?: number;
+  id?: string;          // UUID
   className: string;
   level: number;
+  sortOrder?: number;
 }
 
 // ── Character ────────────────────────────────────────────────────────────────
 
 export interface Character {
-  id: number;
-  name: string;
+  id: string;           // UUID
+  characterName: string;
   playerName: string;
   race: string;
   faction?: string;
-  classesList: CharacterClassLevel[];
+  classLevels: CharacterClassLevel[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -27,9 +28,9 @@ export interface CharacterClassLevelRequest {
 }
 
 export interface CharacterRequest {
-  name: string;
+  characterName: string;
   playerName: string;
   race: string;
   faction?: string | null;
-  classesList: CharacterClassLevelRequest[];
+  classLevels: CharacterClassLevelRequest[];
 }
