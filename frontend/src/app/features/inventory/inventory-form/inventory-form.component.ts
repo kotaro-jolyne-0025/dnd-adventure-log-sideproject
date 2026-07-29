@@ -43,8 +43,8 @@ export class InventoryFormComponent implements OnInit {
 
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
-  private characterId!: number;
-  private itemId?: number;
+  private characterId!: string;
+  private itemId?: string;
 
   readonly itemTypes: ItemType[] = ['PERMANENT', 'CONSUMABLE'];
   readonly rarities: (ItemRarity | '')[] = ['', 'COMMON', 'UNCOMMON', 'RARE', 'VERY_RARE', 'LEGENDARY'];
@@ -61,10 +61,9 @@ export class InventoryFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.characterId = Number(
+    this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
-      this.route.snapshot.paramMap.get('characterId')
-    );
+      this.route.snapshot.paramMap.get('characterId') ?? '';
 
     // Pre-set type from query param (when coming from Tab)
     const typeParam = this.route.snapshot.queryParamMap.get('type') as ItemType;
@@ -75,12 +74,12 @@ export class InventoryFormComponent implements OnInit {
     const itemIdParam = this.route.snapshot.paramMap.get('itemId');
     if (itemIdParam) {
       this.isEditMode.set(true);
-      this.itemId = Number(itemIdParam);
+      this.itemId = itemIdParam;
       this.loadItem(this.itemId);
     }
   }
 
-  private loadItem(id: number): void {
+  private loadItem(id: string): void {
     this.inventoryService.getAllByCharacter(this.characterId).subscribe({
       next: (items) => {
         const item = items.find((i) => i.id === id);

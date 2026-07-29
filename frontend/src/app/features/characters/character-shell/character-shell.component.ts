@@ -29,10 +29,10 @@ export class CharacterShellComponent implements OnInit {
 
   protected character = signal<Character | null>(null);
   protected isLoading = signal(true);
-  protected characterId!: number;
+  protected characterId!: string;
 
   ngOnInit(): void {
-    this.characterId = Number(this.route.snapshot.paramMap.get('id'));
+    this.characterId = this.route.snapshot.paramMap.get('id')!;
     this.characterService.getById(this.characterId).subscribe({
       next: (c) => {
         this.character.set(c);
@@ -46,7 +46,7 @@ export class CharacterShellComponent implements OnInit {
   }
 
   protected formatClasses(character: Character): string {
-    return character.classesList.map((c) => `${c.className} ${c.level}`).join(' / ');
+    return character.classLevels.map((c) => `${c.className} ${c.level}`).join(' / ');
   }
 
   protected onTabChange(index: number): void {

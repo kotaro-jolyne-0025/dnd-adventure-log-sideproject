@@ -46,7 +46,7 @@
           <span class="resource-label">🪙 金幣</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
-            <input matInput type="number" formControlName="goldStart" />
+            <input matInput type="number" formControlName="startingGold" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>變化</mat-label>
@@ -63,15 +63,15 @@
           <span class="resource-label">🏕️ 休假天數</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
-            <input matInput type="number" formControlName="downtimeDaysStart" />
+            <input matInput type="number" formControlName="startingDowntime" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>變化</mat-label>
-            <input matInput type="number" formControlName="downtimeDaysChange" />
+            <input matInput type="number" formControlName="downtimeChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>合計</mat-label>
-            <input matInput type="number" formControlName="downtimeDaysTotal" />
+            <input matInput type="number" formControlName="downtimeTotal" />
           </mat-form-field>
         </div>
 
@@ -80,7 +80,7 @@
           <span class="resource-label">✨ 魔法物品</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
-            <input matInput type="number" formControlName="magicItemsStart" />
+            <input matInput type="number" formControlName="startingMagicItems" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>變化</mat-label>
@@ -100,12 +100,12 @@
       <mat-card-content>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>備註</mat-label>
-          <textarea matInput formControlName="notes" rows="4"
+          <textarea matInput formControlName="adventureNotes" rows="4"
             placeholder="自由填寫冒險備註..."></textarea>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>靈魂幣使用</mat-label>
-          <input matInput formControlName="renownChange" placeholder="自由文字" />
+          <input matInput formControlName="soulCoinChargesUsed" placeholder="自由文字" />
         </mat-form-field>
       </mat-card-content>
     </mat-card>

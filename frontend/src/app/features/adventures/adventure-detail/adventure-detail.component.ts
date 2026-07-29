@@ -47,15 +47,14 @@ export class AdventureDetailComponent implements OnInit {
   protected showDowntimeDialog = signal(false);
   protected newDowntimeText = '';
 
-  private characterId!: number;
-  private entryId!: number;
+  private characterId!: string;
+  private entryId!: string;
 
   ngOnInit(): void {
-    this.characterId = Number(
+    this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
-      this.route.snapshot.paramMap.get('characterId')
-    );
-    this.entryId = Number(this.route.snapshot.paramMap.get('entryId'));
+      this.route.snapshot.paramMap.get('characterId') ?? '';
+    this.entryId = this.route.snapshot.paramMap.get('entryId') ?? '';
     this.loadEntry();
   }
 
@@ -126,7 +125,7 @@ export class AdventureDetailComponent implements OnInit {
       });
   }
 
-  protected onDeleteDowntime(downtimeId: number): void {
+  protected onDeleteDowntime(downtimeId: string): void {
     this.adventureService.deleteDowntime(this.entryId, downtimeId).subscribe({
       next: () => this.loadEntry(),
       error: () => this.snackBar.open('刪除失敗', '關閉', { duration: 3000 }),

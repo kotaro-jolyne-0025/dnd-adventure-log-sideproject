@@ -46,7 +46,7 @@ export class InventoryListComponent implements OnInit {
   protected allItems = signal<InventoryItem[]>([]);
   protected isLoading = signal(true);
   protected activeTab = signal(0); // 0=PERMANENT, 1=CONSUMABLE
-  protected characterId!: number;
+  protected characterId!: string;
 
   protected permanentItems = computed(() =>
     this.allItems().filter((i) => i.itemType === 'PERMANENT')
@@ -59,10 +59,9 @@ export class InventoryListComponent implements OnInit {
   readonly rarityColors = RARITY_COLORS;
 
   ngOnInit(): void {
-    this.characterId = Number(
+    this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
-      this.route.snapshot.paramMap.get('id')
-    );
+      this.route.snapshot.paramMap.get('id') ?? '';
     this.loadItems();
   }
 
@@ -87,7 +86,7 @@ export class InventoryListComponent implements OnInit {
     });
   }
 
-  protected onEditItem(event: Event, itemId: number): void {
+  protected onEditItem(event: Event, itemId: string): void {
     event.stopPropagation();
     this.router.navigate(['/characters', this.characterId, 'inventory', itemId, 'edit']);
   }
