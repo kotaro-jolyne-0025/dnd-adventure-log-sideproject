@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   FormBuilder,
@@ -46,20 +46,55 @@ export class AdventureFormComponent implements OnInit {
   private characterId!: string;
   private entryId?: string;
 
+  // 即時計算合計（顯示用）
+  private readonly _startingGold = signal<number | null>(null);
+  private readonly _goldChange = signal<number | null>(null);
+  private readonly _goldDowntimeChange = signal<number | null>(null);
+  private readonly _startingDowntime = signal<number | null>(null);
+  private readonly _downtimeChange = signal<number | null>(null);
+  private readonly _downtimeDowntimeChange = signal<number | null>(null);
+  private readonly _startingMagicItems = signal<number | null>(null);
+  private readonly _magicItemsChange = signal<number | null>(null);
+  private readonly _magicItemsDowntimeChange = signal<number | null>(null);
+
+  protected readonly goldTotal = computed(() => {
+    const s = this._startingGold();
+    const c = this._goldChange();
+    const d = this._goldDowntimeChange();
+    if (s == null && c == null && d == null) return null;
+    return (s ?? 0) + (c ?? 0) + (d ?? 0);
+  });
+  protected readonly downtimeTotal = computed(() => {
+    const s = this._startingDowntime();
+    const c = this._downtimeChange();
+    const d = this._downtimeDowntimeChange();
+    if (s == null && c == null && d == null) return null;
+    return (s ?? 0) + (c ?? 0) + (d ?? 0);
+  });
+  protected readonly magicItemsTotal = computed(() => {
+    const s = this._startingMagicItems();
+    const c = this._magicItemsChange();
+    const d = this._magicItemsDowntimeChange();
+    if (s == null && c == null && d == null) return null;
+    return (s ?? 0) + (c ?? 0) + (d ?? 0);
+  });
+
   protected form: FormGroup = this.fb.group({
     adventureCode: [''],
     adventureName: [''],
     playDate: [null],
     dmName: [''],
+    startingLevel: [null],
+    endingLevel: [null],
     startingGold: [null],
     goldChange: [null],
-    goldTotal: [null],
+    goldDowntimeChange: [null],
     startingDowntime: [null],
     downtimeChange: [null],
-    downtimeTotal: [null],
+    downtimeDowntimeChange: [null],
     startingMagicItems: [null],
     magicItemsChange: [null],
-    magicItemsTotal: [null],
+    magicItemsDowntimeChange: [null],
     adventureNotes: [''],
     soulCoinChargesUsed: [''],
   });
@@ -69,11 +104,40 @@ export class AdventureFormComponent implements OnInit {
       this.route.parent?.snapshot.paramMap.get('id') ??
       this.route.snapshot.paramMap.get('characterId') ?? '';
     const entryIdParam = this.route.snapshot.paramMap.get('entryId');
+
+    // 監聽數字欄位變更以更新 computed 合計
+    this.form.get('startingGold')!.valueChanges.subscribe(v => this._startingGold.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('goldChange')!.valueChanges.subscribe(v => this._goldChange.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('goldDowntimeChange')!.valueChanges.subscribe(v => this._goldDowntimeChange.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('startingDowntime')!.valueChanges.subscribe(v => this._startingDowntime.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('downtimeChange')!.valueChanges.subscribe(v => this._downtimeChange.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('downtimeDowntimeChange')!.valueChanges.subscribe(v => this._downtimeDowntimeChange.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('startingMagicItems')!.valueChanges.subscribe(v => this._startingMagicItems.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('magicItemsChange')!.valueChanges.subscribe(v => this._magicItemsChange.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('magicItemsDowntimeChange')!.valueChanges.subscribe(v => this._magicItemsDowntimeChange.set(v != null && v !== '' ? Number(v) : null));
+
     if (entryIdParam) {
       this.isEditMode.set(true);
       this.entryId = entryIdParam;
       this.loadEntry(this.entryId);
+    } else {
+      // 新增模式：呼叫 defaults API 預填起始值
+      this.loadDefaults();
     }
+  }
+
+  private loadDefaults(): void {
+    this.adventureService.getDefaults(this.characterId).subscribe({
+      next: (d) => {
+        this.form.patchValue({
+          startingLevel: d.startingLevel ?? null,
+          startingGold: d.startingGold ?? null,
+          startingDowntime: d.startingDowntime ?? null,
+          startingMagicItems: d.startingMagicItems ?? null,
+        });
+      },
+      error: () => { /* 無法取得預設值時靜默略過 */ },
+    });
   }
 
   private loadEntry(id: string): void {
@@ -84,15 +148,17 @@ export class AdventureFormComponent implements OnInit {
           adventureName: entry.adventureName ?? '',
           playDate: entry.playDate ? new Date(entry.playDate) : null,
           dmName: entry.dmName ?? '',
+          startingLevel: entry.startingLevel ?? null,
+          endingLevel: entry.endingLevel ?? null,
           startingGold: entry.startingGold ?? null,
           goldChange: entry.goldChange ?? null,
-          goldTotal: entry.goldTotal ?? null,
+          goldDowntimeChange: entry.goldDowntimeChange ?? null,
           startingDowntime: entry.startingDowntime ?? null,
           downtimeChange: entry.downtimeChange ?? null,
-          downtimeTotal: entry.downtimeTotal ?? null,
+          downtimeDowntimeChange: entry.downtimeDowntimeChange ?? null,
           startingMagicItems: entry.startingMagicItems ?? null,
           magicItemsChange: entry.magicItemsChange ?? null,
-          magicItemsTotal: entry.magicItemsTotal ?? null,
+          magicItemsDowntimeChange: entry.magicItemsDowntimeChange ?? null,
           adventureNotes: entry.adventureNotes ?? '',
           soulCoinChargesUsed: entry.soulCoinChargesUsed ?? '',
         });
@@ -118,15 +184,17 @@ export class AdventureFormComponent implements OnInit {
       adventureName: raw.adventureName?.trim() || null,
       playDate: toDateStr(raw.playDate),
       dmName: raw.dmName?.trim() || null,
+      startingLevel: toNum(raw.startingLevel),
+      endingLevel: toNum(raw.endingLevel),
       startingGold: toNum(raw.startingGold),
       goldChange: toNum(raw.goldChange),
-      goldTotal: toNum(raw.goldTotal),
+      goldDowntimeChange: toNum(raw.goldDowntimeChange),
       startingDowntime: toNum(raw.startingDowntime),
       downtimeChange: toNum(raw.downtimeChange),
-      downtimeTotal: toNum(raw.downtimeTotal),
+      downtimeDowntimeChange: toNum(raw.downtimeDowntimeChange),
       startingMagicItems: toNum(raw.startingMagicItems),
       magicItemsChange: toNum(raw.magicItemsChange),
-      magicItemsTotal: toNum(raw.magicItemsTotal),
+      magicItemsDowntimeChange: toNum(raw.magicItemsDowntimeChange),
       adventureNotes: raw.adventureNotes?.trim() || null,
       soulCoinChargesUsed: raw.soulCoinChargesUsed?.trim() || null,
     };

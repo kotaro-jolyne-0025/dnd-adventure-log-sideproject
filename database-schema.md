@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS character_class_level (
 );
 ```
 
+> **職業名稱允許值（前端下拉選單對應）：**
+> `戰士` `法師` `牧師` `遊蕩者` `遊俠` `吟遊詩人` `德魯伊` `武僧` `聖騎士` `契術師` `術士` `野蠻人` `奇械師` `其他`（或選「其他」時填入的自訂名稱）
+
 ---
 
 ## Step 3：建立 adventure_entry 資料表
@@ -44,6 +47,8 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     adventure_name VARCHAR(255),
     play_date DATE,
     dm_name VARCHAR(100),
+    starting_level INTEGER,
+    ending_level INTEGER,
     starting_gold DECIMAL(10,2),
     gold_change DECIMAL(10,2),
     gold_total DECIMAL(10,2),
@@ -53,12 +58,33 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     starting_magic_items INTEGER,
     magic_items_change INTEGER,
     magic_items_total INTEGER,
+    gold_downtime_change DECIMAL(10,2),
+    downtime_downtime_change INTEGER,
+    magic_items_downtime_change INTEGER,
     adventure_notes TEXT,
     soul_coin_charges_used VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
+
+> **注意（已部署資料庫的 Migration）：**
+> 若 `adventure_entry` 資料表已存在，請在 Supabase SQL Editor 依序執行以下 ALTER：
+>
+> **Migration 1（T08）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS starting_level INTEGER,
+>     ADD COLUMN IF NOT EXISTS ending_level INTEGER;
+> ```
+>
+> **Migration 2（T10）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS gold_downtime_change DECIMAL(10,2),
+>     ADD COLUMN IF NOT EXISTS downtime_downtime_change INTEGER,
+>     ADD COLUMN IF NOT EXISTS magic_items_downtime_change INTEGER;
+> ```
 
 ---
 

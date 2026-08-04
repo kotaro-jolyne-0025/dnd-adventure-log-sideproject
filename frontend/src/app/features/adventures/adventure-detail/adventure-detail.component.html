@@ -46,6 +46,14 @@
             <span class="info-label">DM 名稱</span>
             <span class="info-value">{{ entry()!.dmName || '—' }}</span>
           </div>
+          <div class="info-item">
+            <span class="info-label">起始等級</span>
+            <span class="info-value">{{ entry()!.startingLevel ?? '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">結束等級</span>
+            <span class="info-value">{{ entry()!.endingLevel ?? '—' }}</span>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -61,7 +69,8 @@
             <tr>
               <th></th>
               <th>起始</th>
-              <th>變化</th>
+              <th>冒險中變化</th>
+              <th>休整期變化</th>
               <th>合計</th>
             </tr>
           </thead>
@@ -73,14 +82,22 @@
                   [class.negative]="(entry()!.goldChange ?? 0) < 0">
                 {{ formatChange(entry()!.goldChange) }}
               </td>
+              <td [class.positive]="(entry()!.goldDowntimeChange ?? 0) > 0"
+                  [class.negative]="(entry()!.goldDowntimeChange ?? 0) < 0">
+                {{ formatChange(entry()!.goldDowntimeChange) }}
+              </td>
               <td class="total-cell">{{ entry()!.goldTotal ?? '—' }}</td>
             </tr>
             <tr>
-              <td class="resource-label">🏕️ 休假天數</td>
+              <td class="resource-label">🏕️ 休整期天數</td>
               <td>{{ entry()!.startingDowntime ?? '—' }}</td>
               <td [class.positive]="(entry()!.downtimeChange ?? 0) > 0"
                   [class.negative]="(entry()!.downtimeChange ?? 0) < 0">
                 {{ formatChange(entry()!.downtimeChange) }}
+              </td>
+              <td [class.positive]="(entry()!.downtimeDowntimeChange ?? 0) > 0"
+                  [class.negative]="(entry()!.downtimeDowntimeChange ?? 0) < 0">
+                {{ formatChange(entry()!.downtimeDowntimeChange) }}
               </td>
               <td class="total-cell">{{ entry()!.downtimeTotal ?? '—' }}</td>
             </tr>
@@ -90,6 +107,10 @@
               <td [class.positive]="(entry()!.magicItemsChange ?? 0) > 0"
                   [class.negative]="(entry()!.magicItemsChange ?? 0) < 0">
                 {{ formatChange(entry()!.magicItemsChange) }}
+              </td>
+              <td [class.positive]="(entry()!.magicItemsDowntimeChange ?? 0) > 0"
+                  [class.negative]="(entry()!.magicItemsDowntimeChange ?? 0) < 0">
+                {{ formatChange(entry()!.magicItemsDowntimeChange) }}
               </td>
               <td class="total-cell">{{ entry()!.magicItemsTotal ?? '—' }}</td>
             </tr>

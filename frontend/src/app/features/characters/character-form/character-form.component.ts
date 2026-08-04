@@ -10,6 +10,7 @@ import {
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -26,6 +27,7 @@ import { CharacterRequest } from '../../../core/models/character.model';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
@@ -41,13 +43,19 @@ export class CharacterFormComponent implements OnInit {
   private readonly characterService = inject(CharacterService);
   private readonly snackBar = inject(MatSnackBar);
 
+  protected readonly CLASS_OPTIONS = [
+    '戰士', '法師', '牧師', '遊蕩者', '遊俠',
+    '吟遊詩人', '德魯伊', '武僧', '聖騎士', '契術師',
+    '術士', '野蠻人', '奇械師', '其他',
+  ];
+
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
   private characterId: string | null = null;
 
   protected form: FormGroup = this.fb.group({
     characterName: ['', Validators.required],
-    playerName: ['', Validators.required],
+    playerName: ['可嵐', Validators.required],
     race: ['', Validators.required],
     faction: [''],
     classLevels: this.fb.array([this.createClassLevelGroup()]),
@@ -74,9 +82,11 @@ export class CharacterFormComponent implements OnInit {
           this.classesArray.removeAt(0);
         }
         character.classLevels.forEach((cl) => {
+          const isOther = !this.CLASS_OPTIONS.slice(0, -1).includes(cl.className);
           this.classesArray.push(
             this.fb.group({
-              className: [cl.className, Validators.required],
+              className: [isOther ? '其他' : cl.className, Validators.required],
+              customClassName: [isOther ? cl.className : ''],
               level: [cl.level, [Validators.required, Validators.min(1), Validators.max(20)]],
             })
           );
@@ -98,6 +108,7 @@ export class CharacterFormComponent implements OnInit {
   private createClassLevelGroup(): FormGroup {
     return this.fb.group({
       className: ['', Validators.required],
+      customClassName: [''],
       level: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
     });
   }
@@ -124,8 +135,10 @@ export class CharacterFormComponent implements OnInit {
       playerName: raw.playerName.trim(),
       race: raw.race.trim(),
       faction: raw.faction?.trim() || null,
-      classLevels: raw.classLevels.map((cl: { className: string; level: number }) => ({
-        className: cl.className.trim(),
+      classLevels: raw.classLevels.map((cl: { className: string; customClassName: string; level: number }) => ({
+        className: cl.className === '其他'
+          ? (cl.customClassName?.trim() || '其他')
+          : cl.className.trim(),
         level: Number(cl.level),
       })),
     };

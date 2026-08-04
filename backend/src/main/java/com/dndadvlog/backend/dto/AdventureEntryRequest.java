@@ -11,15 +11,17 @@ public class AdventureEntryRequest {
     private String adventureName;
     private LocalDate playDate;
     private String dmName;
+    private Integer startingLevel;
+    private Integer endingLevel;
     private BigDecimal startingGold;
     private BigDecimal goldChange;
-    private BigDecimal goldTotal;
     private Integer startingDowntime;
     private Integer downtimeChange;
-    private Integer downtimeTotal;
     private Integer startingMagicItems;
     private Integer magicItemsChange;
-    private Integer magicItemsTotal;
+    private BigDecimal goldDowntimeChange;
+    private Integer downtimeDowntimeChange;
+    private Integer magicItemsDowntimeChange;
     private String adventureNotes;
     private String soulCoinChargesUsed;
 }

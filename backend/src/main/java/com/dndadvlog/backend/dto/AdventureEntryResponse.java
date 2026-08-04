@@ -16,6 +16,8 @@ public class AdventureEntryResponse {
     private String adventureName;
     private LocalDate playDate;
     private String dmName;
+    private Integer startingLevel;
+    private Integer endingLevel;
     private BigDecimal startingGold;
     private BigDecimal goldChange;
     private BigDecimal goldTotal;
@@ -25,6 +27,9 @@ public class AdventureEntryResponse {
     private Integer startingMagicItems;
     private Integer magicItemsChange;
     private Integer magicItemsTotal;
+    private BigDecimal goldDowntimeChange;
+    private Integer downtimeDowntimeChange;
+    private Integer magicItemsDowntimeChange;
     private String adventureNotes;
     private String soulCoinChargesUsed;
     private List<DowntimeActivityResponse> downtimeActivities;

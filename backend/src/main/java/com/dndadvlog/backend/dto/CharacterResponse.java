@@ -14,6 +14,7 @@ public class CharacterResponse {
     private String race;
     private String faction;
     private List<ClassLevelResponse> classLevels;
+    private Integer currentLevel;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

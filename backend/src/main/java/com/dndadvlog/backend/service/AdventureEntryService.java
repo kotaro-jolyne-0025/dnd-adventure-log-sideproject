@@ -90,22 +90,60 @@ public class AdventureEntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("找不到冒險記錄 ID：" + entryId));
     }
 
+    public EntryDefaultsResponse getDefaults(UUID characterId) {
+        EntryDefaultsResponse defaults = new EntryDefaultsResponse();
+        // 起始等級來源：character_class_level 的等級加總
+        int totalLevel = characterRepository.sumClassLevelsByCharacterId(characterId);
+        if (totalLevel > 0) {
+            defaults.setStartingLevel(totalLevel);
+        }
+        entryRepository.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId)
+                .ifPresent(last -> {
+                    defaults.setStartingGold(last.getGoldTotal());
+                    defaults.setStartingDowntime(last.getDowntimeTotal());
+                    defaults.setStartingMagicItems(last.getMagicItemsTotal());
+                });
+        return defaults;
+    }
+
     private void mapRequestToEntry(AdventureEntryRequest request, AdventureEntry entry) {
         entry.setAdventureCode(request.getAdventureCode());
         entry.setAdventureName(request.getAdventureName());
         entry.setPlayDate(request.getPlayDate());
         entry.setDmName(request.getDmName());
+        entry.setStartingLevel(request.getStartingLevel());
+        entry.setEndingLevel(request.getEndingLevel());
         entry.setStartingGold(request.getStartingGold());
         entry.setGoldChange(request.getGoldChange());
-        entry.setGoldTotal(request.getGoldTotal());
+        entry.setGoldDowntimeChange(request.getGoldDowntimeChange());
+        // 後端計算合計：起始 + 冒險變化 + 休整期變化
+        entry.setGoldTotal(calcTotal(request.getStartingGold(), request.getGoldChange(), request.getGoldDowntimeChange()));
         entry.setStartingDowntime(request.getStartingDowntime());
         entry.setDowntimeChange(request.getDowntimeChange());
-        entry.setDowntimeTotal(request.getDowntimeTotal());
+        entry.setDowntimeDowntimeChange(request.getDowntimeDowntimeChange());
+        entry.setDowntimeTotal(calcTotalInt(request.getStartingDowntime(), request.getDowntimeChange(), request.getDowntimeDowntimeChange()));
         entry.setStartingMagicItems(request.getStartingMagicItems());
         entry.setMagicItemsChange(request.getMagicItemsChange());
-        entry.setMagicItemsTotal(request.getMagicItemsTotal());
+        entry.setMagicItemsDowntimeChange(request.getMagicItemsDowntimeChange());
+        entry.setMagicItemsTotal(calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange()));
         entry.setAdventureNotes(request.getAdventureNotes());
         entry.setSoulCoinChargesUsed(request.getSoulCoinChargesUsed());
+    }
+
+    private java.math.BigDecimal calcTotal(java.math.BigDecimal starting, java.math.BigDecimal change, java.math.BigDecimal downtimeChange) {
+        if (starting == null && change == null && downtimeChange == null) return null;
+        java.math.BigDecimal s = starting != null ? starting : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal c = change != null ? change : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal d = downtimeChange != null ? downtimeChange : java.math.BigDecimal.ZERO;
+        return s.add(c).add(d);
+    }
+
+    private Integer calcTotalInt(Integer starting, Integer change, Integer downtimeChange) {
+        if (starting == null && change == null && downtimeChange == null) return null;
+        int s = starting != null ? starting : 0;
+        int c = change != null ? change : 0;
+        int d = downtimeChange != null ? downtimeChange : 0;
+        return s + c + d;
     }
 
     private AdventureEntryResponse toResponse(AdventureEntry entry) {
@@ -116,14 +154,19 @@ public class AdventureEntryService {
         response.setAdventureName(entry.getAdventureName());
         response.setPlayDate(entry.getPlayDate());
         response.setDmName(entry.getDmName());
+        response.setStartingLevel(entry.getStartingLevel());
+        response.setEndingLevel(entry.getEndingLevel());
         response.setStartingGold(entry.getStartingGold());
         response.setGoldChange(entry.getGoldChange());
+        response.setGoldDowntimeChange(entry.getGoldDowntimeChange());
         response.setGoldTotal(entry.getGoldTotal());
         response.setStartingDowntime(entry.getStartingDowntime());
         response.setDowntimeChange(entry.getDowntimeChange());
+        response.setDowntimeDowntimeChange(entry.getDowntimeDowntimeChange());
         response.setDowntimeTotal(entry.getDowntimeTotal());
         response.setStartingMagicItems(entry.getStartingMagicItems());
         response.setMagicItemsChange(entry.getMagicItemsChange());
+        response.setMagicItemsDowntimeChange(entry.getMagicItemsDowntimeChange());
         response.setMagicItemsTotal(entry.getMagicItemsTotal());
         response.setAdventureNotes(entry.getAdventureNotes());
         response.setSoulCoinChargesUsed(entry.getSoulCoinChargesUsed());
