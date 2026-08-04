@@ -16,6 +16,7 @@ export interface Character {
   race: string;
   faction?: string;
   classLevels: CharacterClassLevel[];
+  currentLevel?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }

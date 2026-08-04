@@ -32,6 +32,16 @@
             <input matInput formControlName="dmName" />
           </mat-form-field>
         </div>
+        <div class="field-row">
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>起始等級</mat-label>
+            <input matInput type="number" formControlName="startingLevel" placeholder="例：7" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>結束等級</mat-label>
+            <input matInput type="number" formControlName="endingLevel" placeholder="例：8" />
+          </mat-form-field>
+        </div>
       </mat-card-content>
     </mat-card>
 
@@ -39,7 +49,16 @@
     <mat-card class="form-card">
       <mat-card-header><mat-card-title>💰 資源變動</mat-card-title></mat-card-header>
       <mat-card-content>
-        <p class="field-hint">所有數字欄位皆為手動填寫，不自動計算</p>
+        <p class="field-hint">起始值新增時自動帶入；合計由系統自動計算</p>
+
+        <!-- 欄位標題列 -->
+        <div class="resource-row resource-header">
+          <span class="resource-label"></span>
+          <span class="num-field resource-col-header">起始</span>
+          <span class="num-field resource-col-header">冒險中變化</span>
+          <span class="num-field resource-col-header">休整期變化</span>
+          <span class="num-field resource-col-header">合計（自動）</span>
+        </div>
 
         <!-- 金幣 -->
         <div class="resource-row">
@@ -49,29 +68,37 @@
             <input matInput type="number" formControlName="startingGold" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>變化</mat-label>
+            <mat-label>冒險中變化</mat-label>
             <input matInput type="number" formControlName="goldChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>合計</mat-label>
-            <input matInput type="number" formControlName="goldTotal" />
+            <mat-label>休整期變化</mat-label>
+            <input matInput type="number" formControlName="goldDowntimeChange" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="num-field total-field">
+            <mat-label>合計（自動）</mat-label>
+            <input matInput [value]="goldTotal() ?? ''" readonly />
           </mat-form-field>
         </div>
 
-        <!-- 休假天數 -->
+        <!-- 休整期天數 -->
         <div class="resource-row">
-          <span class="resource-label">🏕️ 休假天數</span>
+          <span class="resource-label">🏕️ 休整期天數</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
             <input matInput type="number" formControlName="startingDowntime" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>變化</mat-label>
+            <mat-label>冒險中變化</mat-label>
             <input matInput type="number" formControlName="downtimeChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>合計</mat-label>
-            <input matInput type="number" formControlName="downtimeTotal" />
+            <mat-label>休整期變化</mat-label>
+            <input matInput type="number" formControlName="downtimeDowntimeChange" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="num-field total-field">
+            <mat-label>合計（自動）</mat-label>
+            <input matInput [value]="downtimeTotal() ?? ''" readonly />
           </mat-form-field>
         </div>
 
@@ -83,12 +110,16 @@
             <input matInput type="number" formControlName="startingMagicItems" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>變化</mat-label>
+            <mat-label>冒險中變化</mat-label>
             <input matInput type="number" formControlName="magicItemsChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>合計</mat-label>
-            <input matInput type="number" formControlName="magicItemsTotal" />
+            <mat-label>休整期變化</mat-label>
+            <input matInput type="number" formControlName="magicItemsDowntimeChange" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="num-field total-field">
+            <mat-label>合計（自動）</mat-label>
+            <input matInput [value]="magicItemsTotal() ?? ''" readonly />
           </mat-form-field>
         </div>
       </mat-card-content>

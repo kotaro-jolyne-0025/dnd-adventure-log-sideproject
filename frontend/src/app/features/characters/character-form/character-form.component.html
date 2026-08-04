@@ -58,12 +58,23 @@
             @for (ctrl of classesArray.controls; track $index) {
               <div [formGroupName]="$index" class="class-row">
                 <mat-form-field appearance="outline" class="class-name-field">
-                  <mat-label>職業名稱 *</mat-label>
-                  <input matInput formControlName="className" placeholder="例：術師、聖武士" />
+                  <mat-label>職業 *</mat-label>
+                  <mat-select formControlName="className">
+                    @for (opt of CLASS_OPTIONS; track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-select>
                   @if (ctrl.get('className')?.hasError('required') && ctrl.get('className')?.touched) {
                     <mat-error>職業名稱為必填</mat-error>
                   }
                 </mat-form-field>
+
+                @if (ctrl.get('className')?.value === '其他') {
+                  <mat-form-field appearance="outline" class="class-name-field">
+                    <mat-label>自訂職業名稱</mat-label>
+                    <input matInput formControlName="customClassName" placeholder="輸入職業名稱" />
+                  </mat-form-field>
+                }
 
                 <mat-form-field appearance="outline" class="class-level-field">
                   <mat-label>等級 *</mat-label>

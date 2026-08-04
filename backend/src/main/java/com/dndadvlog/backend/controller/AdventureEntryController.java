@@ -22,6 +22,11 @@ public class AdventureEntryController {
         return adventureEntryService.getEntriesByCharacter(characterId);
     }
 
+    @GetMapping("/api/characters/{characterId}/entries/defaults")
+    public com.dndadvlog.backend.dto.EntryDefaultsResponse getDefaults(@PathVariable UUID characterId) {
+        return adventureEntryService.getDefaults(characterId);
+    }
+
     @GetMapping("/api/entries/{id}")
     public AdventureEntryResponse getEntry(@PathVariable UUID id) {
         return adventureEntryService.getEntry(id);

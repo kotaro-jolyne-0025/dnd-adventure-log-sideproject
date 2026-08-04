@@ -7,6 +7,7 @@ import {
   AdventureEntryRequest,
   DowntimeActivity,
   DowntimeActivityRequest,
+  EntryDefaults,
 } from '../models/adventure.model';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,12 @@ export class AdventureService {
   getAllByCharacter(characterId: string): Observable<AdventureEntry[]> {
     return this.http.get<AdventureEntry[]>(
       `${this.base}/${characterId}/entries`
+    );
+  }
+
+  getDefaults(characterId: string): Observable<EntryDefaults> {
+    return this.http.get<EntryDefaults>(
+      `${this.base}/${characterId}/entries/defaults`
     );
   }
 

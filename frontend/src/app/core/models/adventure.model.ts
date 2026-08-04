@@ -21,14 +21,19 @@ export interface AdventureEntry {
   adventureName?: string;
   playDate?: string;            // ISO date YYYY-MM-DD
   dmName?: string;
+  startingLevel?: number;
+  endingLevel?: number;
   startingGold?: number;
   goldChange?: number;
+  goldDowntimeChange?: number;
   goldTotal?: number;
   startingDowntime?: number;
   downtimeChange?: number;
+  downtimeDowntimeChange?: number;
   downtimeTotal?: number;
   startingMagicItems?: number;
   magicItemsChange?: number;
+  magicItemsDowntimeChange?: number;
   magicItemsTotal?: number;
   adventureNotes?: string;
   soulCoinChargesUsed?: string;
@@ -42,15 +47,24 @@ export interface AdventureEntryRequest {
   adventureName?: string | null;
   playDate?: string | null;
   dmName?: string | null;
+  startingLevel?: number | null;
+  endingLevel?: number | null;
   startingGold?: number | null;
   goldChange?: number | null;
-  goldTotal?: number | null;
+  goldDowntimeChange?: number | null;
   startingDowntime?: number | null;
   downtimeChange?: number | null;
-  downtimeTotal?: number | null;
+  downtimeDowntimeChange?: number | null;
   startingMagicItems?: number | null;
   magicItemsChange?: number | null;
-  magicItemsTotal?: number | null;
+  magicItemsDowntimeChange?: number | null;
   adventureNotes?: string | null;
   soulCoinChargesUsed?: string | null;
+}
+
+export interface EntryDefaults {
+  startingLevel?: number | null;
+  startingGold?: number | null;
+  startingDowntime?: number | null;
+  startingMagicItems?: number | null;
 }

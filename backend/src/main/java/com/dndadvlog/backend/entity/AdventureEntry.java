@@ -39,6 +39,12 @@ public class AdventureEntry {
     @Column(name = "dm_name", length = 100)
     private String dmName;
 
+    @Column(name = "starting_level")
+    private Integer startingLevel;
+
+    @Column(name = "ending_level")
+    private Integer endingLevel;
+
     @Column(name = "starting_gold", precision = 10, scale = 2)
     private BigDecimal startingGold;
 
@@ -65,6 +71,15 @@ public class AdventureEntry {
 
     @Column(name = "magic_items_total")
     private Integer magicItemsTotal;
+
+    @Column(name = "gold_downtime_change", precision = 10, scale = 2)
+    private java.math.BigDecimal goldDowntimeChange;
+
+    @Column(name = "downtime_downtime_change")
+    private Integer downtimeDowntimeChange;
+
+    @Column(name = "magic_items_downtime_change")
+    private Integer magicItemsDowntimeChange;
 
     @Column(name = "adventure_notes", columnDefinition = "TEXT")
     private String adventureNotes;
