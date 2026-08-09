@@ -36,6 +36,15 @@ public class AdventureEntryResponse {
     private String adventureNotes;
     private String soulCoinChargesUsed;
     private List<DowntimeActivityResponse> downtimeActivities;
+    private List<ClassSnapshotItem> startingClassSnapshot;
+    private List<ClassSnapshotItem> endingClassSnapshot;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Data
+    public static class ClassSnapshotItem {
+        private String className;
+        private Integer level;
+        private Integer sortOrder;
+    }
 }

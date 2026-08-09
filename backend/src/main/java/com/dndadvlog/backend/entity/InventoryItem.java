@@ -56,6 +56,6 @@ public class InventoryItem {
     }
 
     public enum Rarity {
-        COMMON, UNCOMMON, RARE, VERY_RARE, LEGENDARY
+        COMMON, UNCOMMON, RARE, VERY_RARE, LEGENDARY, ARTIFACT
     }
 }

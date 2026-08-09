@@ -84,11 +84,11 @@ public class CharacterService {
         response.setCreatedAt(character.getCreatedAt());
         response.setUpdatedAt(character.getUpdatedAt());
 
-        // 目前等級：最後一筆冒險記錄的 endingLevel
-        List<com.dndadvlog.backend.entity.AdventureEntry> entries = character.getAdventureEntries();
-        if (!entries.isEmpty()) {
-            com.dndadvlog.backend.entity.AdventureEntry last = entries.get(entries.size() - 1);
-            response.setCurrentLevel(last.getEndingLevel());
+        // 目前等級：character_class_level 等級加總
+        int totalLevel = character.getClassLevels().stream()
+                .mapToInt(CharacterClassLevel::getLevel).sum();
+        if (totalLevel > 0) {
+            response.setCurrentLevel(totalLevel);
         }
 
         response.setClassLevels(character.getClassLevels().stream()

@@ -1,5 +1,5 @@
 export type ItemType = 'PERMANENT' | 'CONSUMABLE';
-export type ItemRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'VERY_RARE' | 'LEGENDARY';
+export type ItemRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'VERY_RARE' | 'LEGENDARY' | 'ARTIFACT';
 
 export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   PERMANENT: '永久魔法物品',
@@ -7,11 +7,12 @@ export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
 };
 
 export const ITEM_RARITY_LABELS: Record<ItemRarity, string> = {
-  COMMON: 'Common',
-  UNCOMMON: 'Uncommon',
-  RARE: 'Rare',
-  VERY_RARE: 'Very Rare',
-  LEGENDARY: 'Legendary',
+  COMMON: '普通',
+  UNCOMMON: '非普通',
+  RARE: '珍稀',
+  VERY_RARE: '極珍稀',
+  LEGENDARY: '傳說',
+  ARTIFACT: '神器',
 };
 
 export const RARITY_COLORS: Record<ItemRarity, string> = {
@@ -20,6 +21,7 @@ export const RARITY_COLORS: Record<ItemRarity, string> = {
   RARE: '#2196f3',
   VERY_RARE: '#9c27b0',
   LEGENDARY: '#ff9800',
+  ARTIFACT: '#e53935',
 };
 
 export interface InventoryItem {

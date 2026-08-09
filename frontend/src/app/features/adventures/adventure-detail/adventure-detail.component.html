@@ -48,11 +48,27 @@
           </div>
           <div class="info-item">
             <span class="info-label">起始等級</span>
-            <span class="info-value">{{ entry()!.startingLevel ?? '—' }}</span>
+            <span class="info-value">
+              @if (entry()!.startingClassSnapshot && entry()!.startingClassSnapshot!.length > 0) {
+                @for (snap of entry()!.startingClassSnapshot!; track snap.className) {
+                  <span class="snapshot-class">{{ snap.className }} Lv.{{ snap.level }}</span>
+                }
+              } @else {
+                {{ entry()!.startingLevel ?? '—' }}
+              }
+            </span>
           </div>
           <div class="info-item">
             <span class="info-label">結束等級</span>
-            <span class="info-value">{{ entry()!.endingLevel ?? '—' }}</span>
+            <span class="info-value">
+              @if (entry()!.endingClassSnapshot && entry()!.endingClassSnapshot!.length > 0) {
+                @for (snap of entry()!.endingClassSnapshot!; track snap.className) {
+                  <span class="snapshot-class">{{ snap.className }} Lv.{{ snap.level }}</span>
+                }
+              } @else {
+                {{ entry()!.endingLevel ?? '—' }}
+              }
+            </span>
           </div>
           @if (entry()!.levelUpClassName) {
             <div class="info-item">

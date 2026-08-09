@@ -19,9 +19,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { CharacterService } from '../../../core/services/character.service';
-import { AdventureEntryRequest, DowntimeActivity } from '../../../core/models/adventure.model';
+import { AdventureEntryRequest, ClassSnapshotItem, DowntimeActivity } from '../../../core/models/adventure.model';
 import { CharacterClassLevel } from '../../../core/models/character.model';
-import { switchMap, from, concatMap, toArray } from 'rxjs';
+import { from, concatMap, toArray } from 'rxjs';
 
 export const CLASS_OPTIONS = [
   '戰士', '法師', '牧師', '遊蕩者', '遊俠',
@@ -156,12 +156,6 @@ export class AdventureFormComponent implements OnInit {
       this.route.snapshot.paramMap.get('characterId') ?? '';
     const entryIdParam = this.route.snapshot.paramMap.get('entryId');
 
-    // 載入角色職業清單（新增與編輯都需要）
-    this.characterService.getById(this.characterId).subscribe({
-      next: (c) => this.characterClassLevels.set(c.classLevels ?? []),
-      error: () => { /* 靜默略過，選項提示不顯示等級 */ },
-    });
-
     // 監聽數字欄位變更以更新 computed 合計
     this.form.get('startingGold')!.valueChanges.subscribe(v => this._startingGold.set(v != null && v !== '' ? Number(v) : null));
     this.form.get('goldChange')!.valueChanges.subscribe(v => this._goldChange.set(v != null && v !== '' ? Number(v) : null));
@@ -177,9 +171,15 @@ export class AdventureFormComponent implements OnInit {
     if (entryIdParam) {
       this.isEditMode.set(true);
       this.entryId = entryIdParam;
+      // 編輯模式：職業清單由 loadEntry 從 startingClassSnapshot 取得，不另外呼叫角色 API
       this.loadEntry(this.entryId);
     } else {
-      // 新增模式：呼叫 defaults API 預填起始值
+      // 新增模式：從角色 API 取得最新職業等級
+      this.characterService.getById(this.characterId).subscribe({
+        next: (c) => this.characterClassLevels.set(c.classLevels ?? []),
+        error: () => { /* 靜默略過，選項提示不顯示等級 */ },
+      });
+      // 呼叫 defaults API 預填起始值
       this.loadDefaults();
     }
   }
@@ -211,6 +211,22 @@ export class AdventureFormComponent implements OnInit {
         }
         // 起始等級直接寫入 signal（唯讀）
         this._startingLevel.set(entry.startingLevel ?? null);
+        // 編輯模式：使用 startingClassSnapshot 作為職業選項的等級依據
+        // 若快照不存在（舊資料），則退回呼叫角色 API
+        if (entry.startingClassSnapshot && entry.startingClassSnapshot.length > 0) {
+          this.characterClassLevels.set(
+            entry.startingClassSnapshot.map((s: ClassSnapshotItem) => ({
+              className: s.className,
+              level: s.level,
+              sortOrder: s.sortOrder,
+            }))
+          );
+        } else {
+          this.characterService.getById(this.characterId).subscribe({
+            next: (c) => this.characterClassLevels.set(c.classLevels ?? []),
+            error: () => { /* 靜默略過 */ },
+          });
+        }
         // 載入現有休整期活動
         this.existingActivities.set(entry.downtimeActivities ?? []);
 

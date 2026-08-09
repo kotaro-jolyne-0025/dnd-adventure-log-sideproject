@@ -104,6 +104,33 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
 
 ---
 
+## Step 4a：建立 adventure_entry_class_snapshot 資料表（職業快照）
+
+```sql
+CREATE TABLE IF NOT EXISTS adventure_entry_class_snapshot (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    adventure_entry_id UUID NOT NULL REFERENCES adventure_entry(id) ON DELETE CASCADE,
+    snapshot_type VARCHAR(10) NOT NULL,  -- 'starting' 或 'ending'
+    class_name VARCHAR(100) NOT NULL,
+    level INTEGER NOT NULL,
+    sort_order INTEGER DEFAULT 0
+);
+```
+
+> **Migration 5（T15）：**（若資料表不存在則建立）
+> ```sql
+> CREATE TABLE IF NOT EXISTS adventure_entry_class_snapshot (
+>     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>     adventure_entry_id UUID NOT NULL REFERENCES adventure_entry(id) ON DELETE CASCADE,
+>     snapshot_type VARCHAR(10) NOT NULL,
+>     class_name VARCHAR(100) NOT NULL,
+>     level INTEGER NOT NULL,
+>     sort_order INTEGER DEFAULT 0
+> );
+> ```
+
+---
+
 ## Step 4：建立 downtime_activity 資料表（休整期活動）
 
 ```sql
@@ -181,6 +208,7 @@ CREATE TRIGGER update_inventory_item_updated_at
 character
 ├── character_class_level  (1:N，CASCADE DELETE)
 ├── adventure_entry        (1:N，CASCADE DELETE)
-│   └── downtime_activity  (1:N，CASCADE DELETE)
+│   ├── downtime_activity              (1:N，CASCADE DELETE)
+│   └── adventure_entry_class_snapshot (1:N，CASCADE DELETE)
 └── inventory_item         (1:N，CASCADE DELETE)
 ```

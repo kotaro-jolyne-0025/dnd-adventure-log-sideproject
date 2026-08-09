@@ -2,10 +2,12 @@ package com.dndadvlog.backend.service;
 
 import com.dndadvlog.backend.dto.*;
 import com.dndadvlog.backend.entity.AdventureEntry;
+import com.dndadvlog.backend.entity.AdventureEntryClassSnapshot;
 import com.dndadvlog.backend.entity.Character;
 import com.dndadvlog.backend.entity.CharacterClassLevel;
 import com.dndadvlog.backend.entity.DowntimeActivity;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
+import com.dndadvlog.backend.repository.AdventureEntryClassSnapshotRepository;
 import com.dndadvlog.backend.repository.AdventureEntryRepository;
 import com.dndadvlog.backend.repository.CharacterRepository;
 import com.dndadvlog.backend.repository.DowntimeActivityRepository;
@@ -25,6 +27,7 @@ public class AdventureEntryService {
     private final AdventureEntryRepository entryRepository;
     private final CharacterRepository characterRepository;
     private final DowntimeActivityRepository downtimeActivityRepository;
+    private final AdventureEntryClassSnapshotRepository snapshotRepository;
 
     public List<AdventureEntryResponse> getEntriesByCharacter(UUID characterId) {
         return entryRepository.findByCharacterIdOrderByPlayDateAsc(characterId)
@@ -42,6 +45,10 @@ public class AdventureEntryService {
         AdventureEntry entry = new AdventureEntry();
         entry.setCharacter(character);
         mapRequestToEntry(request, entry);
+        // 先儲存取得 ID，再寫入快照
+        AdventureEntry saved = entryRepository.save(entry);
+        // starting 快照（升級前的職業清單）
+        writeSnapshots(saved, character.getClassLevels(), "starting");
         // 若有升級職業，套用升級
         if (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) {
             applyLevelUp(character, request.getLevelUpClassName());
@@ -51,7 +58,11 @@ public class AdventureEntryService {
                 && request.getCatchupCount() != null && request.getCatchupCount() > 0) {
             applyCatchup(character, request.getCatchupClassName(), request.getCatchupCount());
         }
-        return toResponse(entryRepository.save(entry));
+        // ending 快照（升級後的職業清單）
+        writeSnapshots(saved, character.getClassLevels(), "ending");
+        // 重新載入以取得最新快照
+        entryRepository.flush();
+        return toResponse(entryRepository.findById(saved.getId()).orElse(saved));
     }
 
     @Transactional
@@ -64,31 +75,42 @@ public class AdventureEntryService {
         String newCatchupClass = request.getCatchupClassName();
         Integer newCatchupCount = request.getCatchupCount();
         mapRequestToEntry(request, entry);
-        // 若升級職業有變動，先撤回舊值再套用新值
+        Character character = entry.getCharacter();
+        // 先撤回舊升級
         if (!Objects.equals(oldLevelUpClass, newLevelUpClass)) {
-            Character character = entry.getCharacter();
             if (oldLevelUpClass != null && !oldLevelUpClass.isBlank()) {
                 revertLevelUp(character, oldLevelUpClass);
             }
-            if (newLevelUpClass != null && !newLevelUpClass.isBlank()) {
-                applyLevelUp(character, newLevelUpClass);
-            }
         }
-        // 若迎頭趕上有變動，先撤回舊值再套用新值
         boolean catchupChanged = !Objects.equals(oldCatchupClass, newCatchupClass)
                 || !Objects.equals(oldCatchupCount, newCatchupCount);
         if (catchupChanged) {
-            Character character = entry.getCharacter();
             if (oldCatchupClass != null && !oldCatchupClass.isBlank()
                     && oldCatchupCount != null && oldCatchupCount > 0) {
                 revertCatchup(character, oldCatchupClass, oldCatchupCount);
             }
+        }
+        // 更新 starting 快照（撤回後的職業狀態）
+        snapshotRepository.deleteByEntryIdAndType(entry.getId(), "starting");
+        writeSnapshots(entry, character.getClassLevels(), "starting");
+        // 套用新升級
+        if (!Objects.equals(oldLevelUpClass, newLevelUpClass)) {
+            if (newLevelUpClass != null && !newLevelUpClass.isBlank()) {
+                applyLevelUp(character, newLevelUpClass);
+            }
+        }
+        if (catchupChanged) {
             if (newCatchupClass != null && !newCatchupClass.isBlank()
                     && newCatchupCount != null && newCatchupCount > 0) {
                 applyCatchup(character, newCatchupClass, newCatchupCount);
             }
         }
-        return toResponse(entryRepository.save(entry));
+        // 更新 ending 快照（套用後的職業狀態）
+        snapshotRepository.deleteByEntryIdAndType(entry.getId(), "ending");
+        writeSnapshots(entry, character.getClassLevels(), "ending");
+        AdventureEntry saved = entryRepository.save(entry);
+        entryRepository.flush();
+        return toResponse(entryRepository.findById(saved.getId()).orElse(saved));
     }
 
     @Transactional
@@ -258,6 +280,20 @@ public class AdventureEntryService {
         return s + c + d;
     }
 
+    /** 將職業清單寫入指定 snapshotType 的快照 */
+    private void writeSnapshots(AdventureEntry entry, List<CharacterClassLevel> classLevels, String snapshotType) {
+        int order = 0;
+        for (CharacterClassLevel cl : classLevels) {
+            AdventureEntryClassSnapshot snap = new AdventureEntryClassSnapshot();
+            snap.setAdventureEntry(entry);
+            snap.setSnapshotType(snapshotType);
+            snap.setClassName(cl.getClassName());
+            snap.setLevel(cl.getLevel());
+            snap.setSortOrder(order++);
+            snapshotRepository.save(snap);
+        }
+    }
+
     private AdventureEntryResponse toResponse(AdventureEntry entry) {
         AdventureEntryResponse response = new AdventureEntryResponse();
         response.setId(entry.getId());
@@ -289,7 +325,19 @@ public class AdventureEntryService {
         response.setUpdatedAt(entry.getUpdatedAt());
         response.setDowntimeActivities(entry.getDowntimeActivities()
                 .stream().map(this::toActivityResponse).collect(Collectors.toList()));
+        response.setStartingClassSnapshot(entry.getStartingClassSnapshot()
+                .stream().map(this::toSnapshotItem).collect(Collectors.toList()));
+        response.setEndingClassSnapshot(entry.getEndingClassSnapshot()
+                .stream().map(this::toSnapshotItem).collect(Collectors.toList()));
         return response;
+    }
+
+    private AdventureEntryResponse.ClassSnapshotItem toSnapshotItem(AdventureEntryClassSnapshot snap) {
+        AdventureEntryResponse.ClassSnapshotItem item = new AdventureEntryResponse.ClassSnapshotItem();
+        item.setClassName(snap.getClassName());
+        item.setLevel(snap.getLevel());
+        item.setSortOrder(snap.getSortOrder());
+        return item;
     }
 
     private DowntimeActivityResponse toActivityResponse(DowntimeActivity activity) {

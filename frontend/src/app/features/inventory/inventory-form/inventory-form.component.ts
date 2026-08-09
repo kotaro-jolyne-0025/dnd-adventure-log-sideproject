@@ -47,7 +47,7 @@ export class InventoryFormComponent implements OnInit {
   private itemId?: string;
 
   readonly itemTypes: ItemType[] = ['PERMANENT', 'CONSUMABLE'];
-  readonly rarities: (ItemRarity | '')[] = ['', 'COMMON', 'UNCOMMON', 'RARE', 'VERY_RARE', 'LEGENDARY'];
+  readonly rarities: (ItemRarity | '')[] = ['', 'COMMON', 'UNCOMMON', 'RARE', 'VERY_RARE', 'LEGENDARY', 'ARTIFACT'];
   readonly typeLabels = ITEM_TYPE_LABELS;
   readonly rarityLabels = ITEM_RARITY_LABELS;
 

@@ -1,3 +1,11 @@
+// ── ClassSnapshotItem ─────────────────────────────────────────────────────────
+
+export interface ClassSnapshotItem {
+  className: string;
+  level: number;
+  sortOrder?: number;
+}
+
 // ── DowntimeActivity ─────────────────────────────────────────────────────────
 
 export interface DowntimeActivity {
@@ -26,6 +34,8 @@ export interface AdventureEntry {
   levelUpClassName?: string;
   catchupClassName?: string;
   catchupCount?: number;
+  startingClassSnapshot?: ClassSnapshotItem[];
+  endingClassSnapshot?: ClassSnapshotItem[];
   startingGold?: number;
   goldChange?: number;
   goldDowntimeChange?: number;
