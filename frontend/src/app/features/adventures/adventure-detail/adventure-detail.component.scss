@@ -152,3 +152,16 @@
 .full-width {
   width: 100%;
 }
+
+/* Snapshot Classes */
+.snapshot-class {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 0.9rem;
+
+  &:not(:last-child)::after {
+    content: ' /';
+    margin-left: 2px;
+    color: var(--mat-sys-outline);
+  }
+}

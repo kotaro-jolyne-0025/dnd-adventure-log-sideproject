@@ -357,7 +357,7 @@
 
 ### T15 — 功能強化：職業快照 + 當前等級準確追蹤
 
-- **狀態：** `[ ] 待執行`
+- **狀態：** `[x] 已完成`
 - **變更摘要：**
   1. 新增 `adventure_entry_class_snapshot` 關聯表，儲存每筆冒險記錄的起始/結束職業快照
   2. 冒險記錄存入時（create/update），後端自動寫入 starting/ending 快照
@@ -392,18 +392,19 @@
   - `frontend/src/app/core/models/character.model.ts`
   - `frontend/src/app/features/adventures/adventure-detail/adventure-detail.component.html`
   - `frontend/src/app/features/characters/character-list/character-list.component.html`
-- **待完成項目：**
-  - [ ] **DB**：建立 `adventure_entry_class_snapshot` 表（Migration SQL 如上）
-  - [ ] **後端 Entity**：新增 `AdventureEntryClassSnapshot` Entity；`AdventureEntry` 新增 `startingClassSnapshot` / `endingClassSnapshot` OneToMany 關聯
-  - [ ] **後端 Repository**：新增 `AdventureEntryClassSnapshotRepository`
-  - [ ] **後端 Response DTO**：`AdventureEntryResponse` 新增 `startingClassSnapshot` / `endingClassSnapshot`（`List<ClassSnapshotItem>`）
-  - [ ] **後端 Service `createEntry()`**：在 `applyLevelUp`/`applyCatchup` **前**先對目前職業清單做 starting 快照；apply 之後做 ending 快照
-  - [ ] **後端 Service `updateEntry()`**：撤回舊升級 **前**先更新 starting 快照；套用新升級後更新 ending 快照（先刪除舊快照再寫入新快照）
-  - [ ] **後端 `CharacterService`**：`currentLevel` 改由 `character_class_level` 加總（`sumClassLevelsByCharacterId()`），取代讀最後一筆 `endingLevel`
-  - [ ] **前端 Model**：`AdventureEntry` 新增 `startingClassSnapshot` / `endingClassSnapshot`（`ClassSnapshotItem[]`）
-  - [ ] **前端 Detail HTML**：起始等級顯示改為 `startingClassSnapshot` 職業清單；結束等級顯示改為 `endingClassSnapshot` 職業清單；若快照為空則 fallback 顯示數字
-  - [ ] **前端 Character List**：`currentLevel` 改為讀取 `classLevels` 的等級加總（`reduce`）
-  - [ ] **更新 `database-schema.md`**
+- **完成項目：**
+  - [x] **DB**：建立 `adventure_entry_class_snapshot` 表（Migration 5 SQL，需在 Supabase 執行）
+  - [x] **後端 Entity**：新增 `AdventureEntryClassSnapshot` Entity；`AdventureEntry` 新增 `startingClassSnapshot` / `endingClassSnapshot` OneToMany 關聯（使用 `@SQLRestriction` 依 snapshot_type 過濾）
+  - [x] **後端 Repository**：新增 `AdventureEntryClassSnapshotRepository`（含按 entryId + type 刪除的 JPQL）
+  - [x] **後端 Response DTO**：`AdventureEntryResponse` 新增 `startingClassSnapshot` / `endingClassSnapshot`（`List<ClassSnapshotItem>`，含內部靜態類別）
+  - [x] **後端 Service `createEntry()`**：先儲存 entry 取得 ID → 寫 starting 快照 → applyLevelUp/applyCatchup → 寫 ending 快照
+  - [x] **後端 Service `updateEntry()`**：先 revert 舊升級 → 刪除舊 starting 快照 → 寫新 starting 快照 → apply 新升級 → 刪除舊 ending 快照 → 寫新 ending 快照
+  - [x] **後端 `CharacterService`**：`currentLevel` 改由 `classLevels` stream mapToInt 加總，不再讀最後一筆 `endingLevel`
+  - [x] **前端 Model**：`adventure.model.ts` 新增 `ClassSnapshotItem` 介面；`AdventureEntry` 新增 `startingClassSnapshot` / `endingClassSnapshot`
+  - [x] **前端 Detail HTML**：起始/結束等級改為快照職業清單顯示（格式：`職業 Lv.X`，以 `/` 分隔）；快照為空時 fallback 顯示原始數字
+  - [x] **前端 Character List**：新增 `getTotalLevel()` 方法計算 classLevels reduce 加總；HTML 改用此方法顯示目前等級
+  - [x] **更新 `database-schema.md`**：新增 Step 4a 與 Migration 5 SQL；更新關聯圖
+- **備註：** 請到 Supabase SQL Editor 執行 database-schema.md Migration 5（T15）的 CREATE TABLE 語句
 - **設計備註：**
   - `snapshot_type = 'starting'`：職業升級前的快照；`snapshot_type = 'ending'`：升級後的快照
   - `updateEntry` 快照更新策略：刪除舊有 starting/ending 快照再重新插入，確保與最新升級狀態一致

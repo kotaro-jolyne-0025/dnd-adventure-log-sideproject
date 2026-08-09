@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -107,4 +108,14 @@ public class AdventureEntry {
     @OneToMany(mappedBy = "adventureEntry", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
     private List<DowntimeActivity> downtimeActivities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "adventureEntry", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    @SQLRestriction("snapshot_type = 'starting'")
+    private List<AdventureEntryClassSnapshot> startingClassSnapshot = new ArrayList<>();
+
+    @OneToMany(mappedBy = "adventureEntry", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    @SQLRestriction("snapshot_type = 'ending'")
+    private List<AdventureEntryClassSnapshot> endingClassSnapshot = new ArrayList<>();
 }
