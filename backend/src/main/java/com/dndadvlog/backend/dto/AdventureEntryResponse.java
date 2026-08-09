@@ -31,6 +31,8 @@ public class AdventureEntryResponse {
     private Integer downtimeDowntimeChange;
     private Integer magicItemsDowntimeChange;
     private String levelUpClassName;
+    private String catchupClassName;
+    private Integer catchupCount;
     private String adventureNotes;
     private String soulCoinChargesUsed;
     private List<DowntimeActivityResponse> downtimeActivities;

@@ -46,23 +46,46 @@ public class AdventureEntryService {
         if (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) {
             applyLevelUp(character, request.getLevelUpClassName());
         }
+        // 若有迎頭趕上，套用
+        if (request.getCatchupClassName() != null && !request.getCatchupClassName().isBlank()
+                && request.getCatchupCount() != null && request.getCatchupCount() > 0) {
+            applyCatchup(character, request.getCatchupClassName(), request.getCatchupCount());
+        }
         return toResponse(entryRepository.save(entry));
     }
 
     @Transactional
     public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request) {
         AdventureEntry entry = findEntry(entryId);
-        String oldClassName = entry.getLevelUpClassName();
-        String newClassName = request.getLevelUpClassName();
+        String oldLevelUpClass = entry.getLevelUpClassName();
+        String newLevelUpClass = request.getLevelUpClassName();
+        String oldCatchupClass = entry.getCatchupClassName();
+        Integer oldCatchupCount = entry.getCatchupCount();
+        String newCatchupClass = request.getCatchupClassName();
+        Integer newCatchupCount = request.getCatchupCount();
         mapRequestToEntry(request, entry);
         // 若升級職業有變動，先撤回舊值再套用新值
-        if (!Objects.equals(oldClassName, newClassName)) {
+        if (!Objects.equals(oldLevelUpClass, newLevelUpClass)) {
             Character character = entry.getCharacter();
-            if (oldClassName != null && !oldClassName.isBlank()) {
-                revertLevelUp(character, oldClassName);
+            if (oldLevelUpClass != null && !oldLevelUpClass.isBlank()) {
+                revertLevelUp(character, oldLevelUpClass);
             }
-            if (newClassName != null && !newClassName.isBlank()) {
-                applyLevelUp(character, newClassName);
+            if (newLevelUpClass != null && !newLevelUpClass.isBlank()) {
+                applyLevelUp(character, newLevelUpClass);
+            }
+        }
+        // 若迎頭趕上有變動，先撤回舊值再套用新值
+        boolean catchupChanged = !Objects.equals(oldCatchupClass, newCatchupClass)
+                || !Objects.equals(oldCatchupCount, newCatchupCount);
+        if (catchupChanged) {
+            Character character = entry.getCharacter();
+            if (oldCatchupClass != null && !oldCatchupClass.isBlank()
+                    && oldCatchupCount != null && oldCatchupCount > 0) {
+                revertCatchup(character, oldCatchupClass, oldCatchupCount);
+            }
+            if (newCatchupClass != null && !newCatchupClass.isBlank()
+                    && newCatchupCount != null && newCatchupCount > 0) {
+                applyCatchup(character, newCatchupClass, newCatchupCount);
             }
         }
         return toResponse(entryRepository.save(entry));
@@ -142,6 +165,38 @@ public class AdventureEntryService {
                 );
     }
 
+    /** 套用迎頭趕上：找同名職業 +count，不存在則新增 level=count */
+    private void applyCatchup(Character character, String className, int count) {
+        character.getClassLevels().stream()
+                .filter(cl -> cl.getClassName().equals(className))
+                .findFirst()
+                .ifPresentOrElse(
+                        cl -> cl.setLevel(cl.getLevel() + count),
+                        () -> {
+                            CharacterClassLevel newCl = new CharacterClassLevel();
+                            newCl.setCharacter(character);
+                            newCl.setClassName(className);
+                            newCl.setLevel(count);
+                            newCl.setSortOrder(character.getClassLevels().size());
+                            character.getClassLevels().add(newCl);
+                        }
+                );
+    }
+
+    /** 撤回迎頭趕上：找同名職業 -count，降為 0 以下則從清單移除 */
+    private void revertCatchup(Character character, String className, int count) {
+        character.getClassLevels().stream()
+                .filter(cl -> cl.getClassName().equals(className))
+                .findFirst()
+                .ifPresent(cl -> {
+                    if (cl.getLevel() <= count) {
+                        character.getClassLevels().remove(cl);
+                    } else {
+                        cl.setLevel(cl.getLevel() - count);
+                    }
+                });
+    }
+
     /** 撤回升級：找同名職業 -1，降為 0 則從清單移除 */
     private void revertLevelUp(Character character, String className) {
         character.getClassLevels().stream()
@@ -162,7 +217,11 @@ public class AdventureEntryService {
         entry.setPlayDate(request.getPlayDate());
         entry.setDmName(request.getDmName());
         entry.setStartingLevel(request.getStartingLevel());
-        entry.setEndingLevel(request.getEndingLevel());
+        // endingLevel = startingLevel + (levelUp ? 1 : 0) + (catchupCount ?? 0)
+        int sl = request.getStartingLevel() != null ? request.getStartingLevel() : 0;
+        int lvUp = (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) ? 1 : 0;
+        int cu = (request.getCatchupCount() != null) ? request.getCatchupCount() : 0;
+        entry.setEndingLevel(sl + lvUp + cu);
         entry.setStartingGold(request.getStartingGold());
         entry.setGoldChange(request.getGoldChange());
         entry.setGoldDowntimeChange(request.getGoldDowntimeChange());
@@ -177,6 +236,8 @@ public class AdventureEntryService {
         entry.setMagicItemsDowntimeChange(request.getMagicItemsDowntimeChange());
         entry.setMagicItemsTotal(calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange()));
         entry.setLevelUpClassName(request.getLevelUpClassName());
+        entry.setCatchupClassName(request.getCatchupClassName());
+        entry.setCatchupCount(request.getCatchupCount());
         entry.setAdventureNotes(request.getAdventureNotes());
         entry.setSoulCoinChargesUsed(request.getSoulCoinChargesUsed());
     }
@@ -220,6 +281,8 @@ public class AdventureEntryService {
         response.setMagicItemsDowntimeChange(entry.getMagicItemsDowntimeChange());
         response.setMagicItemsTotal(entry.getMagicItemsTotal());
         response.setLevelUpClassName(entry.getLevelUpClassName());
+        response.setCatchupClassName(entry.getCatchupClassName());
+        response.setCatchupCount(entry.getCatchupCount());
         response.setAdventureNotes(entry.getAdventureNotes());
         response.setSoulCoinChargesUsed(entry.getSoulCoinChargesUsed());
         response.setCreatedAt(entry.getCreatedAt());

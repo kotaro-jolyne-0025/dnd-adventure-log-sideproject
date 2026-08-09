@@ -84,6 +84,12 @@ public class AdventureEntry {
     @Column(name = "level_up_class_name", length = 100)
     private String levelUpClassName;
 
+    @Column(name = "catchup_class_name", length = 100)
+    private String catchupClassName;
+
+    @Column(name = "catchup_count")
+    private Integer catchupCount;
+
     @Column(name = "adventure_notes", columnDefinition = "TEXT")
     private String adventureNotes;
 

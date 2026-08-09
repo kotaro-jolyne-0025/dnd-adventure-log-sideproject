@@ -1,13 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -23,13 +20,10 @@ import {
   standalone: true,
   imports: [
     DatePipe,
-    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatTooltipModule,
   ],
   templateUrl: './adventure-detail.component.html',
@@ -44,8 +38,6 @@ export class AdventureDetailComponent implements OnInit {
 
   protected entry = signal<AdventureEntry | null>(null);
   protected isLoading = signal(true);
-  protected showDowntimeDialog = signal(false);
-  protected newDowntimeText = '';
 
   private characterId!: string;
   private entryId!: string;
@@ -106,29 +98,4 @@ export class AdventureDetailComponent implements OnInit {
       });
   }
 
-  protected onAddDowntime(): void {
-    this.newDowntimeText = '';
-    this.showDowntimeDialog.set(true);
-  }
-
-  protected onSaveDowntime(): void {
-    const text = this.newDowntimeText.trim();
-    if (!text) return;
-    this.adventureService
-      .addDowntime(this.entryId, { description: text })
-      .subscribe({
-        next: () => {
-          this.showDowntimeDialog.set(false);
-          this.loadEntry();
-        },
-        error: () => this.snackBar.open('新增失敗', '關閉', { duration: 3000 }),
-      });
-  }
-
-  protected onDeleteDowntime(downtimeId: string): void {
-    this.adventureService.deleteDowntime(this.entryId, downtimeId).subscribe({
-      next: () => this.loadEntry(),
-      error: () => this.snackBar.open('刪除失敗', '關閉', { duration: 3000 }),
-    });
-  }
 }
