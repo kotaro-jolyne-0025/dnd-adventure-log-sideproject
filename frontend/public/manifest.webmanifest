@@ -1,9 +1,13 @@
 {
-  "name": "frontend",
-  "short_name": "frontend",
+  "name": "D&D 冒險日誌",
+  "short_name": "冒險日誌",
+  "description": "D&D 冒險聯盟（AL）冒險記錄數位化工具",
   "display": "standalone",
-  "scope": "./",
-  "start_url": "./",
+  "scope": "/",
+  "start_url": "/",
+  "theme_color": "#7b1fa2",
+  "background_color": "#1a1a2e",
+  "lang": "zh-TW",
   "icons": [
     {
       "src": "icons/icon-72x72.png",

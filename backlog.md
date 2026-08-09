@@ -87,12 +87,18 @@
 ---
 
 ### T06 — 子任務 6：PWA 設定與離線支援
-- **狀態：** `[ ] 待執行`
+- **狀態：** `[x] 已完成`
 - **對應計畫：** `dnd-adv-log-plan.md` 子任務 6
 - **需要讀取的檔案：**
   - `frontend/ngsw-config.json`
-  - `frontend/src/manifest.webmanifest`
+  - `frontend/public/manifest.webmanifest`
   - `frontend/angular.json`（只看 build 設定段落）
+- **完成摘要：**
+  - `manifest.webmanifest`：name 改為「D&D 冒險日誌」、short_name「冒險日誌」、加上 theme_color (#7b1fa2) / background_color (#1a1a2e) / lang / description
+  - `ngsw-config.json`：新增 Google Fonts 快取群組（assetGroups）、新增 API GET 快取策略 `dataGroups`（`/api/**`，freshness 策略，5s timeout，1 天 TTL）
+  - `index.html`：新增 `<meta name="theme-color" content="#7b1fa2" />`
+  - `angular.json`：調寬 budget 限制（initial warning 1MB / error 2MB），避免 Angular Material 觸發 build error
+  - production build 驗證通過：`ngsw-worker.js`、`ngsw.json`、`manifest.webmanifest` 全部正確生成
 
 ---
 
