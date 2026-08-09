@@ -54,6 +54,12 @@
             <span class="info-label">結束等級</span>
             <span class="info-value">{{ entry()!.endingLevel ?? '—' }}</span>
           </div>
+          @if (entry()!.levelUpClassName) {
+            <div class="info-item">
+              <span class="info-label">升級職業</span>
+              <span class="info-value">{{ entry()!.levelUpClassName }}</span>
+            </div>
+          }
         </div>
       </mat-card-content>
     </mat-card>

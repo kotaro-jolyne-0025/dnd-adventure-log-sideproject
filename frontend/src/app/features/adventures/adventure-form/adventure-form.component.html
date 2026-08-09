@@ -32,15 +32,33 @@
             <input matInput formControlName="dmName" />
           </mat-form-field>
         </div>
-        <div class="field-row">
-          <mat-form-field appearance="outline" class="flex-1">
-            <mat-label>起始等級</mat-label>
-            <input matInput type="number" formControlName="startingLevel" placeholder="例：7" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="flex-1">
-            <mat-label>結束等級</mat-label>
-            <input matInput type="number" formControlName="endingLevel" placeholder="例：8" />
-          </mat-form-field>
+        <div class="field-row level-row">
+          <!-- 起始等級：唯讀靜態卡片 -->
+          <div class="ending-level-display">
+            <span class="ending-level-label">起始等級</span>
+            <span class="ending-level-value">{{ _startingLevel() ?? '—' }}</span>
+          </div>
+          <div class="level-up-toggle">
+            <mat-slide-toggle
+              [checked]="levelUp()"
+              (change)="onLevelUpToggle($event.checked)">
+              本次冒險升級
+            </mat-slide-toggle>
+          </div>
+          @if (levelUp()) {
+            <mat-form-field appearance="outline" class="flex-2">
+              <mat-label>升級職業</mat-label>
+              <mat-select formControlName="levelUpClassName">
+                @for (opt of CLASS_OPTIONS; track opt) {
+                  <mat-option [value]="opt">{{ getClassLabel(opt) }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+          <div class="ending-level-display">
+            <span class="ending-level-label">結束等級</span>
+            <span class="ending-level-value">{{ endingLevel() ?? '—' }}</span>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -138,6 +156,53 @@
           <mat-label>靈魂幣使用</mat-label>
           <input matInput formControlName="soulCoinChargesUsed" placeholder="自由文字" />
         </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 🏕️ 休整期活動 -->
+    <mat-card class="form-card">
+      <mat-card-header><mat-card-title>🏕️ 休整期活動</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <!-- 編輯模式：已儲存活動 -->
+        @if (isEditMode()) {
+          @for (act of existingActivities(); track act.id; let i = $index) {
+            <div class="activity-row">
+              <span class="activity-text">{{ act.description }}</span>
+              <button type="button" mat-icon-button color="warn" (click)="removeActivity(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+          @if (existingActivities().length === 0) {
+            <p class="activity-empty">尚無休整期活動</p>
+          }
+        }
+        <!-- 新增模式：暫存活動 -->
+        @if (!isEditMode()) {
+          @for (act of pendingActivities(); track act; let i = $index) {
+            <div class="activity-row">
+              <span class="activity-text">{{ act }}</span>
+              <button type="button" mat-icon-button color="warn" (click)="removeActivity(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+          @if (pendingActivities().length === 0) {
+            <p class="activity-empty">尚無休整期活動（儲存後一併寫入）</p>
+          }
+        }
+        <!-- 輸入列 -->
+        <div class="activity-input-row">
+          <mat-form-field appearance="outline" class="activity-input-field">
+            <mat-label>新增活動描述</mat-label>
+            <input matInput [(ngModel)]="newActivityText" [ngModelOptions]="{standalone: true}"
+              placeholder="例：訓練武器、鑄造魔法物品..."
+              (keydown.enter)="$event.preventDefault(); addActivity()" />
+          </mat-form-field>
+          <button type="button" mat-stroked-button (click)="addActivity()">
+            <mat-icon>add</mat-icon> 新增
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
 

@@ -5,6 +5,7 @@ import {
   FormGroup,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,15 +14,27 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdventureService } from '../../../core/services/adventure.service';
-import { AdventureEntryRequest } from '../../../core/models/adventure.model';
+import { CharacterService } from '../../../core/services/character.service';
+import { AdventureEntryRequest, DowntimeActivity } from '../../../core/models/adventure.model';
+import { CharacterClassLevel } from '../../../core/models/character.model';
+import { switchMap, from, concatMap, toArray } from 'rxjs';
+
+export const CLASS_OPTIONS = [
+  '戰士', '法師', '牧師', '遊蕩者', '遊俠',
+  '吟遊詩人', '德魯伊', '武僧', '聖騎士', '契術師',
+  '術士', '野蠻人', '奇械師', '其他',
+];
 
 @Component({
   selector: 'app-adventure-form',
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -30,6 +43,8 @@ import { AdventureEntryRequest } from '../../../core/models/adventure.model';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './adventure-form.component.html',
   styleUrl: './adventure-form.component.scss',
@@ -39,12 +54,25 @@ export class AdventureFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly adventureService = inject(AdventureService);
+  private readonly characterService = inject(CharacterService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
   private characterId!: string;
   private entryId?: string;
+
+  /** 角色目前的職業等級清單，供選項顯示提示用 */
+  protected characterClassLevels = signal<CharacterClassLevel[]>([]);
+
+  /** 升級 Toggle */
+  protected levelUp = signal(false);
+
+  /** CLASS_OPTIONS 供 template 使用 */
+  protected readonly CLASS_OPTIONS = CLASS_OPTIONS;
+
+  // ── 起始等級（唯讀，由 defaults/loadEntry 直接設值）──────────────────────
+  protected readonly _startingLevel = signal<number | null>(null);
 
   // 即時計算合計（顯示用）
   private readonly _startingGold = signal<number | null>(null);
@@ -56,6 +84,13 @@ export class AdventureFormComponent implements OnInit {
   private readonly _startingMagicItems = signal<number | null>(null);
   private readonly _magicItemsChange = signal<number | null>(null);
   private readonly _magicItemsDowntimeChange = signal<number | null>(null);
+
+  /** 結束等級：唯讀 computed = startingLevel + (levelUp ? 1 : 0) */
+  protected readonly endingLevel = computed(() => {
+    const sl = this._startingLevel();
+    if (sl == null) return null;
+    return sl + (this.levelUp() ? 1 : 0);
+  });
 
   protected readonly goldTotal = computed(() => {
     const s = this._startingGold();
@@ -79,13 +114,20 @@ export class AdventureFormComponent implements OnInit {
     return (s ?? 0) + (c ?? 0) + (d ?? 0);
   });
 
+  // ── 休整期活動 ──────────────────────────────────────────────────────────────
+  /** 新增模式：暫存待儲存的活動描述 */
+  protected pendingActivities = signal<string[]>([]);
+  /** 編輯模式：已存在的活動清單 */
+  protected existingActivities = signal<DowntimeActivity[]>([]);
+  /** 輸入列雙向綁定文字 */
+  protected newActivityText = '';
+
   protected form: FormGroup = this.fb.group({
     adventureCode: [''],
     adventureName: [''],
     playDate: [null],
     dmName: [''],
-    startingLevel: [null],
-    endingLevel: [null],
+    levelUpClassName: [null],
     startingGold: [null],
     goldChange: [null],
     goldDowntimeChange: [null],
@@ -104,6 +146,12 @@ export class AdventureFormComponent implements OnInit {
       this.route.parent?.snapshot.paramMap.get('id') ??
       this.route.snapshot.paramMap.get('characterId') ?? '';
     const entryIdParam = this.route.snapshot.paramMap.get('entryId');
+
+    // 載入角色職業清單（新增與編輯都需要）
+    this.characterService.getById(this.characterId).subscribe({
+      next: (c) => this.characterClassLevels.set(c.classLevels ?? []),
+      error: () => { /* 靜默略過，選項提示不顯示等級 */ },
+    });
 
     // 監聽數字欄位變更以更新 computed 合計
     this.form.get('startingGold')!.valueChanges.subscribe(v => this._startingGold.set(v != null && v !== '' ? Number(v) : null));
@@ -129,8 +177,10 @@ export class AdventureFormComponent implements OnInit {
   private loadDefaults(): void {
     this.adventureService.getDefaults(this.characterId).subscribe({
       next: (d) => {
+        if (d.startingLevel != null) {
+          this._startingLevel.set(d.startingLevel);
+        }
         this.form.patchValue({
-          startingLevel: d.startingLevel ?? null,
           startingGold: d.startingGold ?? null,
           startingDowntime: d.startingDowntime ?? null,
           startingMagicItems: d.startingMagicItems ?? null,
@@ -143,13 +193,20 @@ export class AdventureFormComponent implements OnInit {
   private loadEntry(id: string): void {
     this.adventureService.getById(this.characterId, id).subscribe({
       next: (entry) => {
+        if (entry.levelUpClassName) {
+          this.levelUp.set(true);
+        }
+        // 起始等級直接寫入 signal（唯讀）
+        this._startingLevel.set(entry.startingLevel ?? null);
+        // 載入現有休整期活動
+        this.existingActivities.set(entry.downtimeActivities ?? []);
+
         this.form.patchValue({
           adventureCode: entry.adventureCode ?? '',
           adventureName: entry.adventureName ?? '',
           playDate: entry.playDate ? new Date(entry.playDate) : null,
           dmName: entry.dmName ?? '',
-          startingLevel: entry.startingLevel ?? null,
-          endingLevel: entry.endingLevel ?? null,
+          levelUpClassName: entry.levelUpClassName ?? null,
           startingGold: entry.startingGold ?? null,
           goldChange: entry.goldChange ?? null,
           goldDowntimeChange: entry.goldDowntimeChange ?? null,
@@ -170,6 +227,67 @@ export class AdventureFormComponent implements OnInit {
     });
   }
 
+  /** 取得職業選項顯示標籤（含目前等級提示） */
+  protected getClassLabel(className: string): string {
+    const found = this.characterClassLevels().find(cl => cl.className === className);
+    if (found) {
+      return `${className}（目前 Lv.${found.level}）`;
+    }
+    return `${className}（新職業）`;
+  }
+
+  /** Toggle 關閉時清除 levelUpClassName；開啟時自動帶入第一個職業 */
+  protected onLevelUpToggle(checked: boolean): void {
+    this.levelUp.set(checked);
+    if (!checked) {
+      this.form.get('levelUpClassName')!.setValue(null);
+    } else {
+      const levels = this.characterClassLevels();
+      if (levels.length > 0) {
+        this.form.get('levelUpClassName')!.setValue(levels[0].className);
+      }
+    }
+  }
+
+  // ── 休整期活動操作 ──────────────────────────────────────────────────────────
+
+  /** 新增模式：推入暫存清單；編輯模式：立即呼叫 API */
+  protected addActivity(): void {
+    const text = this.newActivityText.trim();
+    if (!text) return;
+    this.newActivityText = '';
+
+    if (this.isEditMode() && this.entryId) {
+      this.adventureService.addDowntime(this.entryId, { description: text }).subscribe({
+        next: (created) => {
+          this.existingActivities.update(list => [...list, created]);
+        },
+        error: () => {
+          this.snackBar.open('新增活動失敗', '關閉', { duration: 3000 });
+        },
+      });
+    } else {
+      this.pendingActivities.update(list => [...list, text]);
+    }
+  }
+
+  /** 新增模式：從暫存清單移除；編輯模式：立即呼叫 API 刪除 */
+  protected removeActivity(index: number): void {
+    if (this.isEditMode() && this.entryId) {
+      const activity = this.existingActivities()[index];
+      this.adventureService.deleteDowntime(this.entryId, activity.id).subscribe({
+        next: () => {
+          this.existingActivities.update(list => list.filter((_, i) => i !== index));
+        },
+        error: () => {
+          this.snackBar.open('刪除活動失敗', '關閉', { duration: 3000 });
+        },
+      });
+    } else {
+      this.pendingActivities.update(list => list.filter((_, i) => i !== index));
+    }
+  }
+
   private buildRequest(): AdventureEntryRequest {
     const raw = this.form.getRawValue();
     const toNum = (v: unknown): number | null =>
@@ -184,8 +302,9 @@ export class AdventureFormComponent implements OnInit {
       adventureName: raw.adventureName?.trim() || null,
       playDate: toDateStr(raw.playDate),
       dmName: raw.dmName?.trim() || null,
-      startingLevel: toNum(raw.startingLevel),
-      endingLevel: toNum(raw.endingLevel),
+      startingLevel: this._startingLevel(),
+      endingLevel: this.endingLevel(),
+      levelUpClassName: this.levelUp() ? (raw.levelUpClassName || null) : null,
       startingGold: toNum(raw.startingGold),
       goldChange: toNum(raw.goldChange),
       goldDowntimeChange: toNum(raw.goldDowntimeChange),
@@ -218,8 +337,27 @@ export class AdventureFormComponent implements OnInit {
     } else {
       this.adventureService.create(this.characterId, req).subscribe({
         next: (created) => {
-          this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });
-          this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
+          const pending = this.pendingActivities();
+          if (pending.length === 0) {
+            this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });
+            this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
+            return;
+          }
+          // 依序 POST 所有暫存活動
+          from(pending).pipe(
+            concatMap(desc => this.adventureService.addDowntime(created.id, { description: desc })),
+            toArray(),
+          ).subscribe({
+            next: () => {
+              this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });
+              this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
+            },
+            error: () => {
+              // 主記錄已建立，活動部分失敗；仍導向 detail
+              this.snackBar.open('冒險記錄已新增（部分活動儲存失敗）', '關閉', { duration: 3500 });
+              this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
+            },
+          });
         },
         error: () => {
           this.isSaving.set(false);

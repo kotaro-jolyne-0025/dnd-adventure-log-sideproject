@@ -73,3 +73,74 @@
   gap: 12px;
   padding-top: 4px;
 }
+
+/* Level Row — 起始等級 / 升級 Toggle / 升級職業 / 結束等級 */
+.level-row {
+  align-items: center;
+}
+
+.level-up-toggle {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+/* Downtime Activity */
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.activity-text {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.activity-empty {
+  font-size: 0.82rem;
+  color: var(--mat-sys-outline);
+  margin: 4px 0 12px;
+}
+
+.activity-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.activity-input-field {
+  flex: 1;
+}
+
+.ending-level-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 4px 8px;
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  border-radius: 4px;
+  background: var(--mat-sys-surface-variant, #f5f5f5);
+
+  .ending-level-label {
+    font-size: 0.72rem;
+    color: var(--mat-sys-outline);
+    line-height: 1.2;
+  }
+
+  .ending-level-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+}

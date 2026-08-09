@@ -3,6 +3,7 @@ package com.dndadvlog.backend.service;
 import com.dndadvlog.backend.dto.*;
 import com.dndadvlog.backend.entity.AdventureEntry;
 import com.dndadvlog.backend.entity.Character;
+import com.dndadvlog.backend.entity.CharacterClassLevel;
 import com.dndadvlog.backend.entity.DowntimeActivity;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
 import com.dndadvlog.backend.repository.AdventureEntryRepository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,13 +42,29 @@ public class AdventureEntryService {
         AdventureEntry entry = new AdventureEntry();
         entry.setCharacter(character);
         mapRequestToEntry(request, entry);
+        // 若有升級職業，套用升級
+        if (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) {
+            applyLevelUp(character, request.getLevelUpClassName());
+        }
         return toResponse(entryRepository.save(entry));
     }
 
     @Transactional
     public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request) {
         AdventureEntry entry = findEntry(entryId);
+        String oldClassName = entry.getLevelUpClassName();
+        String newClassName = request.getLevelUpClassName();
         mapRequestToEntry(request, entry);
+        // 若升級職業有變動，先撤回舊值再套用新值
+        if (!Objects.equals(oldClassName, newClassName)) {
+            Character character = entry.getCharacter();
+            if (oldClassName != null && !oldClassName.isBlank()) {
+                revertLevelUp(character, oldClassName);
+            }
+            if (newClassName != null && !newClassName.isBlank()) {
+                applyLevelUp(character, newClassName);
+            }
+        }
         return toResponse(entryRepository.save(entry));
     }
 
@@ -106,6 +124,38 @@ public class AdventureEntryService {
         return defaults;
     }
 
+    /** 套用升級：找同名職業 +1，不存在則新增 level=1 */
+    private void applyLevelUp(Character character, String className) {
+        character.getClassLevels().stream()
+                .filter(cl -> cl.getClassName().equals(className))
+                .findFirst()
+                .ifPresentOrElse(
+                        cl -> cl.setLevel(cl.getLevel() + 1),
+                        () -> {
+                            CharacterClassLevel newCl = new CharacterClassLevel();
+                            newCl.setCharacter(character);
+                            newCl.setClassName(className);
+                            newCl.setLevel(1);
+                            newCl.setSortOrder(character.getClassLevels().size());
+                            character.getClassLevels().add(newCl);
+                        }
+                );
+    }
+
+    /** 撤回升級：找同名職業 -1，降為 0 則從清單移除 */
+    private void revertLevelUp(Character character, String className) {
+        character.getClassLevels().stream()
+                .filter(cl -> cl.getClassName().equals(className))
+                .findFirst()
+                .ifPresent(cl -> {
+                    if (cl.getLevel() <= 1) {
+                        character.getClassLevels().remove(cl);
+                    } else {
+                        cl.setLevel(cl.getLevel() - 1);
+                    }
+                });
+    }
+
     private void mapRequestToEntry(AdventureEntryRequest request, AdventureEntry entry) {
         entry.setAdventureCode(request.getAdventureCode());
         entry.setAdventureName(request.getAdventureName());
@@ -126,6 +176,7 @@ public class AdventureEntryService {
         entry.setMagicItemsChange(request.getMagicItemsChange());
         entry.setMagicItemsDowntimeChange(request.getMagicItemsDowntimeChange());
         entry.setMagicItemsTotal(calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange()));
+        entry.setLevelUpClassName(request.getLevelUpClassName());
         entry.setAdventureNotes(request.getAdventureNotes());
         entry.setSoulCoinChargesUsed(request.getSoulCoinChargesUsed());
     }
@@ -168,6 +219,7 @@ public class AdventureEntryService {
         response.setMagicItemsChange(entry.getMagicItemsChange());
         response.setMagicItemsDowntimeChange(entry.getMagicItemsDowntimeChange());
         response.setMagicItemsTotal(entry.getMagicItemsTotal());
+        response.setLevelUpClassName(entry.getLevelUpClassName());
         response.setAdventureNotes(entry.getAdventureNotes());
         response.setSoulCoinChargesUsed(entry.getSoulCoinChargesUsed());
         response.setCreatedAt(entry.getCreatedAt());
