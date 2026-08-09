@@ -297,6 +297,120 @@
 
 ---
 
+### T14 — 功能優化與迎頭趕上升級
+
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. 資源起始值預設為 0（第一筆記錄時不顯示空白）
+  2. 冒險詳情頁（detail）改為純唯讀，移除休整期活動的新增與刪除操作
+  3. 冒險升級職業選項標籤修正：改為「職業（Lv.X）」顯示角色當前等級，不再說「目前」以避免編輯舊紀錄時誤導
+  4. 新增「迎頭趕上」升級功能：消耗休整期天數升額外等級，可選職業與次數
+- **影響範圍：**
+  - DB：`adventure_entry` 新增 `catchup_class_name` / `catchup_count` 兩欄
+  - 後端 Entity / Request / Response / Service（建立＆更新時同步更新角色職業等級）
+  - 前端 Model / Form（迎頭趕上 UI）/ Detail（移除新增/刪除）
+- **資料庫 Migration（需在 Supabase 執行）：**
+  ```sql
+  ALTER TABLE adventure_entry
+      ADD COLUMN IF NOT EXISTS catchup_class_name VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS catchup_count INTEGER DEFAULT 0;
+  ```
+- **需要讀取的檔案：**
+  - `database-schema.md`
+  - `backend/src/main/java/com/dndadvlog/backend/entity/AdventureEntry.java`
+  - `backend/src/main/java/com/dndadvlog/backend/dto/AdventureEntryRequest.java`
+  - `backend/src/main/java/com/dndadvlog/backend/dto/AdventureEntryResponse.java`
+  - `backend/src/main/java/com/dndadvlog/backend/service/AdventureEntryService.java`
+  - `frontend/src/app/core/models/adventure.model.ts`
+  - `frontend/src/app/features/adventures/adventure-form/adventure-form.component.ts`
+  - `frontend/src/app/features/adventures/adventure-form/adventure-form.component.html`
+  - `frontend/src/app/features/adventures/adventure-detail/adventure-detail.component.ts`
+  - `frontend/src/app/features/adventures/adventure-detail/adventure-detail.component.html`
+- **待完成項目：**
+  - [ ] **T14-1：起始值預設 0（前端）**
+    - `loadDefaults()` 中 `startingGold / startingDowntime / startingMagicItems` 改為 `d.startingGold ?? 0`（等）
+    - 確保第一筆記錄不出現空白起始值
+  - [ ] **T14-2：detail 頁改為純唯讀（前端）**
+    - 移除「新增活動」按鈕、Dialog template、`onAddDowntime()` / `onSaveDowntime()` 方法
+    - 移除每筆活動旁的刪除按鈕、`onDeleteDowntime()` 方法
+    - 清除不再需要的 `showDowntimeDialog` signal 與 `newDowntimeText` 變數
+  - [ ] **T14-3：職業選項標籤修正（前端）**
+    - `getClassLabel()` 改為：已有職業顯示 `職業（Lv.X）`；新職業顯示 `職業（新職業）`
+    - 移除「目前」二字，以當前值為準，不宣稱是「目前」
+  - [ ] **T14-4：迎頭趕上升級（前後端）**
+    - **後端 Entity**：`AdventureEntry` 新增 `catchupClassName VARCHAR(100)` / `catchupCount INTEGER`
+    - **後端 Request**：`AdventureEntryRequest` 新增 `catchupClassName` / `catchupCount`
+    - **後端 Response**：`AdventureEntryResponse` 新增 `catchupClassName` / `catchupCount`
+    - **後端 Service `createEntry()`**：若 `catchupClassName` 不為空且 `catchupCount > 0`，對該職業 `level += catchupCount`（不存在則新增，level 從 catchupCount 開始）
+    - **後端 Service `updateEntry()`**：若 `catchupClassName` 或 `catchupCount` 有變動，先撤回舊值（`level -= oldCatchupCount`，降為 0 則移除該筆），再套用新值
+    - **後端 `endingLevel` 計算**：`endingLevel = startingLevel + (levelUp ? 1 : 0) + (catchupCount ?? 0)`
+    - **前端 Model**：`AdventureEntry` / `AdventureEntryRequest` 新增 `catchupClassName` / `catchupCount`
+    - **前端 Form TS**：新增 `catchup` signal（`boolean`）；新增 form 控制項 `catchupClassName` / `catchupCount`；`endingLevel` computed 更新為 `startingLevel + (levelUp?1:0) + (catchup() ? catchupCount : 0)`；`onCatchupToggle(false)` 清除兩個欄位；`loadEntry()` 時若有值則開啟 toggle
+    - **前端 Form HTML**：在「本次冒險升級」區塊下方新增「迎頭趕上」Slide Toggle；開啟後顯示「升哪個職業（CLASS_OPTIONS 下拉）」與「升幾等（數字輸入, min:1）」；加上提示文字「消耗天數請在上方休整期天數欄自行填寫」
+    - **更新 `database-schema.md`**：加入新欄位定義與 Migration 4 SQL
+- **升級邏輯說明：**
+  - `levelUp`（冒險升級）與 `catchup`（迎頭趕上）可同時存在，職業可相同或不同
+  - 後端 createEntry 迎頭趕上：找 `character.classLevels` 中 `className == catchupClassName` → `level += catchupCount`；找不到 → 新增 `{className, level: catchupCount, sortOrder: 現有數量}`
+  - 後端 updateEntry 迎頭趕上（有變動）：舊值不空 → 舊職業 `level -= oldCatchupCount`（降為 0 則移除）；新值不空 → 新職業 `level += newCatchupCount`（不存在則新增）
+
+---
+
+### T15 — 功能強化：職業快照 + 當前等級準確追蹤
+
+- **狀態：** `[ ] 待執行`
+- **變更摘要：**
+  1. 新增 `adventure_entry_class_snapshot` 關聯表，儲存每筆冒險記錄的起始/結束職業快照
+  2. 冒險記錄存入時（create/update），後端自動寫入 starting/ending 快照
+  3. detail 頁「起始等級」區改為顯示 starting 職業快照（`職業 Lv.X / 職業 Lv.Y`）
+  4. detail 頁「結束等級」區改為顯示 ending 職業快照（同格式，已含冒險升級＋迎頭趕上）
+  5. 角色卡「當前等級」改從 `character_class_level` 加總計算（不再依賴 `endingLevel` 欄位）
+- **資料庫 Migration（需在 Supabase 執行）：**
+  ```sql
+  CREATE TABLE IF NOT EXISTS adventure_entry_class_snapshot (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      adventure_entry_id UUID NOT NULL REFERENCES adventure_entry(id) ON DELETE CASCADE,
+      snapshot_type VARCHAR(10) NOT NULL,  -- 'starting' 或 'ending'
+      class_name VARCHAR(100) NOT NULL,
+      level INTEGER NOT NULL,
+      sort_order INTEGER DEFAULT 0
+  );
+  ```
+- **影響範圍：**
+  - DB：新增 `adventure_entry_class_snapshot` 表
+  - 後端 Entity / Repository / Service（快照寫入邏輯）/ Response DTO（帶出快照資料）
+  - 前端 Model / Detail HTML（起始/結束等級改為清單顯示）
+  - 前端 Character List（currentLevel 改用 classLevels 加總）
+- **需要讀取的檔案：**
+  - `database-schema.md`
+  - `backend/src/main/java/com/dndadvlog/backend/entity/AdventureEntry.java`
+  - `backend/src/main/java/com/dndadvlog/backend/entity/Character.java`
+  - `backend/src/main/java/com/dndadvlog/backend/entity/CharacterClassLevel.java`
+  - `backend/src/main/java/com/dndadvlog/backend/dto/AdventureEntryResponse.java`
+  - `backend/src/main/java/com/dndadvlog/backend/service/AdventureEntryService.java`
+  - `backend/src/main/java/com/dndadvlog/backend/service/CharacterService.java`
+  - `frontend/src/app/core/models/adventure.model.ts`
+  - `frontend/src/app/core/models/character.model.ts`
+  - `frontend/src/app/features/adventures/adventure-detail/adventure-detail.component.html`
+  - `frontend/src/app/features/characters/character-list/character-list.component.html`
+- **待完成項目：**
+  - [ ] **DB**：建立 `adventure_entry_class_snapshot` 表（Migration SQL 如上）
+  - [ ] **後端 Entity**：新增 `AdventureEntryClassSnapshot` Entity；`AdventureEntry` 新增 `startingClassSnapshot` / `endingClassSnapshot` OneToMany 關聯
+  - [ ] **後端 Repository**：新增 `AdventureEntryClassSnapshotRepository`
+  - [ ] **後端 Response DTO**：`AdventureEntryResponse` 新增 `startingClassSnapshot` / `endingClassSnapshot`（`List<ClassSnapshotItem>`）
+  - [ ] **後端 Service `createEntry()`**：在 `applyLevelUp`/`applyCatchup` **前**先對目前職業清單做 starting 快照；apply 之後做 ending 快照
+  - [ ] **後端 Service `updateEntry()`**：撤回舊升級 **前**先更新 starting 快照；套用新升級後更新 ending 快照（先刪除舊快照再寫入新快照）
+  - [ ] **後端 `CharacterService`**：`currentLevel` 改由 `character_class_level` 加總（`sumClassLevelsByCharacterId()`），取代讀最後一筆 `endingLevel`
+  - [ ] **前端 Model**：`AdventureEntry` 新增 `startingClassSnapshot` / `endingClassSnapshot`（`ClassSnapshotItem[]`）
+  - [ ] **前端 Detail HTML**：起始等級顯示改為 `startingClassSnapshot` 職業清單；結束等級顯示改為 `endingClassSnapshot` 職業清單；若快照為空則 fallback 顯示數字
+  - [ ] **前端 Character List**：`currentLevel` 改為讀取 `classLevels` 的等級加總（`reduce`）
+  - [ ] **更新 `database-schema.md`**
+- **設計備註：**
+  - `snapshot_type = 'starting'`：職業升級前的快照；`snapshot_type = 'ending'`：升級後的快照
+  - `updateEntry` 快照更新策略：刪除舊有 starting/ending 快照再重新插入，確保與最新升級狀態一致
+  - 舊資料沒有快照時，detail 頁面 fallback 顯示原本的 `startingLevel` / `endingLevel` 數字
+
+---
+
 ### 📌 多人版本待辦（未來規劃，暫不實作）
 - 玩家帳號系統（Email + 密碼 或 OAuth）
 - 登入後自動帶入玩家名稱（取代目前的 localStorage / 硬寫預設值）

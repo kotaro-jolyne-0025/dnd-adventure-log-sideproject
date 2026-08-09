@@ -24,6 +24,8 @@ export interface AdventureEntry {
   startingLevel?: number;
   endingLevel?: number;
   levelUpClassName?: string;
+  catchupClassName?: string;
+  catchupCount?: number;
   startingGold?: number;
   goldChange?: number;
   goldDowntimeChange?: number;
@@ -51,6 +53,8 @@ export interface AdventureEntryRequest {
   startingLevel?: number | null;
   endingLevel?: number | null;
   levelUpClassName?: string | null;
+  catchupClassName?: string | null;
+  catchupCount?: number | null;
   startingGold?: number | null;
   goldChange?: number | null;
   goldDowntimeChange?: number | null;

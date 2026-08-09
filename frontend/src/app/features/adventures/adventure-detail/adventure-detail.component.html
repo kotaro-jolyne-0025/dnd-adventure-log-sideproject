@@ -60,6 +60,12 @@
               <span class="info-value">{{ entry()!.levelUpClassName }}</span>
             </div>
           }
+          @if (entry()!.catchupClassName && entry()!.catchupCount) {
+            <div class="info-item">
+              <span class="info-label">迎頭趕上</span>
+              <span class="info-value">{{ entry()!.catchupClassName }} +{{ entry()!.catchupCount }} 等</span>
+            </div>
+          }
         </div>
       </mat-card-content>
     </mat-card>
@@ -155,12 +161,6 @@
     <mat-card class="detail-card">
       <mat-card-header>
         <mat-card-title>🏕️ 休整期活動</mat-card-title>
-        <div class="card-header-actions">
-          <button mat-stroked-button color="primary" (click)="onAddDowntime()">
-            <mat-icon>add</mat-icon>
-            新增活動
-          </button>
-        </div>
       </mat-card-header>
       <mat-card-content>
         @if (entry()!.downtimeActivities.length === 0) {
@@ -169,9 +169,6 @@
         @for (dt of entry()!.downtimeActivities; track dt.id) {
           <div class="downtime-item">
             <span class="downtime-text">{{ dt.description }}</span>
-            <button mat-icon-button color="warn" (click)="onDeleteDowntime(dt.id)">
-              <mat-icon>delete_outline</mat-icon>
-            </button>
           </div>
         }
       </mat-card-content>
@@ -179,27 +176,3 @@
 
   }<!-- end @if entry() -->
 </div>
-
-<!-- Add Downtime Dialog -->
-@if (showDowntimeDialog()) {
-  <div class="dialog-backdrop" (click)="showDowntimeDialog.set(false)">
-    <mat-card class="inline-dialog" (click)="$event.stopPropagation()">
-      <mat-card-header>
-        <mat-card-title>新增休整期活動</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>活動描述</mat-label>
-          <textarea matInput [(ngModel)]="newDowntimeText" rows="3"
-            placeholder="例：迎頭趕上 −10天 術師→5"></textarea>
-        </mat-form-field>
-      </mat-card-content>
-      <mat-card-actions align="end">
-        <button mat-button (click)="showDowntimeDialog.set(false)">取消</button>
-        <button mat-flat-button color="primary"
-          [disabled]="!newDowntimeText.trim()"
-          (click)="onSaveDowntime()">儲存</button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
-}

@@ -68,11 +68,17 @@ export class AdventureFormComponent implements OnInit {
   /** 升級 Toggle */
   protected levelUp = signal(false);
 
+  /** 迎頭趕上 Toggle */
+  protected catchup = signal(false);
+
   /** CLASS_OPTIONS 供 template 使用 */
   protected readonly CLASS_OPTIONS = CLASS_OPTIONS;
 
   // ── 起始等級（唯讀，由 defaults/loadEntry 直接設值）──────────────────────
   protected readonly _startingLevel = signal<number | null>(null);
+
+  // catchupCount signal（供 endingLevel computed 使用）
+  private readonly _catchupCount = signal<number>(0);
 
   // 即時計算合計（顯示用）
   private readonly _startingGold = signal<number | null>(null);
@@ -85,11 +91,12 @@ export class AdventureFormComponent implements OnInit {
   private readonly _magicItemsChange = signal<number | null>(null);
   private readonly _magicItemsDowntimeChange = signal<number | null>(null);
 
-  /** 結束等級：唯讀 computed = startingLevel + (levelUp ? 1 : 0) */
+  /** 結束等級：唯讀 computed = startingLevel + (levelUp ? 1 : 0) + (catchup ? catchupCount : 0) */
   protected readonly endingLevel = computed(() => {
     const sl = this._startingLevel();
     if (sl == null) return null;
-    return sl + (this.levelUp() ? 1 : 0);
+    const cu = this.catchup() ? this._catchupCount() : 0;
+    return sl + (this.levelUp() ? 1 : 0) + cu;
   });
 
   protected readonly goldTotal = computed(() => {
@@ -128,6 +135,8 @@ export class AdventureFormComponent implements OnInit {
     playDate: [null],
     dmName: [''],
     levelUpClassName: [null],
+    catchupClassName: [null],
+    catchupCount: [null],
     startingGold: [null],
     goldChange: [null],
     goldDowntimeChange: [null],
@@ -163,6 +172,7 @@ export class AdventureFormComponent implements OnInit {
     this.form.get('startingMagicItems')!.valueChanges.subscribe(v => this._startingMagicItems.set(v != null && v !== '' ? Number(v) : null));
     this.form.get('magicItemsChange')!.valueChanges.subscribe(v => this._magicItemsChange.set(v != null && v !== '' ? Number(v) : null));
     this.form.get('magicItemsDowntimeChange')!.valueChanges.subscribe(v => this._magicItemsDowntimeChange.set(v != null && v !== '' ? Number(v) : null));
+    this.form.get('catchupCount')!.valueChanges.subscribe(v => this._catchupCount.set(v != null && v !== '' ? Number(v) : 0));
 
     if (entryIdParam) {
       this.isEditMode.set(true);
@@ -181,9 +191,9 @@ export class AdventureFormComponent implements OnInit {
           this._startingLevel.set(d.startingLevel);
         }
         this.form.patchValue({
-          startingGold: d.startingGold ?? null,
-          startingDowntime: d.startingDowntime ?? null,
-          startingMagicItems: d.startingMagicItems ?? null,
+          startingGold: d.startingGold ?? 0,
+          startingDowntime: d.startingDowntime ?? 0,
+          startingMagicItems: d.startingMagicItems ?? 0,
         });
       },
       error: () => { /* 無法取得預設值時靜默略過 */ },
@@ -196,6 +206,9 @@ export class AdventureFormComponent implements OnInit {
         if (entry.levelUpClassName) {
           this.levelUp.set(true);
         }
+        if (entry.catchupClassName && entry.catchupCount && entry.catchupCount > 0) {
+          this.catchup.set(true);
+        }
         // 起始等級直接寫入 signal（唯讀）
         this._startingLevel.set(entry.startingLevel ?? null);
         // 載入現有休整期活動
@@ -207,6 +220,8 @@ export class AdventureFormComponent implements OnInit {
           playDate: entry.playDate ? new Date(entry.playDate) : null,
           dmName: entry.dmName ?? '',
           levelUpClassName: entry.levelUpClassName ?? null,
+          catchupClassName: entry.catchupClassName ?? null,
+          catchupCount: entry.catchupCount ?? null,
           startingGold: entry.startingGold ?? null,
           goldChange: entry.goldChange ?? null,
           goldDowntimeChange: entry.goldDowntimeChange ?? null,
@@ -227,13 +242,22 @@ export class AdventureFormComponent implements OnInit {
     });
   }
 
-  /** 取得職業選項顯示標籤（含目前等級提示） */
+  /** 取得職業選項顯示標籤（含等級提示） */
   protected getClassLabel(className: string): string {
     const found = this.characterClassLevels().find(cl => cl.className === className);
     if (found) {
-      return `${className}（目前 Lv.${found.level}）`;
+      return `${className}（Lv.${found.level}）`;
     }
     return `${className}（新職業）`;
+  }
+
+  /** 迎頭趕上 Toggle 關閉時清除欄位 */
+  protected onCatchupToggle(checked: boolean): void {
+    this.catchup.set(checked);
+    if (!checked) {
+      this.form.get('catchupClassName')!.setValue(null);
+      this.form.get('catchupCount')!.setValue(null);
+    }
   }
 
   /** Toggle 關閉時清除 levelUpClassName；開啟時自動帶入第一個職業 */
@@ -305,6 +329,8 @@ export class AdventureFormComponent implements OnInit {
       startingLevel: this._startingLevel(),
       endingLevel: this.endingLevel(),
       levelUpClassName: this.levelUp() ? (raw.levelUpClassName || null) : null,
+      catchupClassName: this.catchup() ? (raw.catchupClassName || null) : null,
+      catchupCount: this.catchup() ? (toNum(raw.catchupCount)) : null,
       startingGold: toNum(raw.startingGold),
       goldChange: toNum(raw.goldChange),
       goldDowntimeChange: toNum(raw.goldDowntimeChange),

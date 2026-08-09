@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     downtime_downtime_change INTEGER,
     magic_items_downtime_change INTEGER,
     level_up_class_name VARCHAR(100),
+    catchup_class_name VARCHAR(100),
+    catchup_count INTEGER DEFAULT 0,
     adventure_notes TEXT,
     soul_coin_charges_used VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
@@ -91,6 +93,13 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
 > ```sql
 > ALTER TABLE adventure_entry
 >     ADD COLUMN IF NOT EXISTS level_up_class_name VARCHAR(100);
+> ```
+>
+> **Migration 4（T14）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS catchup_class_name VARCHAR(100),
+>     ADD COLUMN IF NOT EXISTS catchup_count INTEGER DEFAULT 0;
 > ```
 
 ---

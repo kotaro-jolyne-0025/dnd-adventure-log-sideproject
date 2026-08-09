@@ -55,6 +55,31 @@
               </mat-select>
             </mat-form-field>
           }
+        </div>
+        <!-- 迎頭趕上 Toggle + 欄位 -->
+        <div class="field-row level-row">
+          <div class="level-up-toggle">
+            <mat-slide-toggle
+              [checked]="catchup()"
+              (change)="onCatchupToggle($event.checked)">
+              迎頭趕上升級
+            </mat-slide-toggle>
+          </div>
+          @if (catchup()) {
+            <mat-form-field appearance="outline" class="flex-2">
+              <mat-label>升哪個職業</mat-label>
+              <mat-select formControlName="catchupClassName">
+                @for (opt of CLASS_OPTIONS; track opt) {
+                  <mat-option [value]="opt">{{ getClassLabel(opt) }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="num-field">
+              <mat-label>升幾等</mat-label>
+              <input matInput type="number" min="1" formControlName="catchupCount" />
+            </mat-form-field>
+            <p class="field-hint catchup-hint">消耗天數請在下方資源變動的休整期變化自行填寫</p>
+          }
           <div class="ending-level-display">
             <span class="ending-level-label">結束等級</span>
             <span class="ending-level-value">{{ endingLevel() ?? '—' }}</span>
