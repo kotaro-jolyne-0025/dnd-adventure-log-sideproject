@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     gold_downtime_change DECIMAL(10,2),
     downtime_downtime_change INTEGER,
     magic_items_downtime_change INTEGER,
+    level_up_class_name VARCHAR(100),
     adventure_notes TEXT,
     soul_coin_charges_used VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
@@ -84,6 +85,12 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
 >     ADD COLUMN IF NOT EXISTS gold_downtime_change DECIMAL(10,2),
 >     ADD COLUMN IF NOT EXISTS downtime_downtime_change INTEGER,
 >     ADD COLUMN IF NOT EXISTS magic_items_downtime_change INTEGER;
+> ```
+>
+> **Migration 3（T12）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS level_up_class_name VARCHAR(100);
 > ```
 
 ---

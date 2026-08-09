@@ -30,6 +30,7 @@ public class AdventureEntryResponse {
     private BigDecimal goldDowntimeChange;
     private Integer downtimeDowntimeChange;
     private Integer magicItemsDowntimeChange;
+    private String levelUpClassName;
     private String adventureNotes;
     private String soulCoinChargesUsed;
     private List<DowntimeActivityResponse> downtimeActivities;

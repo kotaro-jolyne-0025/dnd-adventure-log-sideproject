@@ -196,7 +196,7 @@
 
 ### T12 — 功能變更：冒險結束升級流程
 
-- **狀態：** `[ ] 待執行`
+- **狀態：** `[x] 已完成`
 - **變更摘要：**
   - 在冒險表單「起始等級」欄位旁，新增「本次冒險升級」Slide Toggle
   - Toggle 開啟後，顯示「升哪個職業」下拉選單，直接列出完整職業清單（CLASS_OPTIONS，共 13 個固定職業 + 其他）
@@ -230,25 +230,19 @@
   - `frontend/src/app/features/adventures/adventure-form/adventure-form.component.html`
   - `frontend/src/app/features/adventures/adventure-detail/adventure-detail.component.html`
   - `frontend/src/app/features/characters/character-form/character-form.component.ts`（參考 CLASS_OPTIONS 清單）
-- **待完成項目（後端）：**
-  - [ ] `AdventureEntry` Entity 新增 `levelUpClassName` 欄位（`VARCHAR(100)`）
-  - [ ] `AdventureEntryRequest` 新增 `levelUpClassName` 欄位
-  - [ ] `AdventureEntryResponse` 新增 `levelUpClassName` 欄位
-  - [ ] `AdventureEntryService.createEntry()` 儲存記錄時：若有 `levelUpClassName`，找 `character_class_level` 中同名職業 → `level + 1`；若不存在則新增一筆 `{className, level: 1}`
-  - [ ] `AdventureEntryService.updateEntry()` 更新記錄時：若 `levelUpClassName` 有變動，先撤回舊職業（`level - 1`，降為 0 則移除該筆），再套用新職業（+1 或新增）；若新值為空則只撤回
-  - [ ] 更新 `database-schema.md` 加入新欄位定義（含 Migration 3 ALTER TABLE SQL）
-- **待完成項目（前端）：**
-  - [ ] `adventure.model.ts` 的 `AdventureEntry` 與 `AdventureEntryRequest` 新增 `levelUpClassName` 欄位
-  - [ ] `adventure-form.component.ts`：
-    - 新增 `levelUp` signal（boolean，預設 false）與 `CLASS_OPTIONS` 常數（與 character-form 相同）
-    - 新增 `levelUpClassName` 表單控制項（`<mat-select>`）
-    - 結束等級改為 computed signal：`startingLevel + (levelUp() ? 1 : 0)`；從 FormGroup 移除 `endingLevel`，`buildRequest()` 回填 computed 結果
-    - 表單載入時（新增＆編輯皆是）呼叫 `characterService.getById(characterId)` 取得角色職業清單，存入 `characterClassLevels` signal 供選項提示使用
-  - [ ] `adventure-form.component.html`：
-    - 起始等級旁新增 `<mat-slide-toggle>` 控制 `levelUp` signal
-    - Toggle 開啟時顯示「升級職業」`<mat-select>`（`levelUpClassName` 控制項），選項為 CLASS_OPTIONS；顯示文字加入等級提示（例：「法師（目前 Lv.2）」或「聖騎士（新職業）」）
-    - 結束等級改為唯讀文字 `{{ endingLevel() ?? '—' }}`（不再是 input）
-  - [ ] `adventure-detail.component.html` 基本資訊區新增「升級職業」顯示欄（有值才顯示）
+- **完成項目（後端）：**
+  - [x] `AdventureEntry` Entity 新增 `levelUpClassName` 欄位（`VARCHAR(100)`）
+  - [x] `AdventureEntryRequest` 新增 `levelUpClassName` 欄位
+  - [x] `AdventureEntryResponse` 新增 `levelUpClassName` 欄位
+  - [x] `AdventureEntryService.createEntry()` 儲存記錄時：若有 `levelUpClassName`，找 `character_class_level` 中同名職業 → `level + 1`；若不存在則新增一筆 `{className, level: 1}`
+  - [x] `AdventureEntryService.updateEntry()` 更新記錄時：若 `levelUpClassName` 有變動，先撤回舊職業（`level - 1`，降為 0 則移除該筆），再套用新職業（+1 或新增）；若新值為空則只撤回
+  - [x] 更新 `database-schema.md` 加入新欄位定義（含 Migration 3 ALTER TABLE SQL）
+- **完成項目（前端）：**
+  - [x] `adventure.model.ts` 的 `AdventureEntry` 與 `AdventureEntryRequest` 新增 `levelUpClassName` 欄位
+  - [x] `adventure-form.component.ts`：新增 `levelUp` signal、`CLASS_OPTIONS`、`characterClassLevels` signal；`endingLevel` 改為 computed；`buildRequest()` 回填 computed 結果
+  - [x] `adventure-form.component.html`：起始等級旁新增 Slide Toggle；Toggle 開啟時顯示升級職業選單（含等級提示）；結束等級改為唯讀 computed 顯示
+  - [x] `adventure-detail.component.html` 基本資訊區新增「升級職業」顯示欄（有值才顯示）
+- **備註：** 請到 Supabase SQL Editor 執行 database-schema.md Migration 3（T12）的 ALTER TABLE 語句
 - **升級邏輯說明：**
   - 下拉選項顯示規則：查詢角色目前職業清單 → CLASS_OPTIONS 每一項若角色已有則顯示「職業（目前 Lv.X）」，否則顯示「職業（新職業）」
   - 後端 createEntry：找 `character.classLevels` 中 `className == levelUpClassName` → `level++`；找不到 → 新增 `{className, level: 1, sortOrder: 現有數量}`
@@ -263,6 +257,43 @@
   - 無任何帳號/登入流程（MVP 單人版）
 - **完成項目：**
   - [x] `character-form.component.ts` `playerName` 初始值改為 `'可嵐'`
+
+---
+
+### T13 — 功能優化：表單 UX 三項改善
+
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. 起始等級改為唯讀（由 defaults API 自動帶入，不可手動輸入）
+  2. 升級 Toggle 開啟時，自動帶入角色第一個職業作為預設升級職業
+  3. 休整期活動整合進冒險記錄表單（新增／編輯皆可在表單內管理活動，不再需要跳至 detail 頁操作）
+- **影響範圍：** 純前端，不涉及後端 API 變更
+- **需要讀取的檔案：**
+  - `frontend/src/app/features/adventures/adventure-form/adventure-form.component.ts`
+  - `frontend/src/app/features/adventures/adventure-form/adventure-form.component.html`
+  - `frontend/src/app/features/adventures/adventure-form/adventure-form.component.scss`
+  - `frontend/src/app/core/services/adventure.service.ts`
+  - `frontend/src/app/core/models/adventure.model.ts`
+- **完成項目：**
+  - [x] **起始等級唯讀（adventure-form）**
+    - `startingLevel` 欄位從 `<input type="number">` 改為唯讀顯示（同 `ending-level-display` 的靜態卡片樣式）
+    - FormGroup 移除 `startingLevel` 控制項；`_startingLevel` signal 直接由 defaults 或 loadEntry 時設值
+    - `buildRequest()` 中 `startingLevel` 直接讀 `this._startingLevel()` 而非 `raw.startingLevel`
+  - [x] **升級 Toggle 自動帶入預設職業（adventure-form）**
+    - `onLevelUpToggle(true)` 時：若 `characterClassLevels()` 非空，自動 `form.get('levelUpClassName')!.setValue(characterClassLevels()[0].className)`
+  - [x] **休整期活動整合進表單（adventure-form）**
+    - 新增 `pendingActivities` signal（`string[]`，新增模式暫存用）
+    - 新增 `existingActivities` signal（`DowntimeActivity[]`，編輯模式顯示用，初始從 `entry.downtimeActivities` 讀取）
+    - 新增 `newActivityText` 本地變數（輸入列用）
+    - 表單最下方加入「🏕️ 休整期活動」卡片區塊：
+      - 顯示現有活動（編輯模式）或暫存活動（新增模式），每筆旁有刪除按鈕
+      - 底部輸入列 + 「＋ 新增」按鈕
+    - **新增模式**：按「＋」→ 推入 `pendingActivities`；刪除 → 從 array 移除（不呼叫 API）；主記錄儲存成功後，依序呼叫 `addDowntime()` 將 pendingActivities 全部 POST 到後端
+    - **編輯模式**：按「＋」→ 立即呼叫 `addDowntime()` 並更新 `existingActivities`；刪除 → 立即呼叫 `deleteDowntime()` 並更新 `existingActivities`
+    - `loadEntry()` 時將 `entry.downtimeActivities` 設入 `existingActivities`
+- **設計備註：**
+  - `adventure-detail` 頁面的休整期活動區塊**保留不動**（仍可在 detail 頁操作），不需移除
+  - 唯讀起始等級樣式建議與「結束等級」的 `.ending-level-display` 保持一致
 
 ---
 

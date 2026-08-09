@@ -23,6 +23,7 @@ export interface AdventureEntry {
   dmName?: string;
   startingLevel?: number;
   endingLevel?: number;
+  levelUpClassName?: string;
   startingGold?: number;
   goldChange?: number;
   goldDowntimeChange?: number;
@@ -49,6 +50,7 @@ export interface AdventureEntryRequest {
   dmName?: string | null;
   startingLevel?: number | null;
   endingLevel?: number | null;
+  levelUpClassName?: string | null;
   startingGold?: number | null;
   goldChange?: number | null;
   goldDowntimeChange?: number | null;

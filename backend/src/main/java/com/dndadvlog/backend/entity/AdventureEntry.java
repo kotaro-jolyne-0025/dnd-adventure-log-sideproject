@@ -81,6 +81,9 @@ public class AdventureEntry {
     @Column(name = "magic_items_downtime_change")
     private Integer magicItemsDowntimeChange;
 
+    @Column(name = "level_up_class_name", length = 100)
+    private String levelUpClassName;
+
     @Column(name = "adventure_notes", columnDefinition = "TEXT")
     private String adventureNotes;
 
