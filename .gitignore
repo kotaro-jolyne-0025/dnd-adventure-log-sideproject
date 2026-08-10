@@ -53,3 +53,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# ------
+# Zeabur設定
+# ------
+zeabur-deploy-fix-plan.md
