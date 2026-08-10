@@ -12,6 +12,6 @@ RUN apk add --no-cache gettext
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-EXPOSE 80
+EXPOSE 8080
 # 啟動時：先用 envsubst 把 $BACKEND_URL 換成實際網址，再啟動 Nginx
 CMD ["/bin/sh", "-c", "envsubst '$BACKEND_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
