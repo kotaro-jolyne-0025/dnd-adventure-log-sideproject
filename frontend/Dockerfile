@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build -- --configuration production
+RUN NODE_OPTIONS=--max_old_space_size=1536 npm run build -- --configuration production
 
 FROM nginx:alpine
 # 安裝 envsubst 工具（用來在啟動時替換 nginx.conf 中的環境變數）
