@@ -437,6 +437,47 @@
 
 ---
 
+### T16 — 功能優化：修復角色職業編輯與移除「其他」職業選項
+
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. 職業選項清單（`CLASS_OPTIONS`）精簡為 13 種官方核心職業，徹底移除「其他」與自訂文字輸入欄位。
+  2. 修復角色編輯表單中無法修改職業/等級的問題：優化後端 `CharacterService.updateCharacter` 的集合更新與 `saveAndFlush`，確保 JPA 交易原子性與狀態同步。
+  3. 同步更新 `system-requirements-spec.md`、`database-schema.md`、`user-stories.md`。
+- **影響範圍：**
+  - 後端：`CharacterService.java`
+  - 前端：`character-form.component.ts`、`character-form.component.html`、`adventure-form.component.ts`
+  - 文檔：SRS、DB Schema、User Stories
+- **完成項目：**
+  - [x] 後端 `CharacterService.updateCharacter` 重構，安全更新基本欄位與 `classLevels` 集合並執行 `saveAndFlush`
+  - [x] 前端 `character-form` 與 `adventure-form` 移除 `CLASS_OPTIONS` 裡的 `'其他'`
+  - [x] 前端 `character-form` 移除 `customClassName` 控制項與 HTML 範本
+  - [x] 更新 `system-requirements-spec.md`、`database-schema.md`、`user-stories.md` 規格
+
+---
+
+### T17 — 架構重構與升級機制優化：JPA 遷移至 MyBatis & 角色職業鎖定與冒險靈活升級
+
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **持久層重構 (JPA ➔ MyBatis)**：移除 `spring-boot-starter-data-jpa`，導入 MyBatis，編寫 XML Mappers 與自訂 `UuidTypeHandler`，徹底解決實體狀態同步與懶加載問題。
+  2. **冒險記錄升級機制 (靈活調配)**：冒險記錄核心追蹤總等級；升級或迎頭趕上時動態展開職業配置表，即時核對職業等級加總等於結束總等級；儲存時自動同步角色當前職業狀態。
+  3. **角色編輯鎖定規則**：角色建立開卡時決定起始職業與等級，編輯模式下職業等級鎖定為唯讀徽章，後續等級推進一律透過冒險日誌記錄。
+  4. **專案術語一致性**：全專案詞彙統一為「冒險」與「冒險日誌」。
+- **影響範圍：**
+  - 後端：`pom.xml`, `BackendApplication.java`, `config/*`, `mapper/*`, `service/*`, `dto/*`, `entity/*`
+  - 前端：`character-form/*`, `adventure-form/*`, `models/*`
+  - 文檔：`system-requirements-spec.md`, `backlog.md`, `walkthrough.md`
+- **完成項目：**
+  - [x] MyBatis 依賴導入與 XML Mappers 實作
+  - [x] 自訂 `UuidTypeHandler` 支援 PostgreSQL UUID
+  - [x] `AdventureEntryService` 與 `CharacterService` 重構
+  - [x] 前端冒險升級動態職業配置與核對條實作
+  - [x] 角色編輯頁面職業/等級唯讀化
+  - [x] 前後端編譯打包驗證通過
+
+---
+
 ### 📌 多人版本待辦（未來規劃，暫不實作）
 - 玩家帳號系統（Email + 密碼 或 OAuth）
 - 登入後自動帶入玩家名稱（取代目前的 localStorage / 硬寫預設值）

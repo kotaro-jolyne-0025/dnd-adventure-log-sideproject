@@ -55,6 +55,8 @@ export interface AdventureEntry {
   updatedAt?: string;
 }
 
+import { CharacterClassLevelRequest } from './character.model';
+
 export interface AdventureEntryRequest {
   adventureCode?: string | null;
   adventureName?: string | null;
@@ -76,6 +78,7 @@ export interface AdventureEntryRequest {
   magicItemsDowntimeChange?: number | null;
   adventureNotes?: string | null;
   soulCoinChargesUsed?: string | null;
+  classLevels?: CharacterClassLevelRequest[] | null;
 }
 
 export interface EntryDefaults {

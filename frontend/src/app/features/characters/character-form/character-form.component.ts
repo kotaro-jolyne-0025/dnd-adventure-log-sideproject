@@ -46,11 +46,12 @@ export class CharacterFormComponent implements OnInit {
   protected readonly CLASS_OPTIONS = [
     '戰士', '法師', '牧師', '遊蕩者', '遊俠',
     '吟遊詩人', '德魯伊', '武僧', '聖騎士', '契術師',
-    '術士', '野蠻人', '奇械師', '其他',
+    '術士', '野蠻人', '奇械師',
   ];
 
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
+  protected existingClassLevels = signal<{ className: string; level: number }[]>([]);
   private characterId: string | null = null;
 
   protected form: FormGroup = this.fb.group({
@@ -77,20 +78,9 @@ export class CharacterFormComponent implements OnInit {
   private loadCharacter(id: string): void {
     this.characterService.getById(id).subscribe({
       next: (character) => {
-        // Clear default array and fill with existing data
-        while (this.classesArray.length > 0) {
-          this.classesArray.removeAt(0);
-        }
-        character.classLevels.forEach((cl) => {
-          const isOther = !this.CLASS_OPTIONS.slice(0, -1).includes(cl.className);
-          this.classesArray.push(
-            this.fb.group({
-              className: [isOther ? '其他' : cl.className, Validators.required],
-              customClassName: [isOther ? cl.className : ''],
-              level: [cl.level, [Validators.required, Validators.min(1), Validators.max(20)]],
-            })
-          );
-        });
+        this.existingClassLevels.set(
+          (character.classLevels ?? []).map(cl => ({ className: cl.className, level: cl.level }))
+        );
         this.form.patchValue({
           characterName: character.characterName,
           playerName: character.playerName,
@@ -105,11 +95,10 @@ export class CharacterFormComponent implements OnInit {
     });
   }
 
-  private createClassLevelGroup(): FormGroup {
+  private createClassLevelGroup(className: string = '', level: number = 1): FormGroup {
     return this.fb.group({
-      className: ['', Validators.required],
-      customClassName: [''],
-      level: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
+      className: [className, Validators.required],
+      level: [level, [Validators.required, Validators.min(1), Validators.max(20)]],
     });
   }
 
@@ -124,10 +113,25 @@ export class CharacterFormComponent implements OnInit {
   }
 
   protected onSubmit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+    if (this.isEditMode()) {
+      // 編輯模式下僅驗證基本欄位
+      const basicValid =
+        this.form.get('characterName')!.valid &&
+        this.form.get('playerName')!.valid &&
+        this.form.get('race')!.valid;
+      if (!basicValid) {
+        this.form.get('characterName')!.markAsTouched();
+        this.form.get('playerName')!.markAsTouched();
+        this.form.get('race')!.markAsTouched();
+        return;
+      }
+    } else {
+      if (this.form.invalid) {
+        this.form.markAllAsTouched();
+        return;
+      }
     }
+
     this.isSaving.set(true);
     const raw = this.form.getRawValue();
     const req: CharacterRequest = {
@@ -135,12 +139,12 @@ export class CharacterFormComponent implements OnInit {
       playerName: raw.playerName.trim(),
       race: raw.race.trim(),
       faction: raw.faction?.trim() || null,
-      classLevels: raw.classLevels.map((cl: { className: string; customClassName: string; level: number }) => ({
-        className: cl.className === '其他'
-          ? (cl.customClassName?.trim() || '其他')
-          : cl.className.trim(),
-        level: Number(cl.level),
-      })),
+      classLevels: this.isEditMode()
+        ? this.existingClassLevels()
+        : raw.classLevels.map((cl: { className: string; level: number }) => ({
+            className: cl.className.trim(),
+            level: Number(cl.level),
+          })),
     };
 
     if (this.isEditMode() && this.characterId) {

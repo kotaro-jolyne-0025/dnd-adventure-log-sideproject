@@ -42,22 +42,9 @@
             <mat-slide-toggle
               [checked]="levelUp()"
               (change)="onLevelUpToggle($event.checked)">
-              本次冒險升級
+              本次冒險升級 (+1)
             </mat-slide-toggle>
           </div>
-          @if (levelUp()) {
-            <mat-form-field appearance="outline" class="flex-2">
-              <mat-label>升級職業</mat-label>
-              <mat-select formControlName="levelUpClassName">
-                @for (opt of CLASS_OPTIONS; track opt) {
-                  <mat-option [value]="opt">{{ getClassLabel(opt) }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          }
-        </div>
-        <!-- 迎頭趕上 Toggle + 欄位 -->
-        <div class="field-row level-row">
           <div class="level-up-toggle">
             <mat-slide-toggle
               [checked]="catchup()"
@@ -66,25 +53,75 @@
             </mat-slide-toggle>
           </div>
           @if (catchup()) {
-            <mat-form-field appearance="outline" class="flex-2">
-              <mat-label>升哪個職業</mat-label>
-              <mat-select formControlName="catchupClassName">
-                @for (opt of CLASS_OPTIONS; track opt) {
-                  <mat-option [value]="opt">{{ getClassLabel(opt) }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
             <mat-form-field appearance="outline" class="num-field">
               <mat-label>升幾等</mat-label>
               <input matInput type="number" min="1" formControlName="catchupCount" />
             </mat-form-field>
-            <p class="field-hint catchup-hint">消耗天數請在下方資源變動的休整期變化自行填寫</p>
           }
           <div class="ending-level-display">
             <span class="ending-level-label">結束等級</span>
             <span class="ending-level-value">{{ endingLevel() ?? '—' }}</span>
           </div>
         </div>
+
+        @if (catchup()) {
+          <p class="field-hint catchup-hint">💡 迎頭趕上消耗之天數請在下方資源變動的「休整期變化」填寫扣減</p>
+        }
+
+        <!-- 🎯 升級後職業與等級配置（當有升級時展開） -->
+        @if (isLeveling()) {
+          <div class="class-allocation-section">
+            <div class="section-header">
+              <div class="section-title-group">
+                <span class="section-sub-title">🎯 升級後職業與等級配置</span>
+                <span class="section-sub-hint">請調配升級後的各職業等級（加總需等於結束總等級）</span>
+              </div>
+              <button type="button" mat-stroked-button color="primary" (click)="addClassLevel()">
+                <mat-icon>add</mat-icon> 新增兼職
+              </button>
+            </div>
+
+            <!-- 等級加總核對狀態條 -->
+            <div class="level-match-status"
+              [class.status-match]="allocatedLevelSum() === endingLevel()"
+              [class.status-mismatch]="allocatedLevelSum() !== endingLevel()">
+              @if (allocatedLevelSum() === endingLevel()) {
+                <mat-icon class="status-icon">check_circle</mat-icon>
+                <span>各職業等級加總 ({{ allocatedLevelSum() }}) <strong>符合</strong> 升級後總等級 ({{ endingLevel() }})</span>
+              } @else {
+                <mat-icon class="status-icon">warning</mat-icon>
+                <span>各職業等級加總為 <strong>{{ allocatedLevelSum() }}</strong>，必須等於升級後總等級 <strong>{{ endingLevel() }}</strong>（差 {{ (endingLevel() ?? 0) - allocatedLevelSum() }} 級）</span>
+              }
+            </div>
+
+            <div formArrayName="classLevels" class="classes-list">
+              @for (ctrl of classLevelsArray.controls; track $index) {
+                <div [formGroupName]="$index" class="class-row">
+                  <mat-form-field appearance="outline" class="class-name-field">
+                    <mat-label>職業 *</mat-label>
+                    <mat-select formControlName="className">
+                      @for (opt of CLASS_OPTIONS; track opt) {
+                        <mat-option [value]="opt">{{ opt }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="class-level-field">
+                    <mat-label>等級 *</mat-label>
+                    <input matInput type="number" formControlName="level" min="1" max="20" />
+                  </mat-form-field>
+
+                  <button type="button" mat-icon-button color="warn"
+                    [disabled]="classLevelsArray.length <= 1"
+                    matTooltip="刪除此職業"
+                    (click)="removeClassLevel($index)">
+                    <mat-icon>remove_circle_outline</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
 

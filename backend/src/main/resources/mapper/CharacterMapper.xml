@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dndadvlog.backend.mapper.CharacterMapper">
+
+    <!-- ResultMap：Character + classLevels JOIN -->
+    <resultMap id="characterMap" type="com.dndadvlog.backend.entity.Character">
+        <id     property="id"            column="c_id"/>
+        <result property="characterName" column="character_name"/>
+        <result property="playerName"    column="player_name"/>
+        <result property="race"          column="race"/>
+        <result property="faction"       column="faction"/>
+        <result property="createdAt"     column="c_created_at"/>
+        <result property="updatedAt"     column="c_updated_at"/>
+        <collection property="classLevels" ofType="com.dndadvlog.backend.entity.CharacterClassLevel">
+            <id     property="id"          column="cl_id"/>
+            <result property="characterId" column="c_id"/>
+            <result property="className"   column="class_name"/>
+            <result property="level"       column="level"/>
+            <result property="sortOrder"   column="sort_order"/>
+            <result property="createdAt"   column="cl_created_at"/>
+        </collection>
+    </resultMap>
+
+    <select id="findAll" resultMap="characterMap">
+        SELECT
+            c.id           AS c_id,
+            c.character_name,
+            c.player_name,
+            c.race,
+            c.faction,
+            c.created_at   AS c_created_at,
+            c.updated_at   AS c_updated_at,
+            cl.id          AS cl_id,
+            cl.class_name,
+            cl.level,
+            cl.sort_order,
+            cl.created_at  AS cl_created_at
+        FROM "character" c
+        LEFT JOIN character_class_level cl ON cl.character_id = c.id
+        ORDER BY c.created_at ASC, cl.sort_order ASC
+    </select>
+
+    <select id="findById" resultMap="characterMap">
+        SELECT
+            c.id           AS c_id,
+            c.character_name,
+            c.player_name,
+            c.race,
+            c.faction,
+            c.created_at   AS c_created_at,
+            c.updated_at   AS c_updated_at,
+            cl.id          AS cl_id,
+            cl.class_name,
+            cl.level,
+            cl.sort_order,
+            cl.created_at  AS cl_created_at
+        FROM "character" c
+        LEFT JOIN character_class_level cl ON cl.character_id = c.id
+        WHERE c.id = #{id}::uuid
+        ORDER BY cl.sort_order ASC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO "character" (id, character_name, player_name, race, faction, created_at, updated_at)
+        VALUES (
+            #{id}::uuid,
+            #{characterName},
+            #{playerName},
+            #{race},
+            #{faction},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "character"
+        SET
+            character_name = #{characterName},
+            player_name    = #{playerName},
+            race           = #{race},
+            faction        = #{faction},
+            updated_at     = NOW()
+        WHERE id = #{id}::uuid
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "character" WHERE id = #{id}::uuid
+    </delete>
+
+    <!-- Class Levels -->
+    <insert id="insertClassLevel">
+        INSERT INTO character_class_level (id, character_id, class_name, level, sort_order, created_at)
+        VALUES (
+            #{id}::uuid,
+            #{characterId}::uuid,
+            #{className},
+            #{level},
+            #{sortOrder},
+            NOW()
+        )
+    </insert>
+
+    <delete id="deleteClassLevelsByCharacterId">
+        DELETE FROM character_class_level WHERE character_id = #{characterId}::uuid
+    </delete>
+
+    <update id="updateClassLevelById">
+        UPDATE character_class_level SET level = #{level} WHERE id = #{id}::uuid
+    </update>
+
+    <delete id="deleteClassLevelById">
+        DELETE FROM character_class_level WHERE id = #{id}::uuid
+    </delete>
+
+    <select id="sumClassLevelsByCharacterId" resultType="int">
+        SELECT COALESCE(SUM(level), 0)
+        FROM character_class_level
+        WHERE character_id = #{characterId}::uuid
+    </select>
+
+</mapper>
