@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class AdventureEntryRequest {
@@ -27,4 +28,5 @@ public class AdventureEntryRequest {
     private Integer catchupCount;
     private String adventureNotes;
     private String soulCoinChargesUsed;
+    private List<CharacterRequest.ClassLevelRequest> classLevels;
 }
