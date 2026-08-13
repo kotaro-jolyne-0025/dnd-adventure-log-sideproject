@@ -102,31 +102,30 @@
 
 ---
 
-### T07 — 子任務 7：部署至 Zeabur
-- **狀態：** `[x] 已完成（檔案準備完畢，待 Zeabur 面板操作）`
+### T07 — 子任務 7：部署至 Zeabur（原生 Buildpacks 架構）
+- **狀態：** `[x] 已完成（已移除 Dockerfile，改為 Zeabur 原生自動建置）`
 - **對應計畫：** `dnd-adv-log-plan.md` 子任務 7
 - **需要讀取的檔案：**
   - `frontend/src/environments/`
-  - `backend/Dockerfile`
+  - `frontend/package.json`
   - `backend/src/main/resources/application.properties`
+  - `backend/src/main/java/com/dndadvlog/backend/WebConfig.java`
 - **完成摘要：**
-  - `backend/src/main/resources/application.properties`：移除 `spring.profiles.active=local`（部署環境不需要 local profile）
-  - `backend/Dockerfile`：建立兩階段 build（eclipse-temurin:17-jdk-alpine build → jre-alpine run），執行 `mvnw package -DskipTests`
-  - `frontend/Dockerfile`：建立兩階段 build（node:20-alpine build → nginx:alpine serve），啟動時用 `envsubst` 將 `$BACKEND_URL` 注入 nginx.conf
-  - `frontend/nginx.conf`：Angular Router fallback + `/api` 反向代理到 `$BACKEND_URL`（由 Zeabur 環境變數提供）
+  - 移除 `backend/Dockerfile`、`frontend/Dockerfile`、`frontend/nginx.conf`、`frontend/.dockerignore`，全面改用 Zeabur 原生 buildpacks。
+  - `backend/src/main/java/com/dndadvlog/backend/WebConfig.java`：支援以逗號分隔的多個 `CORS_ALLOWED_ORIGIN` 網址。
+  - `frontend/src/environments/environment.prod.ts`：更新生產環境 API 網址註解與設定。
 - **Zeabur 部署步驟（手動操作）：**
-  1. git commit + push 所有變更到 GitHub
-  2. 登入 Zeabur → 建立新 Project
-  3. 新增後端 Service → 連結 GitHub repo → 指定 `backend/` 子目錄 → 等待部署完成
-  4. 在後端 Service 的「Variables」設定三個環境變數：
+  1. git commit + push 所有變更到 GitHub。
+  2. 登入 Zeabur → 進入專案。
+  3. 新增後端 Service → 連結 GitHub repo → 指定 `backend/` 子目錄。
+  4. 在後端 Service 的「Variables」設定環境變數：
      - `DB_URL` = `jdbc:postgresql://db.<你的supabase id>.supabase.co:5432/postgres`
-     - `DB_USERNAME` = `postgres`
+     - `DB_USERNAME` = `postgres.<id>`
      - `DB_PASSWORD` = 你的 Supabase 資料庫密碼
-  5. 複製後端 Service 的「Internal Domain」（格式：`http://<service-name>.zeabur.internal`）
-  6. 新增前端 Service → 連結 GitHub repo → 指定 `frontend/` 子目錄
-  7. 在前端 Service 的「Variables」設定：
-     - `BACKEND_URL` = 上一步複製的後端 Internal Domain（例如 `http://dnd-backend.zeabur.internal:8080`）
-  8. 為兩個 Service 各自設定公開網域（Zeabur 提供免費的 `.zeabur.app` 子域名）
+     - `CORS_ALLOWED_ORIGIN` = `http://localhost:4200,https://<你的前端網域>.zeabur.app`
+  5. 產生後端公開網域（例如 `https://dnd-backend.zeabur.app`）。
+  6. 新增前端 Service → 連結 GitHub repo → 指定 `frontend/` 子目錄（Zeabur 自動以 Static Web 建置並託管 `dist/frontend/browser`）。
+  7. 為前端 Service 設定公開網域。
 
 ---
 

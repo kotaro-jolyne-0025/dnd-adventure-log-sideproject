@@ -67,3 +67,25 @@ spring.datasource.password=<password>
 - **職業快照**：每筆冒險記錄儲存起始/結束時的職業等級快照，供詳情頁準確顯示
 - **休整期活動管理**：可在冒險表單內直接新增休整期活動，不需另開頁面
 - **PWA 支援**：可安裝至 Windows / Mac / 手機桌面，支援離線瀏覽快取
+
+---
+
+## 🚀 Zeabur 原生部屬說明
+
+本專案採用 Zeabur 原生自動建置（無需 Dockerfile）：
+
+### 1. 後端 (Spring Boot)
+1. 於 Zeabur 建立新服務，連結 GitHub repo，子目錄填寫 `backend`。
+2. 於後端服務的 **Variables** 設定：
+   - `DB_URL` = `jdbc:postgresql://<supabase-host>:5432/postgres`
+   - `DB_USERNAME` = `postgres.<id>`
+   - `DB_PASSWORD` = `<supabase-password>`
+   - `CORS_ALLOWED_ORIGIN` = 前端公開網址（例如 `https://<frontend>.zeabur.app` 或多個逗號分隔）
+3. 於後端服務建立公開網域（例如 `https://dnd-backend.zeabur.app`）。
+
+### 2. 前端 (Angular Static Web)
+1. 確認 `frontend/src/environments/environment.prod.ts` 的 `apiUrl` 已指向後端公開網址（例如 `https://dnd-backend.zeabur.app/api`）。
+2. 於 Zeabur 建立新服務，連結 GitHub repo，子目錄填寫 `frontend`。
+3. Zeabur 會自動執行 `npm ci` 與 `npm run build`，產物輸出於 `dist/frontend/browser`。
+4. 於前端服務設定 SPA 重定向或公開網域即可上線。
+
