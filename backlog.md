@@ -102,30 +102,32 @@
 
 ---
 
-### T07 — 子任務 7：部署至 Zeabur（原生 Buildpacks 架構）
-- **狀態：** `[x] 已完成（已移除 Dockerfile，改為 Zeabur 原生自動建置）`
+### T07 — 子任務 7：部署至 Zeabur（方案 A：後端原生 + 前端 Nginx 反代）
+- **狀態：** `[x] 已完成（檔案準備完畢）`
 - **對應計畫：** `dnd-adv-log-plan.md` 子任務 7
 - **需要讀取的檔案：**
-  - `frontend/src/environments/`
-  - `frontend/package.json`
+  - `frontend/Dockerfile`
+  - `frontend/nginx.conf`
   - `backend/src/main/resources/application.properties`
   - `backend/src/main/java/com/dndadvlog/backend/WebConfig.java`
 - **完成摘要：**
-  - 移除 `backend/Dockerfile`、`frontend/Dockerfile`、`frontend/nginx.conf`、`frontend/.dockerignore`，全面改用 Zeabur 原生 buildpacks。
+  - 後端移除 `Dockerfile`，由 Zeabur 以 Maven 原生自動建置，僅開內網存取（安全且簡潔）。
+  - 前端建立 `frontend/Dockerfile` + `nginx.conf`，透過 `envsubst` 讀取 Zeabur 的 `BACKEND_URL` 環境變數，將 `/api` 請求在內部反向代理給後端。
   - `backend/src/main/java/com/dndadvlog/backend/WebConfig.java`：支援以逗號分隔的多個 `CORS_ALLOWED_ORIGIN` 網址。
-  - `frontend/src/environments/environment.prod.ts`：更新生產環境 API 網址註解與設定。
+  - `frontend/src/environments/environment.prod.ts`：維持 `apiUrl: '/api'` 相對路徑。
 - **Zeabur 部署步驟（手動操作）：**
   1. git commit + push 所有變更到 GitHub。
   2. 登入 Zeabur → 進入專案。
-  3. 新增後端 Service → 連結 GitHub repo → 指定 `backend/` 子目錄。
+  3. 新增後端 Service → 連結 GitHub repo → 指定 `backend/` 子目錄（自動以 Java 17 + Maven 原生建置）。
   4. 在後端 Service 的「Variables」設定環境變數：
-     - `DB_URL` = `jdbc:postgresql://db.<你的supabase id>.supabase.co:5432/postgres`
+     - `DB_URL` = `jdbc:postgresql://<supabase-host>:5432/postgres`
      - `DB_USERNAME` = `postgres.<id>`
      - `DB_PASSWORD` = 你的 Supabase 資料庫密碼
-     - `CORS_ALLOWED_ORIGIN` = `http://localhost:4200,https://<你的前端網域>.zeabur.app`
-  5. 產生後端公開網域（例如 `https://dnd-backend.zeabur.app`）。
-  6. 新增前端 Service → 連結 GitHub repo → 指定 `frontend/` 子目錄（Zeabur 自動以 Static Web 建置並託管 `dist/frontend/browser`）。
-  7. 為前端 Service 設定公開網域。
+  5. 複製後端 Service 的「內網網址」（例如 `http://dnd-adventure-log-sideproject.zeabur.internal:8080`），**後端無需開公網**。
+  6. 新增前端 Service → 連結 GitHub repo → 指定 `frontend/` 子目錄（Zeabur 自動以 `frontend/Dockerfile` 建置）。
+  7. 在前端 Service 的「Variables」設定：
+     - `BACKEND_URL` = `http://dnd-adventure-log-sideproject.zeabur.internal:8080`
+  8. 為前端 Service 設定公開網域（例如 `https://adv-log.zeabur.app`）。
 
 ---
 

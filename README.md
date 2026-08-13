@@ -70,22 +70,20 @@ spring.datasource.password=<password>
 
 ---
 
-## 🚀 Zeabur 原生部屬說明
+## 🚀 Zeabur 部署說明 (方案 A：後端原生 + 前端 Nginx 反代)
 
-本專案採用 Zeabur 原生自動建置（無需 Dockerfile）：
-
-### 1. 後端 (Spring Boot)
-1. 於 Zeabur 建立新服務，連結 GitHub repo，子目錄填寫 `backend`。
+### 1. 後端 (Spring Boot - 原生建置)
+1. 於 Zeabur 建立新服務，連結 GitHub repo，子目錄填寫 `backend`（Zeabur 自動以 Maven 原生打包啟動）。
 2. 於後端服務的 **Variables** 設定：
    - `DB_URL` = `jdbc:postgresql://<supabase-host>:5432/postgres`
    - `DB_USERNAME` = `postgres.<id>`
    - `DB_PASSWORD` = `<supabase-password>`
-   - `CORS_ALLOWED_ORIGIN` = 前端公開網址（例如 `https://<frontend>.zeabur.app` 或多個逗號分隔）
-3. 於後端服務建立公開網域（例如 `https://dnd-backend.zeabur.app`）。
+3. 在後端服務的 **Networking（網路）** 設定內網存取（例如 `dnd-adventure-log-sideproject.zeabur.internal:8080`），後端**無需對外開放公網**。
 
-### 2. 前端 (Angular Static Web)
-1. 確認 `frontend/src/environments/environment.prod.ts` 的 `apiUrl` 已指向後端公開網址（例如 `https://dnd-backend.zeabur.app/api`）。
-2. 於 Zeabur 建立新服務，連結 GitHub repo，子目錄填寫 `frontend`。
-3. Zeabur 會自動執行 `npm ci` 與 `npm run build`，產物輸出於 `dist/frontend/browser`。
-4. 於前端服務設定 SPA 重定向或公開網域即可上線。
+### 2. 前端 (Angular + Nginx 反向代理)
+1. 於 Zeabur 建立新服務，連結 GitHub repo，子目錄填寫 `frontend`（Zeabur 自動偵測 `frontend/Dockerfile` 進行兩階段建置）。
+2. 於前端服務的 **Variables** 設定：
+   - `BACKEND_URL` = 後端內網網址（例如 `http://dnd-adventure-log-sideproject.zeabur.internal:8080`）
+3. 於前端服務的 **Networking（網路）** 綁定公開網域（例如 `https://adv-log.zeabur.app`）。
+
 
