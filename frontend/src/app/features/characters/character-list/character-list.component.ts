@@ -95,12 +95,6 @@ export class CharacterListComponent implements OnInit {
   }
 
   protected formatClasses(character: Character): string {
-    return character.classLevels
-      .map((c) => `${c.className} ${c.level}`)
-      .join(' / ');
-  }
-
-  protected getTotalLevel(character: Character): number {
-    return character.classLevels.reduce((sum, c) => sum + c.level, 0);
+    return character.currentClassesString || '無職業紀錄';
   }
 }

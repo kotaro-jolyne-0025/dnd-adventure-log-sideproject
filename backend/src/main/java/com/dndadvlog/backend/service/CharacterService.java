@@ -3,7 +3,6 @@ package com.dndadvlog.backend.service;
 import com.dndadvlog.backend.dto.CharacterRequest;
 import com.dndadvlog.backend.dto.CharacterResponse;
 import com.dndadvlog.backend.entity.Character;
-import com.dndadvlog.backend.entity.CharacterClassLevel;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
 import com.dndadvlog.backend.mapper.CharacterMapper;
 import lombok.RequiredArgsConstructor;
@@ -39,17 +38,8 @@ public class CharacterService {
         character.setPlayerName(request.getPlayerName());
         character.setRace(request.getRace());
         character.setFaction(request.getFaction());
+        character.setCurrentClassesString(request.getCurrentClassesString());
         characterMapper.insert(character);
-        for (int i = 0; i < request.getClassLevels().size(); i++) {
-            CharacterRequest.ClassLevelRequest cl = request.getClassLevels().get(i);
-            CharacterClassLevel classLevel = new CharacterClassLevel();
-            classLevel.setId(UUID.randomUUID());
-            classLevel.setCharacterId(character.getId());
-            classLevel.setClassName(cl.getClassName());
-            classLevel.setLevel(cl.getLevel());
-            classLevel.setSortOrder(i);
-            characterMapper.insertClassLevel(classLevel);
-        }
         log.info("角色建立成功: ID={}, 名稱={}", character.getId(), character.getCharacterName());
         return toResponse(findCharacter(character.getId()));
     }
@@ -60,7 +50,9 @@ public class CharacterService {
         character.setCharacterName(request.getCharacterName());
         character.setPlayerName(request.getPlayerName());
         character.setRace(request.getRace());
-        character.setFaction(request.getFaction());
+        if (request.getCurrentClassesString() != null) {
+            character.setCurrentClassesString(request.getCurrentClassesString());
+        }
         characterMapper.update(character);
         Character updated = findCharacter(id);
         log.info("角色基本資料更新成功: ID={}, 名稱={}", updated.getId(), updated.getCharacterName());
@@ -91,23 +83,7 @@ public class CharacterService {
         response.setFaction(character.getFaction());
         response.setCreatedAt(character.getCreatedAt());
         response.setUpdatedAt(character.getUpdatedAt());
-        List<CharacterClassLevel> validClassLevels = character.getClassLevels() != null
-                ? character.getClassLevels().stream()
-                    .filter(cl -> cl != null && cl.getClassName() != null && cl.getLevel() != null)
-                    .collect(Collectors.toList())
-                : List.of();
-        int totalLevel = validClassLevels.stream()
-                .mapToInt(CharacterClassLevel::getLevel).sum();
-        response.setCurrentLevel(totalLevel);
-        response.setClassLevels(validClassLevels.stream()
-                .map(cl -> {
-                    CharacterResponse.ClassLevelResponse clr = new CharacterResponse.ClassLevelResponse();
-                    clr.setId(cl.getId());
-                    clr.setClassName(cl.getClassName());
-                    clr.setLevel(cl.getLevel());
-                    clr.setSortOrder(cl.getSortOrder() != null ? cl.getSortOrder() : 0);
-                    return clr;
-                }).collect(Collectors.toList()));
+        response.setCurrentClassesString(character.getCurrentClassesString());
         return response;
     }
 }

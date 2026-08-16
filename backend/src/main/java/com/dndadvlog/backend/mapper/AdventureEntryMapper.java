@@ -1,7 +1,6 @@
 package com.dndadvlog.backend.mapper;
 
 import com.dndadvlog.backend.entity.AdventureEntry;
-import com.dndadvlog.backend.entity.AdventureEntryClassSnapshot;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -24,9 +23,4 @@ public interface AdventureEntryMapper {
 
     void deleteById(@Param("id") UUID id);
 
-    void insertSnapshot(AdventureEntryClassSnapshot snapshot);
-
-    void deleteSnapshotsByEntryIdAndType(@Param("entryId") UUID entryId, @Param("snapshotType") String snapshotType);
-
-    List<AdventureEntryClassSnapshot> findSnapshotsByEntryIdAndType(@Param("entryId") UUID entryId, @Param("snapshotType") String snapshotType);
 }

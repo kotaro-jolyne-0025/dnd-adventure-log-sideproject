@@ -64,6 +64,20 @@ export class AdventureDetailComponent implements OnInit {
     });
   }
 
+  protected formatClassesDisplay(classesString?: string | null, level?: number | null): string {
+    if (classesString && classesString.trim()) {
+      const parts = classesString.split('/').map(seg => {
+        const match = seg.trim().match(/^(.+?)(\d+)$/);
+        if (match) {
+          return `${match[1]}/Lv.${match[2]}`;
+        }
+        return seg.trim();
+      });
+      return parts.join('，');
+    }
+    return level != null ? `Lv.${level}` : '—';
+  }
+
   protected formatChange(val?: number | null): string {
     if (val == null) return '—';
     return val > 0 ? `+${val}` : `${val}`;

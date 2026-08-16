@@ -486,11 +486,25 @@
 
 ---
 
-## 如何使用這個 Backlog
-
-1. **開新 session 時**：把這個檔案貼給 AI，說「讀 backlog.md，然後執行 T0X」
-2. **執行完一個工作**：將狀態從 `[ ]` 改為 `[x]`，並在備註補充完成摘要
-3. **工作進行中**：將狀態改為 `[-]`，在備註記錄進度與阻礙
-4. **臨時需求**：在上方的`工作項目清單`增加新項目
+### T18 — 架構重構：職業等級改為字串化
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. 廢除 `character_class_level` 與 `adventure_entry_class_snapshot` 關聯表。
+  2. `character` 新增 `current_classes_string` 欄位；`adventure_entry` 新增 `starting_classes_string` / `ending_classes_string` 欄位。
+  3. 前端角色表單與冒險日誌表單中的職業等級輸入改為單純的字串輸入 (例: `法師5/戰士2`)，由使用者自行填寫並對齊。
+  4. 移除了前端所有與「動態配置陣列」、「升級核對」、「迎頭趕上」相關的複雜邏輯。
+  5. 後端 Entity, DTO, Mapper, Service 全部更新為對應字串的寫入。
+- **影響範圍：**
+  - 後端：`CharacterService.java`, `AdventureEntryService.java`, Mybatis Mappers, Entities, DTOs
+  - 前端：`character.model.ts`, `adventure.model.ts`, 所有 Form 與 Detail Components
+  - 資料庫：Schema 更新
+- **完成項目：**
+  - [x] 資料庫表結構 Migration SQL 已更新於 `database-schema.md` (T18)
+  - [x] 後端實體與 DTO、Mapper 介面全面重構
+  - [x] 後端服務業務邏輯簡化為字串寫入
+  - [x] 前端模型與元件介面簡化，改為字串輸入
+  - [x] 前後端皆已編譯與驗證成功
 
 ---
+
+## 如何使用這個 Backlog
