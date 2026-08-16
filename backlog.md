@@ -437,6 +437,47 @@
 
 ---
 
+### T16 — 功能優化：修復角色職業編輯與移除「其他」職業選項
+
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. 職業選項清單（`CLASS_OPTIONS`）精簡為 13 種官方核心職業，徹底移除「其他」與自訂文字輸入欄位。
+  2. 修復角色編輯表單中無法修改職業/等級的問題：優化後端 `CharacterService.updateCharacter` 的集合更新與 `saveAndFlush`，確保 JPA 交易原子性與狀態同步。
+  3. 同步更新 `system-requirements-spec.md`、`database-schema.md`、`user-stories.md`。
+- **影響範圍：**
+  - 後端：`CharacterService.java`
+  - 前端：`character-form.component.ts`、`character-form.component.html`、`adventure-form.component.ts`
+  - 文檔：SRS、DB Schema、User Stories
+- **完成項目：**
+  - [x] 後端 `CharacterService.updateCharacter` 重構，安全更新基本欄位與 `classLevels` 集合並執行 `saveAndFlush`
+  - [x] 前端 `character-form` 與 `adventure-form` 移除 `CLASS_OPTIONS` 裡的 `'其他'`
+  - [x] 前端 `character-form` 移除 `customClassName` 控制項與 HTML 範本
+  - [x] 更新 `system-requirements-spec.md`、`database-schema.md`、`user-stories.md` 規格
+
+---
+
+### T17 — 架構重構與升級機制優化：JPA 遷移至 MyBatis & 角色職業鎖定與冒險靈活升級
+
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **持久層重構 (JPA ➔ MyBatis)**：移除 `spring-boot-starter-data-jpa`，導入 MyBatis，編寫 XML Mappers 與自訂 `UuidTypeHandler`，徹底解決實體狀態同步與懶加載問題。
+  2. **冒險記錄升級機制 (靈活調配)**：冒險記錄核心追蹤總等級；升級或迎頭趕上時動態展開職業配置表，即時核對職業等級加總等於結束總等級；儲存時自動同步角色當前職業狀態。
+  3. **角色編輯鎖定規則**：角色建立開卡時決定起始職業與等級，編輯模式下職業等級鎖定為唯讀徽章，後續等級推進一律透過冒險日誌記錄。
+  4. **專案術語一致性**：全專案詞彙統一為「冒險」與「冒險日誌」。
+- **影響範圍：**
+  - 後端：`pom.xml`, `BackendApplication.java`, `config/*`, `mapper/*`, `service/*`, `dto/*`, `entity/*`
+  - 前端：`character-form/*`, `adventure-form/*`, `models/*`
+  - 文檔：`system-requirements-spec.md`, `backlog.md`, `walkthrough.md`
+- **完成項目：**
+  - [x] MyBatis 依賴導入與 XML Mappers 實作
+  - [x] 自訂 `UuidTypeHandler` 支援 PostgreSQL UUID
+  - [x] `AdventureEntryService` 與 `CharacterService` 重構
+  - [x] 前端冒險升級動態職業配置與核對條實作
+  - [x] 角色編輯頁面職業/等級唯讀化
+  - [x] 前後端編譯打包驗證通過
+
+---
+
 ### 📌 多人版本待辦（未來規劃，暫不實作）
 - 玩家帳號系統（Email + 密碼 或 OAuth）
 - 登入後自動帶入玩家名稱（取代目前的 localStorage / 硬寫預設值）
@@ -445,11 +486,25 @@
 
 ---
 
-## 如何使用這個 Backlog
-
-1. **開新 session 時**：把這個檔案貼給 AI，說「讀 backlog.md，然後執行 T0X」
-2. **執行完一個工作**：將狀態從 `[ ]` 改為 `[x]`，並在備註補充完成摘要
-3. **工作進行中**：將狀態改為 `[-]`，在備註記錄進度與阻礙
-4. **臨時需求**：在上方的`工作項目清單`增加新項目
+### T18 — 架構重構：職業等級改為字串化
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. 廢除 `character_class_level` 與 `adventure_entry_class_snapshot` 關聯表。
+  2. `character` 新增 `current_classes_string` 欄位；`adventure_entry` 新增 `starting_classes_string` / `ending_classes_string` 欄位。
+  3. 前端角色表單與冒險日誌表單中的職業等級輸入改為單純的字串輸入 (例: `法師5/戰士2`)，由使用者自行填寫並對齊。
+  4. 移除了前端所有與「動態配置陣列」、「升級核對」、「迎頭趕上」相關的複雜邏輯。
+  5. 後端 Entity, DTO, Mapper, Service 全部更新為對應字串的寫入。
+- **影響範圍：**
+  - 後端：`CharacterService.java`, `AdventureEntryService.java`, Mybatis Mappers, Entities, DTOs
+  - 前端：`character.model.ts`, `adventure.model.ts`, 所有 Form 與 Detail Components
+  - 資料庫：Schema 更新
+- **完成項目：**
+  - [x] 資料庫表結構 Migration SQL 已更新於 `database-schema.md` (T18)
+  - [x] 後端實體與 DTO、Mapper 介面全面重構
+  - [x] 後端服務業務邏輯簡化為字串寫入
+  - [x] 前端模型與元件介面簡化，改為字串輸入
+  - [x] 前後端皆已編譯與驗證成功
 
 ---
+
+## 如何使用這個 Backlog

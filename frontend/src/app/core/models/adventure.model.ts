@@ -1,10 +1,4 @@
-// ── ClassSnapshotItem ─────────────────────────────────────────────────────────
 
-export interface ClassSnapshotItem {
-  className: string;
-  level: number;
-  sortOrder?: number;
-}
 
 // ── DowntimeActivity ─────────────────────────────────────────────────────────
 
@@ -31,11 +25,8 @@ export interface AdventureEntry {
   dmName?: string;
   startingLevel?: number;
   endingLevel?: number;
-  levelUpClassName?: string;
-  catchupClassName?: string;
-  catchupCount?: number;
-  startingClassSnapshot?: ClassSnapshotItem[];
-  endingClassSnapshot?: ClassSnapshotItem[];
+  startingClassesString?: string;
+  endingClassesString?: string;
   startingGold?: number;
   goldChange?: number;
   goldDowntimeChange?: number;
@@ -62,9 +53,6 @@ export interface AdventureEntryRequest {
   dmName?: string | null;
   startingLevel?: number | null;
   endingLevel?: number | null;
-  levelUpClassName?: string | null;
-  catchupClassName?: string | null;
-  catchupCount?: number | null;
   startingGold?: number | null;
   goldChange?: number | null;
   goldDowntimeChange?: number | null;
@@ -76,6 +64,7 @@ export interface AdventureEntryRequest {
   magicItemsDowntimeChange?: number | null;
   adventureNotes?: string | null;
   soulCoinChargesUsed?: string | null;
+  endingClassesString?: string | null;
 }
 
 export interface EntryDefaults {
@@ -83,4 +72,5 @@ export interface EntryDefaults {
   startingGold?: number | null;
   startingDowntime?: number | null;
   startingMagicItems?: number | null;
+  startingClassesString?: string | null;
 }

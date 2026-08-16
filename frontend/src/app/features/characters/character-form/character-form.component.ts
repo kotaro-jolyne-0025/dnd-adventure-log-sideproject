@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   FormArray,
@@ -46,7 +46,7 @@ export class CharacterFormComponent implements OnInit {
   protected readonly CLASS_OPTIONS = [
     '戰士', '法師', '牧師', '遊蕩者', '遊俠',
     '吟遊詩人', '德魯伊', '武僧', '聖騎士', '契術師',
-    '術士', '野蠻人', '奇械師', '其他',
+    '術士', '野蠻人', '奇械師',
   ];
 
   protected isEditMode = signal(false);
@@ -58,11 +58,44 @@ export class CharacterFormComponent implements OnInit {
     playerName: ['可嵐', Validators.required],
     race: ['', Validators.required],
     faction: [''],
-    classLevels: this.fb.array([this.createClassLevelGroup()]),
   });
 
-  get classesArray(): FormArray {
-    return this.form.get('classLevels') as FormArray;
+  // 職業等級選擇器
+  protected classEntries = signal<{ className: string; level: number }[]>([
+    { className: '', level: 1 },
+  ]);
+
+  protected addClass(): void {
+    this.classEntries.update(list => [...list, { className: '', level: 1 }]);
+  }
+
+  protected removeClass(index: number): void {
+    this.classEntries.update(list => list.filter((_, i) => i !== index));
+  }
+
+  protected totalLevel = computed(() =>
+    this.classEntries().reduce((sum, e) => sum + (e.level || 0), 0)
+  );
+
+  protected updateClassName(index: number, value: string): void {
+    this.classEntries.update(list =>
+      list.map((e, i) => i === index ? { ...e, className: value } : e)
+    );
+  }
+
+  protected updateClassLevel(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const num = parseInt(input.value, 10);
+    if (isNaN(num) || num < 1) return;
+    this.classEntries.update(list =>
+      list.map((e, i) => i === index ? { ...e, level: num } : e)
+    );
+  }
+
+  private buildClassesString(): string | null {
+    const filled = this.classEntries().filter(e => e.className.trim());
+    if (filled.length === 0) return null;
+    return filled.map(e => `${e.className.trim()}${e.level}`).join('/');
   }
 
   ngOnInit(): void {
@@ -77,26 +110,21 @@ export class CharacterFormComponent implements OnInit {
   private loadCharacter(id: string): void {
     this.characterService.getById(id).subscribe({
       next: (character) => {
-        // Clear default array and fill with existing data
-        while (this.classesArray.length > 0) {
-          this.classesArray.removeAt(0);
-        }
-        character.classLevels.forEach((cl) => {
-          const isOther = !this.CLASS_OPTIONS.slice(0, -1).includes(cl.className);
-          this.classesArray.push(
-            this.fb.group({
-              className: [isOther ? '其他' : cl.className, Validators.required],
-              customClassName: [isOther ? cl.className : ''],
-              level: [cl.level, [Validators.required, Validators.min(1), Validators.max(20)]],
-            })
-          );
-        });
         this.form.patchValue({
           characterName: character.characterName,
           playerName: character.playerName,
           race: character.race,
           faction: character.faction ?? '',
         });
+        // 解析職業字串 → 選擇器
+        if (character.currentClassesString) {
+          const parsed = character.currentClassesString.split('/').map(seg => {
+            const match = seg.trim().match(/^(.+?)([\d]+)$/);
+            if (match) return { className: match[1].trim(), level: parseInt(match[2], 10) };
+            return { className: seg.trim(), level: 1 };
+          }).filter(e => e.className);
+          if (parsed.length > 0) this.classEntries.set(parsed);
+        }
       },
       error: () => {
         this.snackBar.open('載入角色資料失敗', '關閉', { duration: 3000 });
@@ -105,29 +133,28 @@ export class CharacterFormComponent implements OnInit {
     });
   }
 
-  private createClassLevelGroup(): FormGroup {
-    return this.fb.group({
-      className: ['', Validators.required],
-      customClassName: [''],
-      level: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
-    });
-  }
 
-  protected addClassLevel(): void {
-    this.classesArray.push(this.createClassLevelGroup());
-  }
-
-  protected removeClassLevel(index: number): void {
-    if (this.classesArray.length > 1) {
-      this.classesArray.removeAt(index);
-    }
-  }
 
   protected onSubmit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+    if (this.isEditMode()) {
+      // 編輯模式下僅驗證基本欄位
+      const basicValid =
+        this.form.get('characterName')!.valid &&
+        this.form.get('playerName')!.valid &&
+        this.form.get('race')!.valid;
+      if (!basicValid) {
+        this.form.get('characterName')!.markAsTouched();
+        this.form.get('playerName')!.markAsTouched();
+        this.form.get('race')!.markAsTouched();
+        return;
+      }
+    } else {
+      if (this.form.invalid) {
+        this.form.markAllAsTouched();
+        return;
+      }
     }
+
     this.isSaving.set(true);
     const raw = this.form.getRawValue();
     const req: CharacterRequest = {
@@ -135,12 +162,7 @@ export class CharacterFormComponent implements OnInit {
       playerName: raw.playerName.trim(),
       race: raw.race.trim(),
       faction: raw.faction?.trim() || null,
-      classLevels: raw.classLevels.map((cl: { className: string; customClassName: string; level: number }) => ({
-        className: cl.className === '其他'
-          ? (cl.customClassName?.trim() || '其他')
-          : cl.className.trim(),
-        level: Number(cl.level),
-      })),
+      currentClassesString: this.buildClassesString(),
     };
 
     if (this.isEditMode() && this.characterId) {

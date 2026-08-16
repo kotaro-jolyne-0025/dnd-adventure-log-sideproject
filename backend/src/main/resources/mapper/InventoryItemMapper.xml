@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dndadvlog.backend.mapper.InventoryItemMapper">
+
+    <resultMap id="itemMap" type="com.dndadvlog.backend.entity.InventoryItem">
+        <id     property="id"          column="id"/>
+        <result property="characterId" column="character_id"/>
+        <result property="itemName"    column="item_name"/>
+        <result property="itemType"    column="item_type"/>
+        <result property="rarity"      column="rarity"/>
+        <result property="quantity"    column="quantity"/>
+        <result property="source"      column="source"/>
+        <result property="notes"       column="notes"/>
+        <result property="createdAt"   column="created_at"/>
+        <result property="updatedAt"   column="updated_at"/>
+    </resultMap>
+
+    <select id="findByCharacterId" resultMap="itemMap">
+        SELECT * FROM inventory_item
+        WHERE character_id = #{characterId}::uuid
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="findByCharacterIdAndItemType" resultMap="itemMap">
+        SELECT * FROM inventory_item
+        WHERE character_id = #{characterId}::uuid AND item_type = #{itemType}
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="findById" resultMap="itemMap">
+        SELECT * FROM inventory_item WHERE id = #{id}::uuid
+    </select>
+
+    <insert id="insert">
+        INSERT INTO inventory_item (id, character_id, item_name, item_type, rarity, quantity, source, notes, created_at, updated_at)
+        VALUES (#{id}::uuid, #{characterId}::uuid, #{itemName}, #{itemType}, #{rarity}, #{quantity}, #{source}, #{notes}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE inventory_item SET
+            item_name  = #{itemName},
+            item_type  = #{itemType},
+            rarity     = #{rarity},
+            quantity   = #{quantity},
+            source     = #{source},
+            notes      = #{notes},
+            updated_at = NOW()
+        WHERE id = #{id}::uuid
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM inventory_item WHERE id = #{id}::uuid
+    </delete>
+
+</mapper>

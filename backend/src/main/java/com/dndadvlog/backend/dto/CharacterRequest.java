@@ -1,10 +1,7 @@
 package com.dndadvlog.backend.dto;
 
 import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import java.util.List;
 
 @Data
 public class CharacterRequest {
@@ -20,13 +17,6 @@ public class CharacterRequest {
 
     private String faction;
 
-    @NotEmpty(message = "職業/等級至少需填寫一筆")
-    private List<ClassLevelRequest> classLevels;
+    private String currentClassesString;
 
-    @Data
-    public static class ClassLevelRequest {
-        @NotBlank(message = "職業名稱為必填")
-        private String className;
-        private Integer level;
-    }
 }

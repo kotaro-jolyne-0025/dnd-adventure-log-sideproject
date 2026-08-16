@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dndadvlog.backend.mapper.CharacterMapper">
+
+    <!-- ResultMap：Character + classLevels JOIN -->
+    <resultMap id="characterMap" type="com.dndadvlog.backend.entity.Character">
+        <id     property="id"            column="c_id"/>
+        <result property="characterName" column="character_name"/>
+        <result property="playerName"    column="player_name"/>
+        <result property="race"          column="race"/>
+        <result property="faction"       column="faction"/>
+        <result property="createdAt"     column="c_created_at"/>
+        <result property="updatedAt"     column="c_updated_at"/>
+        <result property="currentClassesString" column="current_classes_string"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="characterMap">
+        SELECT
+            c.id           AS c_id,
+            c.character_name,
+            c.player_name,
+            c.race,
+            c.faction,
+            c.current_classes_string,
+            c.created_at   AS c_created_at,
+            c.updated_at   AS c_updated_at
+        FROM "character" c
+        ORDER BY c.created_at ASC
+    </select>
+
+    <select id="findById" resultMap="characterMap">
+        SELECT
+            c.id           AS c_id,
+            c.character_name,
+            c.player_name,
+            c.race,
+            c.faction,
+            c.current_classes_string,
+            c.created_at   AS c_created_at,
+            c.updated_at   AS c_updated_at
+        FROM "character" c
+        WHERE c.id = #{id}::uuid
+    </select>
+
+    <insert id="insert">
+        INSERT INTO "character" (id, character_name, player_name, race, faction, current_classes_string, created_at, updated_at)
+        VALUES (
+            #{id}::uuid,
+            #{characterName},
+            #{playerName},
+            #{race},
+            #{faction},
+            #{currentClassesString},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "character"
+        SET
+            character_name = #{characterName},
+            player_name    = #{playerName},
+            race           = #{race},
+            faction        = #{faction},
+            current_classes_string = #{currentClassesString},
+            updated_at     = NOW()
+        WHERE id = #{id}::uuid
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "character" WHERE id = #{id}::uuid
+    </delete>
+
+
+
+</mapper>

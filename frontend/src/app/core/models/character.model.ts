@@ -1,31 +1,12 @@
-// ── CharacterClassLevel ──────────────────────────────────────────────────────
-
-export interface CharacterClassLevel {
-  id?: string;          // UUID
-  className: string;
-  level: number;
-  sortOrder?: number;
-}
-
-// ── Character ────────────────────────────────────────────────────────────────
-
 export interface Character {
   id: string;           // UUID
   characterName: string;
   playerName: string;
   race: string;
   faction?: string;
-  classLevels: CharacterClassLevel[];
-  currentLevel?: number | null;
+  currentClassesString?: string;
   createdAt?: string;
   updatedAt?: string;
-}
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-export interface CharacterClassLevelRequest {
-  className: string;
-  level: number;
 }
 
 export interface CharacterRequest {
@@ -33,5 +14,5 @@ export interface CharacterRequest {
   playerName: string;
   race: string;
   faction?: string | null;
-  classLevels: CharacterClassLevelRequest[];
+  currentClassesString?: string | null;
 }

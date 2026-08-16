@@ -46,7 +46,7 @@ export class CharacterShellComponent implements OnInit {
   }
 
   protected formatClasses(character: Character): string {
-    return character.classLevels.map((c) => `${c.className} ${c.level}`).join(' / ');
+    return character.currentClassesString || '無職業紀錄';
   }
 
   protected onTabChange(index: number): void {
