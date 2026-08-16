@@ -144,3 +144,86 @@
     line-height: 1.4;
   }
 }
+
+/* 🎯 升級後職業配置區塊 */
+.class-allocation-section {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low, #f8f9fa);
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .section-title-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .section-sub-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .section-sub-hint {
+    font-size: 0.76rem;
+    color: var(--mat-sys-outline, #757575);
+  }
+}
+
+.level-match-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+
+  .status-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  &.status-match {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+
+  &.status-mismatch {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+  }
+}
+
+.classes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .class-name-field {
+    flex: 2;
+    min-width: 140px;
+  }
+
+  .class-level-field {
+    width: 100px;
+    min-width: 80px;
+  }
+}

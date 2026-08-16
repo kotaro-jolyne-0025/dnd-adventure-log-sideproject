@@ -2,12 +2,12 @@ package com.dndadvlog.backend.service;
 
 import com.dndadvlog.backend.dto.InventoryItemRequest;
 import com.dndadvlog.backend.dto.InventoryItemResponse;
-import com.dndadvlog.backend.entity.Character;
 import com.dndadvlog.backend.entity.InventoryItem;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
-import com.dndadvlog.backend.repository.CharacterRepository;
-import com.dndadvlog.backend.repository.InventoryItemRepository;
+import com.dndadvlog.backend.mapper.CharacterMapper;
+import com.dndadvlog.backend.mapper.InventoryItemMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,45 +15,54 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InventoryItemService {
 
-    private final InventoryItemRepository inventoryItemRepository;
-    private final CharacterRepository characterRepository;
+    private final InventoryItemMapper inventoryItemMapper;
+    private final CharacterMapper characterMapper;
 
     public List<InventoryItemResponse> getItems(UUID characterId, InventoryItem.ItemType itemType) {
         List<InventoryItem> items = (itemType != null)
-                ? inventoryItemRepository.findByCharacterIdAndItemTypeOrderByCreatedAtAsc(characterId, itemType)
-                : inventoryItemRepository.findByCharacterIdOrderByCreatedAtAsc(characterId);
+                ? inventoryItemMapper.findByCharacterIdAndItemType(characterId, itemType.name())
+                : inventoryItemMapper.findByCharacterId(characterId);
         return items.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public InventoryItemResponse createItem(UUID characterId, InventoryItemRequest request) {
-        Character character = characterRepository.findById(characterId)
-                .orElseThrow(() -> new ResourceNotFoundException("找不到角色 ID：" + characterId));
+        if (characterMapper.findById(characterId) == null) {
+            throw new ResourceNotFoundException("找不到角色 ID：" + characterId);
+        }
         InventoryItem item = new InventoryItem();
-        item.setCharacter(character);
+        item.setId(UUID.randomUUID());
+        item.setCharacterId(characterId);
         mapRequestToItem(request, item);
-        return toResponse(inventoryItemRepository.save(item));
+        inventoryItemMapper.insert(item);
+        return toResponse(findItem(item.getId()));
     }
 
     @Transactional
     public InventoryItemResponse updateItem(UUID itemId, InventoryItemRequest request) {
         InventoryItem item = findItem(itemId);
         mapRequestToItem(request, item);
-        return toResponse(inventoryItemRepository.save(item));
+        inventoryItemMapper.update(item);
+        return toResponse(findItem(itemId));
     }
 
     @Transactional
     public void deleteItem(UUID itemId) {
-        inventoryItemRepository.delete(findItem(itemId));
+        findItem(itemId);
+        inventoryItemMapper.deleteById(itemId);
     }
 
     private InventoryItem findItem(UUID itemId) {
-        return inventoryItemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("找不到物品 ID：" + itemId));
+        InventoryItem item = inventoryItemMapper.findById(itemId);
+        if (item == null) {
+            throw new ResourceNotFoundException("找不到物品 ID：" + itemId);
+        }
+        return item;
     }
 
     private void mapRequestToItem(InventoryItemRequest request, InventoryItem item) {
@@ -68,7 +77,7 @@ public class InventoryItemService {
     private InventoryItemResponse toResponse(InventoryItem item) {
         InventoryItemResponse response = new InventoryItemResponse();
         response.setId(item.getId());
-        response.setCharacterId(item.getCharacter().getId());
+        response.setCharacterId(item.getCharacterId());
         response.setItemName(item.getItemName());
         response.setItemType(item.getItemType());
         response.setRarity(item.getRarity());

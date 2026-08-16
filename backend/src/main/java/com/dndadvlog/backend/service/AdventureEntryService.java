@@ -2,273 +2,194 @@ package com.dndadvlog.backend.service;
 
 import com.dndadvlog.backend.dto.*;
 import com.dndadvlog.backend.entity.AdventureEntry;
-import com.dndadvlog.backend.entity.AdventureEntryClassSnapshot;
 import com.dndadvlog.backend.entity.Character;
-import com.dndadvlog.backend.entity.CharacterClassLevel;
 import com.dndadvlog.backend.entity.DowntimeActivity;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
-import com.dndadvlog.backend.repository.AdventureEntryClassSnapshotRepository;
-import com.dndadvlog.backend.repository.AdventureEntryRepository;
-import com.dndadvlog.backend.repository.CharacterRepository;
-import com.dndadvlog.backend.repository.DowntimeActivityRepository;
+import com.dndadvlog.backend.mapper.AdventureEntryMapper;
+import com.dndadvlog.backend.mapper.CharacterMapper;
+import com.dndadvlog.backend.mapper.DowntimeActivityMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdventureEntryService {
 
-    private final AdventureEntryRepository entryRepository;
-    private final CharacterRepository characterRepository;
-    private final DowntimeActivityRepository downtimeActivityRepository;
-    private final AdventureEntryClassSnapshotRepository snapshotRepository;
+    private final AdventureEntryMapper entryMapper;
+    private final CharacterMapper characterMapper;
+    private final DowntimeActivityMapper downtimeActivityMapper;
+    private final CharacterService characterService;
 
     public List<AdventureEntryResponse> getEntriesByCharacter(UUID characterId) {
-        return entryRepository.findByCharacterIdOrderByPlayDateAsc(characterId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+        List<AdventureEntry> entries = entryMapper.findByCharacterIdOrderByPlayDateAsc(characterId);
+        return entries.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     public AdventureEntryResponse getEntry(UUID entryId) {
         return toResponse(findEntry(entryId));
     }
 
+    public EntryDefaultsResponse getDefaults(UUID characterId) {
+        EntryDefaultsResponse defaults = new EntryDefaultsResponse();
+        Optional<AdventureEntry> lastEntry =
+                entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
+        if (lastEntry.isPresent()) {
+            AdventureEntry last = lastEntry.get();
+            defaults.setStartingLevel(last.getEndingLevel());
+            defaults.setStartingGold(last.getGoldTotal());
+            defaults.setStartingDowntime(last.getDowntimeTotal());
+            defaults.setStartingMagicItems(last.getMagicItemsTotal());
+            defaults.setStartingClassesString(last.getEndingClassesString());
+        } else {
+            Character character = characterService.findCharacter(characterId);
+            defaults.setStartingGold(BigDecimal.ZERO);
+            defaults.setStartingDowntime(0);
+            defaults.setStartingMagicItems(0);
+            String classesStr = character.getCurrentClassesString();
+            defaults.setStartingClassesString(classesStr);
+            defaults.setStartingLevel(parseTotalLevelFromClassesString(classesStr));
+        }
+        return defaults;
+    }
+
+    private Integer parseTotalLevelFromClassesString(String classesString) {
+        if (classesString == null || classesString.trim().isEmpty()) {
+            return 1;
+        }
+        int total = 0;
+        String[] segments = classesString.split("/");
+        for (String seg : segments) {
+            String trimmed = seg.trim();
+            // Match trailing digits e.g. "戰士2" -> 2
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)$").matcher(trimmed);
+            if (matcher.find()) {
+                try {
+                    total += Integer.parseInt(matcher.group(1));
+                } catch (NumberFormatException ignored) {}
+            } else {
+                total += 1;
+            }
+        }
+        return total > 0 ? total : 1;
+    }
+
     @Transactional
     public AdventureEntryResponse createEntry(UUID characterId, AdventureEntryRequest request) {
-        Character character = characterRepository.findById(characterId)
-                .orElseThrow(() -> new ResourceNotFoundException("找不到角色 ID：" + characterId));
+        Character character = characterService.findCharacter(characterId);
         AdventureEntry entry = new AdventureEntry();
-        entry.setCharacter(character);
+        entry.setId(UUID.randomUUID());
+        entry.setCharacterId(characterId);
+        
+        // 自動帶入先前的職業字串作為 starting (如果前端沒給，或者我們可以完全信任前端送的)
+        if (request.getEndingClassesString() != null) {
+            entry.setStartingClassesString(character.getCurrentClassesString());
+            entry.setEndingClassesString(request.getEndingClassesString());
+            
+            // 更新角色當前的職業字串 (因為這是一筆新紀錄，它代表最新狀態)
+            character.setCurrentClassesString(request.getEndingClassesString());
+            characterMapper.update(character);
+        }
+
         mapRequestToEntry(request, entry);
-        // 先儲存取得 ID，再寫入快照
-        AdventureEntry saved = entryRepository.save(entry);
-        // starting 快照（升級前的職業清單）
-        writeSnapshots(saved, character.getClassLevels(), "starting");
-        // 若有升級職業，套用升級
-        if (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) {
-            applyLevelUp(character, request.getLevelUpClassName());
-        }
-        // 若有迎頭趕上，套用
-        if (request.getCatchupClassName() != null && !request.getCatchupClassName().isBlank()
-                && request.getCatchupCount() != null && request.getCatchupCount() > 0) {
-            applyCatchup(character, request.getCatchupClassName(), request.getCatchupCount());
-        }
-        // ending 快照（升級後的職業清單）
-        writeSnapshots(saved, character.getClassLevels(), "ending");
-        // 重新載入以取得最新快照
-        entryRepository.flush();
-        return toResponse(entryRepository.findById(saved.getId()).orElse(saved));
+        entryMapper.insert(entry);
+        
+        log.info("冒險記錄建立: ID={}, 名稱={}", entry.getId(), entry.getAdventureName());
+        return toResponse(findEntry(entry.getId()));
     }
 
     @Transactional
     public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request) {
         AdventureEntry entry = findEntry(entryId);
-        String oldLevelUpClass = entry.getLevelUpClassName();
-        String newLevelUpClass = request.getLevelUpClassName();
-        String oldCatchupClass = entry.getCatchupClassName();
-        Integer oldCatchupCount = entry.getCatchupCount();
-        String newCatchupClass = request.getCatchupClassName();
-        Integer newCatchupCount = request.getCatchupCount();
+        UUID characterId = entry.getCharacterId();
+        
+        // 為了簡單起見，如果這是「最新」的一筆紀錄，我們連帶更新 character 的 string
+        Optional<AdventureEntry> lastEntry =
+                entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
+                
+        if (request.getEndingClassesString() != null) {
+            entry.setEndingClassesString(request.getEndingClassesString());
+            if (lastEntry.isPresent() && lastEntry.get().getId().equals(entryId)) {
+                Character character = characterService.findCharacter(characterId);
+                character.setCurrentClassesString(request.getEndingClassesString());
+                characterMapper.update(character);
+            }
+        }
+
         mapRequestToEntry(request, entry);
-        Character character = entry.getCharacter();
-        // 先撤回舊升級
-        if (!Objects.equals(oldLevelUpClass, newLevelUpClass)) {
-            if (oldLevelUpClass != null && !oldLevelUpClass.isBlank()) {
-                revertLevelUp(character, oldLevelUpClass);
-            }
-        }
-        boolean catchupChanged = !Objects.equals(oldCatchupClass, newCatchupClass)
-                || !Objects.equals(oldCatchupCount, newCatchupCount);
-        if (catchupChanged) {
-            if (oldCatchupClass != null && !oldCatchupClass.isBlank()
-                    && oldCatchupCount != null && oldCatchupCount > 0) {
-                revertCatchup(character, oldCatchupClass, oldCatchupCount);
-            }
-        }
-        // 更新 starting 快照（撤回後的職業狀態）
-        snapshotRepository.deleteByEntryIdAndType(entry.getId(), "starting");
-        writeSnapshots(entry, character.getClassLevels(), "starting");
-        // 套用新升級
-        if (!Objects.equals(oldLevelUpClass, newLevelUpClass)) {
-            if (newLevelUpClass != null && !newLevelUpClass.isBlank()) {
-                applyLevelUp(character, newLevelUpClass);
-            }
-        }
-        if (catchupChanged) {
-            if (newCatchupClass != null && !newCatchupClass.isBlank()
-                    && newCatchupCount != null && newCatchupCount > 0) {
-                applyCatchup(character, newCatchupClass, newCatchupCount);
-            }
-        }
-        // 更新 ending 快照（套用後的職業狀態）
-        snapshotRepository.deleteByEntryIdAndType(entry.getId(), "ending");
-        writeSnapshots(entry, character.getClassLevels(), "ending");
-        AdventureEntry saved = entryRepository.save(entry);
-        entryRepository.flush();
-        return toResponse(entryRepository.findById(saved.getId()).orElse(saved));
+        entryMapper.update(entry);
+
+        log.info("冒險記錄更新: ID={}, 名稱={}", entryId, entry.getAdventureName());
+        return toResponse(findEntry(entryId));
     }
 
     @Transactional
     public void deleteEntry(UUID entryId) {
-        entryRepository.delete(findEntry(entryId));
+        AdventureEntry entry = findEntry(entryId);
+        UUID characterId = entry.getCharacterId();
+        String fallbackString = entry.getStartingClassesString();
+
+        entryMapper.deleteById(entryId);
+
+        // 如果刪除的是最新一筆，角色狀態要退回上一筆
+        Optional<AdventureEntry> latestRemaining =
+                entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
+
+        Character character = characterService.findCharacter(characterId);
+        if (latestRemaining.isPresent()) {
+            character.setCurrentClassesString(latestRemaining.get().getEndingClassesString());
+        } else {
+            // 已無紀錄，回退至這筆紀錄建立前的狀態
+            character.setCurrentClassesString(fallbackString);
+        }
+        characterMapper.update(character);
+        
+        log.info("冒險記錄刪除: ID={}", entryId);
     }
 
-    // Downtime Activities
     public List<DowntimeActivityResponse> getActivities(UUID entryId) {
-        return downtimeActivityRepository.findByAdventureEntryIdOrderByCreatedAtAsc(entryId)
+        return downtimeActivityMapper.findByEntryIdOrderByCreatedAtAsc(entryId)
                 .stream().map(this::toActivityResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public DowntimeActivityResponse createActivity(UUID entryId, DowntimeActivityRequest request) {
-        AdventureEntry entry = findEntry(entryId);
+        findEntry(entryId);
         DowntimeActivity activity = new DowntimeActivity();
-        activity.setAdventureEntry(entry);
+        activity.setId(UUID.randomUUID());
+        activity.setAdventureEntryId(entryId);
         activity.setDescription(request.getDescription());
-        return toActivityResponse(downtimeActivityRepository.save(activity));
+        downtimeActivityMapper.insert(activity);
+        return toActivityResponse(findActivity(activity.getId()));
     }
 
     @Transactional
     public DowntimeActivityResponse updateActivity(UUID activityId, DowntimeActivityRequest request) {
-        DowntimeActivity activity = downtimeActivityRepository.findById(activityId)
-                .orElseThrow(() -> new ResourceNotFoundException("找不到休整期活動 ID：" + activityId));
+        DowntimeActivity activity = findActivity(activityId);
         activity.setDescription(request.getDescription());
-        return toActivityResponse(downtimeActivityRepository.save(activity));
+        downtimeActivityMapper.update(activity);
+        return toActivityResponse(findActivity(activityId));
     }
 
     @Transactional
     public void deleteActivity(UUID activityId) {
-        DowntimeActivity activity = downtimeActivityRepository.findById(activityId)
-                .orElseThrow(() -> new ResourceNotFoundException("找不到休整期活動 ID：" + activityId));
-        downtimeActivityRepository.delete(activity);
+        findActivity(activityId);
+        downtimeActivityMapper.deleteById(activityId);
     }
 
-    private AdventureEntry findEntry(UUID entryId) {
-        return entryRepository.findById(entryId)
-                .orElseThrow(() -> new ResourceNotFoundException("找不到冒險記錄 ID：" + entryId));
-    }
-
-    public EntryDefaultsResponse getDefaults(UUID characterId) {
-        EntryDefaultsResponse defaults = new EntryDefaultsResponse();
-        // 起始等級來源：character_class_level 的等級加總
-        int totalLevel = characterRepository.sumClassLevelsByCharacterId(characterId);
-        if (totalLevel > 0) {
-            defaults.setStartingLevel(totalLevel);
-        }
-        entryRepository.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId)
-                .ifPresent(last -> {
-                    defaults.setStartingGold(last.getGoldTotal());
-                    defaults.setStartingDowntime(last.getDowntimeTotal());
-                    defaults.setStartingMagicItems(last.getMagicItemsTotal());
-                });
-        return defaults;
-    }
-
-    /** 套用升級：找同名職業 +1，不存在則新增 level=1 */
-    private void applyLevelUp(Character character, String className) {
-        character.getClassLevels().stream()
-                .filter(cl -> cl.getClassName().equals(className))
-                .findFirst()
-                .ifPresentOrElse(
-                        cl -> cl.setLevel(cl.getLevel() + 1),
-                        () -> {
-                            CharacterClassLevel newCl = new CharacterClassLevel();
-                            newCl.setCharacter(character);
-                            newCl.setClassName(className);
-                            newCl.setLevel(1);
-                            newCl.setSortOrder(character.getClassLevels().size());
-                            character.getClassLevels().add(newCl);
-                        }
-                );
-    }
-
-    /** 套用迎頭趕上：找同名職業 +count，不存在則新增 level=count */
-    private void applyCatchup(Character character, String className, int count) {
-        character.getClassLevels().stream()
-                .filter(cl -> cl.getClassName().equals(className))
-                .findFirst()
-                .ifPresentOrElse(
-                        cl -> cl.setLevel(cl.getLevel() + count),
-                        () -> {
-                            CharacterClassLevel newCl = new CharacterClassLevel();
-                            newCl.setCharacter(character);
-                            newCl.setClassName(className);
-                            newCl.setLevel(count);
-                            newCl.setSortOrder(character.getClassLevels().size());
-                            character.getClassLevels().add(newCl);
-                        }
-                );
-    }
-
-    /** 撤回迎頭趕上：找同名職業 -count，降為 0 以下則從清單移除 */
-    private void revertCatchup(Character character, String className, int count) {
-        character.getClassLevels().stream()
-                .filter(cl -> cl.getClassName().equals(className))
-                .findFirst()
-                .ifPresent(cl -> {
-                    if (cl.getLevel() <= count) {
-                        character.getClassLevels().remove(cl);
-                    } else {
-                        cl.setLevel(cl.getLevel() - count);
-                    }
-                });
-    }
-
-    /** 撤回升級：找同名職業 -1，降為 0 則從清單移除 */
-    private void revertLevelUp(Character character, String className) {
-        character.getClassLevels().stream()
-                .filter(cl -> cl.getClassName().equals(className))
-                .findFirst()
-                .ifPresent(cl -> {
-                    if (cl.getLevel() <= 1) {
-                        character.getClassLevels().remove(cl);
-                    } else {
-                        cl.setLevel(cl.getLevel() - 1);
-                    }
-                });
-    }
-
-    private void mapRequestToEntry(AdventureEntryRequest request, AdventureEntry entry) {
-        entry.setAdventureCode(request.getAdventureCode());
-        entry.setAdventureName(request.getAdventureName());
-        entry.setPlayDate(request.getPlayDate());
-        entry.setDmName(request.getDmName());
-        entry.setStartingLevel(request.getStartingLevel());
-        // endingLevel = startingLevel + (levelUp ? 1 : 0) + (catchupCount ?? 0)
-        int sl = request.getStartingLevel() != null ? request.getStartingLevel() : 0;
-        int lvUp = (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) ? 1 : 0;
-        int cu = (request.getCatchupCount() != null) ? request.getCatchupCount() : 0;
-        entry.setEndingLevel(sl + lvUp + cu);
-        entry.setStartingGold(request.getStartingGold());
-        entry.setGoldChange(request.getGoldChange());
-        entry.setGoldDowntimeChange(request.getGoldDowntimeChange());
-        // 後端計算合計：起始 + 冒險變化 + 休整期變化
-        entry.setGoldTotal(calcTotal(request.getStartingGold(), request.getGoldChange(), request.getGoldDowntimeChange()));
-        entry.setStartingDowntime(request.getStartingDowntime());
-        entry.setDowntimeChange(request.getDowntimeChange());
-        entry.setDowntimeDowntimeChange(request.getDowntimeDowntimeChange());
-        entry.setDowntimeTotal(calcTotalInt(request.getStartingDowntime(), request.getDowntimeChange(), request.getDowntimeDowntimeChange()));
-        entry.setStartingMagicItems(request.getStartingMagicItems());
-        entry.setMagicItemsChange(request.getMagicItemsChange());
-        entry.setMagicItemsDowntimeChange(request.getMagicItemsDowntimeChange());
-        entry.setMagicItemsTotal(calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange()));
-        entry.setLevelUpClassName(request.getLevelUpClassName());
-        entry.setCatchupClassName(request.getCatchupClassName());
-        entry.setCatchupCount(request.getCatchupCount());
-        entry.setAdventureNotes(request.getAdventureNotes());
-        entry.setSoulCoinChargesUsed(request.getSoulCoinChargesUsed());
-    }
-
-    private java.math.BigDecimal calcTotal(java.math.BigDecimal starting, java.math.BigDecimal change, java.math.BigDecimal downtimeChange) {
+    private BigDecimal calcTotal(BigDecimal starting, BigDecimal change, BigDecimal downtimeChange) {
         if (starting == null && change == null && downtimeChange == null) return null;
-        java.math.BigDecimal s = starting != null ? starting : java.math.BigDecimal.ZERO;
-        java.math.BigDecimal c = change != null ? change : java.math.BigDecimal.ZERO;
-        java.math.BigDecimal d = downtimeChange != null ? downtimeChange : java.math.BigDecimal.ZERO;
+        BigDecimal s = starting != null ? starting : BigDecimal.ZERO;
+        BigDecimal c = change != null ? change : BigDecimal.ZERO;
+        BigDecimal d = downtimeChange != null ? downtimeChange : BigDecimal.ZERO;
         return s.add(c).add(d);
     }
 
@@ -280,24 +201,46 @@ public class AdventureEntryService {
         return s + c + d;
     }
 
-    /** 將職業清單寫入指定 snapshotType 的快照 */
-    private void writeSnapshots(AdventureEntry entry, List<CharacterClassLevel> classLevels, String snapshotType) {
-        int order = 0;
-        for (CharacterClassLevel cl : classLevels) {
-            AdventureEntryClassSnapshot snap = new AdventureEntryClassSnapshot();
-            snap.setAdventureEntry(entry);
-            snap.setSnapshotType(snapshotType);
-            snap.setClassName(cl.getClassName());
-            snap.setLevel(cl.getLevel());
-            snap.setSortOrder(order++);
-            snapshotRepository.save(snap);
-        }
+    private void mapRequestToEntry(AdventureEntryRequest request, AdventureEntry entry) {
+        entry.setAdventureCode(request.getAdventureCode());
+        entry.setAdventureName(request.getAdventureName());
+        entry.setPlayDate(request.getPlayDate());
+        entry.setDmName(request.getDmName());
+        entry.setStartingLevel(request.getStartingLevel());
+        entry.setEndingLevel(request.getEndingLevel());
+        entry.setStartingGold(request.getStartingGold());
+        entry.setGoldChange(request.getGoldChange());
+        entry.setGoldDowntimeChange(request.getGoldDowntimeChange());
+        entry.setGoldTotal(calcTotal(request.getStartingGold(), request.getGoldChange(), request.getGoldDowntimeChange()));
+        entry.setStartingDowntime(request.getStartingDowntime());
+        entry.setDowntimeChange(request.getDowntimeChange());
+        entry.setDowntimeDowntimeChange(request.getDowntimeDowntimeChange());
+        entry.setDowntimeTotal(calcTotalInt(request.getStartingDowntime(), request.getDowntimeChange(), request.getDowntimeDowntimeChange()));
+        entry.setStartingMagicItems(request.getStartingMagicItems());
+        entry.setMagicItemsChange(request.getMagicItemsChange());
+        entry.setMagicItemsDowntimeChange(request.getMagicItemsDowntimeChange());
+        entry.setMagicItemsTotal(calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange()));
+        entry.setAdventureNotes(request.getAdventureNotes());
+        entry.setSoulCoinChargesUsed(request.getSoulCoinChargesUsed());
+    }
+
+    private AdventureEntry findEntry(UUID entryId) {
+        AdventureEntry entry = entryMapper.findById(entryId);
+        if (entry == null) throw new ResourceNotFoundException("找不到冒險記錄 ID：" + entryId);
+        entry.setDowntimeActivities(downtimeActivityMapper.findByEntryIdOrderByCreatedAtAsc(entryId));
+        return entry;
+    }
+
+    private DowntimeActivity findActivity(UUID activityId) {
+        DowntimeActivity activity = downtimeActivityMapper.findById(activityId);
+        if (activity == null) throw new ResourceNotFoundException("找不到休整期活動 ID：" + activityId);
+        return activity;
     }
 
     private AdventureEntryResponse toResponse(AdventureEntry entry) {
         AdventureEntryResponse response = new AdventureEntryResponse();
         response.setId(entry.getId());
-        response.setCharacterId(entry.getCharacter().getId());
+        response.setCharacterId(entry.getCharacterId());
         response.setAdventureCode(entry.getAdventureCode());
         response.setAdventureName(entry.getAdventureName());
         response.setPlayDate(entry.getPlayDate());
@@ -316,34 +259,23 @@ public class AdventureEntryService {
         response.setMagicItemsChange(entry.getMagicItemsChange());
         response.setMagicItemsDowntimeChange(entry.getMagicItemsDowntimeChange());
         response.setMagicItemsTotal(entry.getMagicItemsTotal());
-        response.setLevelUpClassName(entry.getLevelUpClassName());
-        response.setCatchupClassName(entry.getCatchupClassName());
-        response.setCatchupCount(entry.getCatchupCount());
+        
+        response.setStartingClassesString(entry.getStartingClassesString());
+        response.setEndingClassesString(entry.getEndingClassesString());
+        
         response.setAdventureNotes(entry.getAdventureNotes());
         response.setSoulCoinChargesUsed(entry.getSoulCoinChargesUsed());
         response.setCreatedAt(entry.getCreatedAt());
         response.setUpdatedAt(entry.getUpdatedAt());
         response.setDowntimeActivities(entry.getDowntimeActivities()
                 .stream().map(this::toActivityResponse).collect(Collectors.toList()));
-        response.setStartingClassSnapshot(entry.getStartingClassSnapshot()
-                .stream().map(this::toSnapshotItem).collect(Collectors.toList()));
-        response.setEndingClassSnapshot(entry.getEndingClassSnapshot()
-                .stream().map(this::toSnapshotItem).collect(Collectors.toList()));
         return response;
-    }
-
-    private AdventureEntryResponse.ClassSnapshotItem toSnapshotItem(AdventureEntryClassSnapshot snap) {
-        AdventureEntryResponse.ClassSnapshotItem item = new AdventureEntryResponse.ClassSnapshotItem();
-        item.setClassName(snap.getClassName());
-        item.setLevel(snap.getLevel());
-        item.setSortOrder(snap.getSortOrder());
-        return item;
     }
 
     private DowntimeActivityResponse toActivityResponse(DowntimeActivity activity) {
         DowntimeActivityResponse response = new DowntimeActivityResponse();
         response.setId(activity.getId());
-        response.setAdventureEntryId(activity.getAdventureEntry().getId());
+        response.setAdventureEntryId(activity.getAdventureEntryId());
         response.setDescription(activity.getDescription());
         response.setCreatedAt(activity.getCreatedAt());
         response.setUpdatedAt(activity.getUpdatedAt());

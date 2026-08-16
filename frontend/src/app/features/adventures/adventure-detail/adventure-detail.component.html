@@ -49,39 +49,15 @@
           <div class="info-item">
             <span class="info-label">起始等級</span>
             <span class="info-value">
-              @if (entry()!.startingClassSnapshot && entry()!.startingClassSnapshot!.length > 0) {
-                @for (snap of entry()!.startingClassSnapshot!; track snap.className) {
-                  <span class="snapshot-class">{{ snap.className }} Lv.{{ snap.level }}</span>
-                }
-              } @else {
-                {{ entry()!.startingLevel ?? '—' }}
-              }
+              {{ formatClassesDisplay(entry()!.startingClassesString, entry()!.startingLevel) }}
             </span>
           </div>
           <div class="info-item">
             <span class="info-label">結束等級</span>
             <span class="info-value">
-              @if (entry()!.endingClassSnapshot && entry()!.endingClassSnapshot!.length > 0) {
-                @for (snap of entry()!.endingClassSnapshot!; track snap.className) {
-                  <span class="snapshot-class">{{ snap.className }} Lv.{{ snap.level }}</span>
-                }
-              } @else {
-                {{ entry()!.endingLevel ?? '—' }}
-              }
+              {{ formatClassesDisplay(entry()!.endingClassesString, entry()!.endingLevel) }}
             </span>
           </div>
-          @if (entry()!.levelUpClassName) {
-            <div class="info-item">
-              <span class="info-label">升級職業</span>
-              <span class="info-value">{{ entry()!.levelUpClassName }}</span>
-            </div>
-          }
-          @if (entry()!.catchupClassName && entry()!.catchupCount) {
-            <div class="info-item">
-              <span class="info-label">迎頭趕上</span>
-              <span class="info-value">{{ entry()!.catchupClassName }} +{{ entry()!.catchupCount }} 等</span>
-            </div>
-          }
         </div>
       </mat-card-content>
     </mat-card>

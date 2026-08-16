@@ -10,4 +10,5 @@ public class EntryDefaultsResponse {
     private BigDecimal startingGold;
     private Integer startingDowntime;
     private Integer startingMagicItems;
+    private String startingClassesString;
 }

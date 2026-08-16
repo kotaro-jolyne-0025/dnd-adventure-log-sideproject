@@ -51,12 +51,7 @@
                 <span class="info-label">職業</span>
                 <span class="info-value classes">{{ formatClasses(char) }}</span>
               </div>
-              @if (getTotalLevel(char) > 0) {
-                <div class="info-row">
-                  <span class="info-label">目前等級</span>
-                  <span class="info-value">Lv.{{ getTotalLevel(char) }}</span>
-                </div>
-              }
+
               @if (char.faction) {
                 <div class="info-row">
                   <span class="info-label">派系</span>
