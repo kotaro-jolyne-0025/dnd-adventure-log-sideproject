@@ -2,8 +2,7 @@ package com.dndadvlog.backend.service;
 
 import com.dndadvlog.backend.dto.*;
 import com.dndadvlog.backend.entity.AdventureEntry;
-import com.dndadvlog.backend.entity.AdventureEntryClassSnapshot;
-import com.dndadvlog.backend.entity.CharacterClassLevel;
+import com.dndadvlog.backend.entity.Character;
 import com.dndadvlog.backend.entity.DowntimeActivity;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
 import com.dndadvlog.backend.mapper.AdventureEntryMapper;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,52 +40,68 @@ public class AdventureEntryService {
 
     public EntryDefaultsResponse getDefaults(UUID characterId) {
         EntryDefaultsResponse defaults = new EntryDefaultsResponse();
-        int totalLevel = characterMapper.sumClassLevelsByCharacterId(characterId);
-        if (totalLevel > 0) defaults.setStartingLevel(totalLevel);
         Optional<AdventureEntry> lastEntry =
                 entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
-        lastEntry.ifPresent(last -> {
+        if (lastEntry.isPresent()) {
+            AdventureEntry last = lastEntry.get();
+            defaults.setStartingLevel(last.getEndingLevel());
             defaults.setStartingGold(last.getGoldTotal());
             defaults.setStartingDowntime(last.getDowntimeTotal());
             defaults.setStartingMagicItems(last.getMagicItemsTotal());
-        });
+            defaults.setStartingClassesString(last.getEndingClassesString());
+        } else {
+            Character character = characterService.findCharacter(characterId);
+            defaults.setStartingGold(BigDecimal.ZERO);
+            defaults.setStartingDowntime(0);
+            defaults.setStartingMagicItems(0);
+            String classesStr = character.getCurrentClassesString();
+            defaults.setStartingClassesString(classesStr);
+            defaults.setStartingLevel(parseTotalLevelFromClassesString(classesStr));
+        }
         return defaults;
+    }
+
+    private Integer parseTotalLevelFromClassesString(String classesString) {
+        if (classesString == null || classesString.trim().isEmpty()) {
+            return 1;
+        }
+        int total = 0;
+        String[] segments = classesString.split("/");
+        for (String seg : segments) {
+            String trimmed = seg.trim();
+            // Match trailing digits e.g. "戰士2" -> 2
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)$").matcher(trimmed);
+            if (matcher.find()) {
+                try {
+                    total += Integer.parseInt(matcher.group(1));
+                } catch (NumberFormatException ignored) {}
+            } else {
+                total += 1;
+            }
+        }
+        return total > 0 ? total : 1;
     }
 
     @Transactional
     public AdventureEntryResponse createEntry(UUID characterId, AdventureEntryRequest request) {
-        com.dndadvlog.backend.entity.Character character = characterService.findCharacter(characterId);
+        Character character = characterService.findCharacter(characterId);
         AdventureEntry entry = new AdventureEntry();
         entry.setId(UUID.randomUUID());
         entry.setCharacterId(characterId);
-        mapRequestToEntry(request, entry);
-        entryMapper.insert(entry);
-        writeSnapshots(entry.getId(), character.getClassLevels(), "starting");
-
-        if (request.getClassLevels() != null && !request.getClassLevels().isEmpty()) {
-            characterMapper.deleteClassLevelsByCharacterId(characterId);
-            for (int i = 0; i < request.getClassLevels().size(); i++) {
-                CharacterRequest.ClassLevelRequest cl = request.getClassLevels().get(i);
-                CharacterClassLevel classLevel = new CharacterClassLevel();
-                classLevel.setId(UUID.randomUUID());
-                classLevel.setCharacterId(characterId);
-                classLevel.setClassName(cl.getClassName());
-                classLevel.setLevel(cl.getLevel());
-                classLevel.setSortOrder(i);
-                characterMapper.insertClassLevel(classLevel);
-            }
-        } else {
-            if (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) {
-                applyLevelUp(characterId, request.getLevelUpClassName());
-            }
-            if (request.getCatchupClassName() != null && !request.getCatchupClassName().isBlank()
-                    && request.getCatchupCount() != null && request.getCatchupCount() > 0) {
-                applyCatchup(characterId, request.getCatchupClassName(), request.getCatchupCount());
-            }
+        
+        // 自動帶入先前的職業字串作為 starting (如果前端沒給，或者我們可以完全信任前端送的)
+        if (request.getEndingClassesString() != null) {
+            entry.setStartingClassesString(character.getCurrentClassesString());
+            entry.setEndingClassesString(request.getEndingClassesString());
+            
+            // 更新角色當前的職業字串 (因為這是一筆新紀錄，它代表最新狀態)
+            character.setCurrentClassesString(request.getEndingClassesString());
+            characterMapper.update(character);
         }
 
-        com.dndadvlog.backend.entity.Character afterCharacter = characterService.findCharacter(characterId);
-        writeSnapshots(entry.getId(), afterCharacter.getClassLevels(), "ending");
+        mapRequestToEntry(request, entry);
+        entryMapper.insert(entry);
+        
         log.info("冒險記錄建立: ID={}, 名稱={}", entry.getId(), entry.getAdventureName());
         return toResponse(findEntry(entry.getId()));
     }
@@ -95,64 +109,50 @@ public class AdventureEntryService {
     @Transactional
     public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request) {
         AdventureEntry entry = findEntry(entryId);
-        String oldLevelUpClass = entry.getLevelUpClassName();
-        String newLevelUpClass = request.getLevelUpClassName();
-        String oldCatchupClass = entry.getCatchupClassName();
-        Integer oldCatchupCount = entry.getCatchupCount();
-        String newCatchupClass = request.getCatchupClassName();
-        Integer newCatchupCount = request.getCatchupCount();
         UUID characterId = entry.getCharacterId();
-        mapRequestToEntry(request, entry);
-        entryMapper.update(entry);
-
-        if (request.getClassLevels() != null && !request.getClassLevels().isEmpty()) {
-            characterMapper.deleteClassLevelsByCharacterId(characterId);
-            for (int i = 0; i < request.getClassLevels().size(); i++) {
-                CharacterRequest.ClassLevelRequest cl = request.getClassLevels().get(i);
-                CharacterClassLevel classLevel = new CharacterClassLevel();
-                classLevel.setId(UUID.randomUUID());
-                classLevel.setCharacterId(characterId);
-                classLevel.setClassName(cl.getClassName());
-                classLevel.setLevel(cl.getLevel());
-                classLevel.setSortOrder(i);
-                characterMapper.insertClassLevel(classLevel);
-            }
-        } else {
-            if (!Objects.equals(oldLevelUpClass, newLevelUpClass)) {
-                if (oldLevelUpClass != null && !oldLevelUpClass.isBlank()) {
-                    revertLevelUp(characterId, oldLevelUpClass);
-                }
-            }
-            boolean catchupChanged = !Objects.equals(oldCatchupClass, newCatchupClass)
-                    || !Objects.equals(oldCatchupCount, newCatchupCount);
-            if (catchupChanged && oldCatchupClass != null && !oldCatchupClass.isBlank()
-                    && oldCatchupCount != null && oldCatchupCount > 0) {
-                revertCatchup(characterId, oldCatchupClass, oldCatchupCount);
-            }
-            if (!Objects.equals(oldLevelUpClass, newLevelUpClass) && newLevelUpClass != null && !newLevelUpClass.isBlank()) {
-                applyLevelUp(characterId, newLevelUpClass);
-            }
-            if (catchupChanged && newCatchupClass != null && !newCatchupClass.isBlank()
-                    && newCatchupCount != null && newCatchupCount > 0) {
-                applyCatchup(characterId, newCatchupClass, newCatchupCount);
+        
+        // 為了簡單起見，如果這是「最新」的一筆紀錄，我們連帶更新 character 的 string
+        Optional<AdventureEntry> lastEntry =
+                entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
+                
+        if (request.getEndingClassesString() != null) {
+            entry.setEndingClassesString(request.getEndingClassesString());
+            if (lastEntry.isPresent() && lastEntry.get().getId().equals(entryId)) {
+                Character character = characterService.findCharacter(characterId);
+                character.setCurrentClassesString(request.getEndingClassesString());
+                characterMapper.update(character);
             }
         }
 
-        entryMapper.deleteSnapshotsByEntryIdAndType(entryId, "starting");
-        com.dndadvlog.backend.entity.Character beforeChar = characterService.findCharacter(characterId);
-        writeSnapshots(entryId, beforeChar.getClassLevels(), "starting");
+        mapRequestToEntry(request, entry);
+        entryMapper.update(entry);
 
-        entryMapper.deleteSnapshotsByEntryIdAndType(entryId, "ending");
-        com.dndadvlog.backend.entity.Character afterChar = characterService.findCharacter(characterId);
-        writeSnapshots(entryId, afterChar.getClassLevels(), "ending");
         log.info("冒險記錄更新: ID={}, 名稱={}", entryId, entry.getAdventureName());
         return toResponse(findEntry(entryId));
     }
 
     @Transactional
     public void deleteEntry(UUID entryId) {
-        findEntry(entryId);
+        AdventureEntry entry = findEntry(entryId);
+        UUID characterId = entry.getCharacterId();
+        String fallbackString = entry.getStartingClassesString();
+
         entryMapper.deleteById(entryId);
+
+        // 如果刪除的是最新一筆，角色狀態要退回上一筆
+        Optional<AdventureEntry> latestRemaining =
+                entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
+
+        Character character = characterService.findCharacter(characterId);
+        if (latestRemaining.isPresent()) {
+            character.setCurrentClassesString(latestRemaining.get().getEndingClassesString());
+        } else {
+            // 已無紀錄，回退至這筆紀錄建立前的狀態
+            character.setCurrentClassesString(fallbackString);
+        }
+        characterMapper.update(character);
+        
+        log.info("冒險記錄刪除: ID={}", entryId);
     }
 
     public List<DowntimeActivityResponse> getActivities(UUID entryId) {
@@ -185,84 +185,6 @@ public class AdventureEntryService {
         downtimeActivityMapper.deleteById(activityId);
     }
 
-    private void applyLevelUp(UUID characterId, String className) {
-        com.dndadvlog.backend.entity.Character character = characterService.findCharacter(characterId);
-        boolean found = false;
-        for (CharacterClassLevel cl : character.getClassLevels()) {
-            if (cl.getClassName().equals(className)) {
-                characterMapper.updateClassLevelById(cl.getId(), cl.getLevel() + 1);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            CharacterClassLevel newCl = new CharacterClassLevel();
-            newCl.setId(UUID.randomUUID());
-            newCl.setCharacterId(characterId);
-            newCl.setClassName(className);
-            newCl.setLevel(1);
-            newCl.setSortOrder(character.getClassLevels().size());
-            characterMapper.insertClassLevel(newCl);
-        }
-    }
-
-    private void applyCatchup(UUID characterId, String className, int count) {
-        com.dndadvlog.backend.entity.Character character = characterService.findCharacter(characterId);
-        boolean found = false;
-        for (CharacterClassLevel cl : character.getClassLevels()) {
-            if (cl.getClassName().equals(className)) {
-                characterMapper.updateClassLevelById(cl.getId(), cl.getLevel() + count);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            CharacterClassLevel newCl = new CharacterClassLevel();
-            newCl.setId(UUID.randomUUID());
-            newCl.setCharacterId(characterId);
-            newCl.setClassName(className);
-            newCl.setLevel(count);
-            newCl.setSortOrder(character.getClassLevels().size());
-            characterMapper.insertClassLevel(newCl);
-        }
-    }
-
-    private void revertLevelUp(UUID characterId, String className) {
-        com.dndadvlog.backend.entity.Character character = characterService.findCharacter(characterId);
-        for (CharacterClassLevel cl : character.getClassLevels()) {
-            if (cl.getClassName().equals(className)) {
-                if (cl.getLevel() <= 1) characterMapper.deleteClassLevelById(cl.getId());
-                else characterMapper.updateClassLevelById(cl.getId(), cl.getLevel() - 1);
-                break;
-            }
-        }
-    }
-
-    private void revertCatchup(UUID characterId, String className, int count) {
-        com.dndadvlog.backend.entity.Character character = characterService.findCharacter(characterId);
-        for (CharacterClassLevel cl : character.getClassLevels()) {
-            if (cl.getClassName().equals(className)) {
-                if (cl.getLevel() <= count) characterMapper.deleteClassLevelById(cl.getId());
-                else characterMapper.updateClassLevelById(cl.getId(), cl.getLevel() - count);
-                break;
-            }
-        }
-    }
-
-    private void writeSnapshots(UUID entryId, List<CharacterClassLevel> classLevels, String snapshotType) {
-        for (int i = 0; i < classLevels.size(); i++) {
-            CharacterClassLevel cl = classLevels.get(i);
-            AdventureEntryClassSnapshot snap = new AdventureEntryClassSnapshot();
-            snap.setId(UUID.randomUUID());
-            snap.setAdventureEntryId(entryId);
-            snap.setSnapshotType(snapshotType);
-            snap.setClassName(cl.getClassName());
-            snap.setLevel(cl.getLevel());
-            snap.setSortOrder(i);
-            entryMapper.insertSnapshot(snap);
-        }
-    }
-
     private BigDecimal calcTotal(BigDecimal starting, BigDecimal change, BigDecimal downtimeChange) {
         if (starting == null && change == null && downtimeChange == null) return null;
         BigDecimal s = starting != null ? starting : BigDecimal.ZERO;
@@ -285,14 +207,7 @@ public class AdventureEntryService {
         entry.setPlayDate(request.getPlayDate());
         entry.setDmName(request.getDmName());
         entry.setStartingLevel(request.getStartingLevel());
-        if (request.getEndingLevel() != null) {
-            entry.setEndingLevel(request.getEndingLevel());
-        } else {
-            int sl = request.getStartingLevel() != null ? request.getStartingLevel() : 0;
-            int lvUp = (request.getLevelUpClassName() != null && !request.getLevelUpClassName().isBlank()) ? 1 : 0;
-            int cu = request.getCatchupCount() != null ? request.getCatchupCount() : 0;
-            entry.setEndingLevel(sl + lvUp + cu);
-        }
+        entry.setEndingLevel(request.getEndingLevel());
         entry.setStartingGold(request.getStartingGold());
         entry.setGoldChange(request.getGoldChange());
         entry.setGoldDowntimeChange(request.getGoldDowntimeChange());
@@ -305,9 +220,6 @@ public class AdventureEntryService {
         entry.setMagicItemsChange(request.getMagicItemsChange());
         entry.setMagicItemsDowntimeChange(request.getMagicItemsDowntimeChange());
         entry.setMagicItemsTotal(calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange()));
-        entry.setLevelUpClassName(request.getLevelUpClassName());
-        entry.setCatchupClassName(request.getCatchupClassName());
-        entry.setCatchupCount(request.getCatchupCount());
         entry.setAdventureNotes(request.getAdventureNotes());
         entry.setSoulCoinChargesUsed(request.getSoulCoinChargesUsed());
     }
@@ -315,8 +227,6 @@ public class AdventureEntryService {
     private AdventureEntry findEntry(UUID entryId) {
         AdventureEntry entry = entryMapper.findById(entryId);
         if (entry == null) throw new ResourceNotFoundException("找不到冒險記錄 ID：" + entryId);
-        entry.setStartingClassSnapshot(entryMapper.findSnapshotsByEntryIdAndType(entryId, "starting"));
-        entry.setEndingClassSnapshot(entryMapper.findSnapshotsByEntryIdAndType(entryId, "ending"));
         entry.setDowntimeActivities(downtimeActivityMapper.findByEntryIdOrderByCreatedAtAsc(entryId));
         return entry;
     }
@@ -349,28 +259,17 @@ public class AdventureEntryService {
         response.setMagicItemsChange(entry.getMagicItemsChange());
         response.setMagicItemsDowntimeChange(entry.getMagicItemsDowntimeChange());
         response.setMagicItemsTotal(entry.getMagicItemsTotal());
-        response.setLevelUpClassName(entry.getLevelUpClassName());
-        response.setCatchupClassName(entry.getCatchupClassName());
-        response.setCatchupCount(entry.getCatchupCount());
+        
+        response.setStartingClassesString(entry.getStartingClassesString());
+        response.setEndingClassesString(entry.getEndingClassesString());
+        
         response.setAdventureNotes(entry.getAdventureNotes());
         response.setSoulCoinChargesUsed(entry.getSoulCoinChargesUsed());
         response.setCreatedAt(entry.getCreatedAt());
         response.setUpdatedAt(entry.getUpdatedAt());
         response.setDowntimeActivities(entry.getDowntimeActivities()
                 .stream().map(this::toActivityResponse).collect(Collectors.toList()));
-        response.setStartingClassSnapshot(entry.getStartingClassSnapshot()
-                .stream().map(this::toSnapshotItem).collect(Collectors.toList()));
-        response.setEndingClassSnapshot(entry.getEndingClassSnapshot()
-                .stream().map(this::toSnapshotItem).collect(Collectors.toList()));
         return response;
-    }
-
-    private AdventureEntryResponse.ClassSnapshotItem toSnapshotItem(AdventureEntryClassSnapshot snap) {
-        AdventureEntryResponse.ClassSnapshotItem item = new AdventureEntryResponse.ClassSnapshotItem();
-        item.setClassName(snap.getClassName());
-        item.setLevel(snap.getLevel());
-        item.setSortOrder(snap.getSortOrder());
-        return item;
     }
 
     private DowntimeActivityResponse toActivityResponse(DowntimeActivity activity) {

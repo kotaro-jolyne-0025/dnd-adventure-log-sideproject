@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   FormArray,
@@ -51,7 +51,6 @@ export class CharacterFormComponent implements OnInit {
 
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
-  protected existingClassLevels = signal<{ className: string; level: number }[]>([]);
   private characterId: string | null = null;
 
   protected form: FormGroup = this.fb.group({
@@ -59,11 +58,44 @@ export class CharacterFormComponent implements OnInit {
     playerName: ['可嵐', Validators.required],
     race: ['', Validators.required],
     faction: [''],
-    classLevels: this.fb.array([this.createClassLevelGroup()]),
   });
 
-  get classesArray(): FormArray {
-    return this.form.get('classLevels') as FormArray;
+  // 職業等級選擇器
+  protected classEntries = signal<{ className: string; level: number }[]>([
+    { className: '', level: 1 },
+  ]);
+
+  protected addClass(): void {
+    this.classEntries.update(list => [...list, { className: '', level: 1 }]);
+  }
+
+  protected removeClass(index: number): void {
+    this.classEntries.update(list => list.filter((_, i) => i !== index));
+  }
+
+  protected totalLevel = computed(() =>
+    this.classEntries().reduce((sum, e) => sum + (e.level || 0), 0)
+  );
+
+  protected updateClassName(index: number, value: string): void {
+    this.classEntries.update(list =>
+      list.map((e, i) => i === index ? { ...e, className: value } : e)
+    );
+  }
+
+  protected updateClassLevel(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const num = parseInt(input.value, 10);
+    if (isNaN(num) || num < 1) return;
+    this.classEntries.update(list =>
+      list.map((e, i) => i === index ? { ...e, level: num } : e)
+    );
+  }
+
+  private buildClassesString(): string | null {
+    const filled = this.classEntries().filter(e => e.className.trim());
+    if (filled.length === 0) return null;
+    return filled.map(e => `${e.className.trim()}${e.level}`).join('/');
   }
 
   ngOnInit(): void {
@@ -78,15 +110,21 @@ export class CharacterFormComponent implements OnInit {
   private loadCharacter(id: string): void {
     this.characterService.getById(id).subscribe({
       next: (character) => {
-        this.existingClassLevels.set(
-          (character.classLevels ?? []).map(cl => ({ className: cl.className, level: cl.level }))
-        );
         this.form.patchValue({
           characterName: character.characterName,
           playerName: character.playerName,
           race: character.race,
           faction: character.faction ?? '',
         });
+        // 解析職業字串 → 選擇器
+        if (character.currentClassesString) {
+          const parsed = character.currentClassesString.split('/').map(seg => {
+            const match = seg.trim().match(/^(.+?)([\d]+)$/);
+            if (match) return { className: match[1].trim(), level: parseInt(match[2], 10) };
+            return { className: seg.trim(), level: 1 };
+          }).filter(e => e.className);
+          if (parsed.length > 0) this.classEntries.set(parsed);
+        }
       },
       error: () => {
         this.snackBar.open('載入角色資料失敗', '關閉', { duration: 3000 });
@@ -95,22 +133,7 @@ export class CharacterFormComponent implements OnInit {
     });
   }
 
-  private createClassLevelGroup(className: string = '', level: number = 1): FormGroup {
-    return this.fb.group({
-      className: [className, Validators.required],
-      level: [level, [Validators.required, Validators.min(1), Validators.max(20)]],
-    });
-  }
 
-  protected addClassLevel(): void {
-    this.classesArray.push(this.createClassLevelGroup());
-  }
-
-  protected removeClassLevel(index: number): void {
-    if (this.classesArray.length > 1) {
-      this.classesArray.removeAt(index);
-    }
-  }
 
   protected onSubmit(): void {
     if (this.isEditMode()) {
@@ -139,12 +162,7 @@ export class CharacterFormComponent implements OnInit {
       playerName: raw.playerName.trim(),
       race: raw.race.trim(),
       faction: raw.faction?.trim() || null,
-      classLevels: this.isEditMode()
-        ? this.existingClassLevels()
-        : raw.classLevels.map((cl: { className: string; level: number }) => ({
-            className: cl.className.trim(),
-            level: Number(cl.level),
-          })),
+      currentClassesString: this.buildClassesString(),
     };
 
     if (this.isEditMode() && this.characterId) {

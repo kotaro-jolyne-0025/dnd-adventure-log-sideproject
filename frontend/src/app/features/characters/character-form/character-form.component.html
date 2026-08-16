@@ -42,81 +42,68 @@
             <mat-label>派系（選填）</mat-label>
             <input matInput formControlName="faction" placeholder="例：龍鱗刃、魔法師公會" />
           </mat-form-field>
-        </section>
 
-        <!-- 職業/等級區 -->
-        <section class="form-section">
-          <div class="section-header">
-            <h2 class="section-title">職業 / 等級</h2>
-            @if (!isEditMode()) {
-              <button type="button" mat-stroked-button color="primary" (click)="addClassLevel()">
-                <mat-icon>add</mat-icon>
-                新增職業
-              </button>
-            }
-          </div>
-
+          <!-- 職業與等級 -->
           @if (isEditMode()) {
-            <div class="readonly-class-box">
+            <div class="readonly-class-box" style="margin-top: 16px;">
+              <h3 class="section-title" style="font-size:0.9rem; margin:0 0 12px;">目前職業與等級</h3>
               <div class="readonly-classes-list">
-                @for (cl of existingClassLevels(); track $index) {
+                @for (entry of classEntries(); track $index) {
                   <span class="class-chip">
                     <mat-icon class="chip-icon">shield</mat-icon>
-                    {{ cl.className }} Lv.{{ cl.level }}
+                    {{ entry.className }} Lv.{{ entry.level }}
                   </span>
+                }
+                @if (classEntries().length === 0) {
+                  <span style="color: var(--mat-sys-outline); font-size:0.85rem;">無職業紀錄</span>
                 }
               </div>
               <p class="readonly-hint">
                 <mat-icon class="hint-icon">lock</mat-icon>
-                角色開卡後，職業與等級已鎖定。如需升級或兼職，請於<strong>「冒險日誌」</strong>新增冒險記錄時進行升級配置。
+                職業與等級已鎖定。如需升級或兼職，請透過「冒險日誌」新增記錄推進。
               </p>
             </div>
           } @else {
-            <div formArrayName="classLevels" class="classes-list">
-              @for (ctrl of classesArray.controls; track $index) {
-                <div [formGroupName]="$index" class="class-row">
+            <div class="section-header" style="margin-top: 8px;">
+              <h3 class="section-title" style="font-size:0.9rem; margin:0;">初始職業與等級</h3>
+              <button type="button" mat-stroked-button (click)="addClass()">
+                <mat-icon>add</mat-icon> 新增職業（兼職）
+              </button>
+            </div>
+            <div class="classes-list">
+              @for (entry of classEntries(); track $index; let i = $index) {
+                <div class="class-row">
                   <mat-form-field appearance="outline" class="class-name-field">
-                    <mat-label>職業 *</mat-label>
-                    <mat-select formControlName="className">
-                      @for (opt of CLASS_OPTIONS; track opt) {
-                        <mat-option [value]="opt">{{ opt }}</mat-option>
+                    <mat-label>職業</mat-label>
+                    <mat-select [value]="entry.className" (selectionChange)="updateClassName(i, $event.value)">
+                      @for (cls of CLASS_OPTIONS; track cls) {
+                        <mat-option [value]="cls">{{ cls }}</mat-option>
                       }
                     </mat-select>
-                    @if (ctrl.get('className')?.hasError('required') && ctrl.get('className')?.touched) {
-                      <mat-error>職業名稱為必填</mat-error>
-                    }
                   </mat-form-field>
-
                   <mat-form-field appearance="outline" class="class-level-field">
-                    <mat-label>等級 *</mat-label>
-                    <input matInput type="number" formControlName="level"
-                      placeholder="1" min="1" max="20" />
-                    @if (ctrl.get('level')?.hasError('required') && ctrl.get('level')?.touched) {
-                      <mat-error>必填</mat-error>
-                    }
-                    @if (ctrl.get('level')?.hasError('min') && ctrl.get('level')?.touched) {
-                      <mat-error>最小 1</mat-error>
-                    }
-                    @if (ctrl.get('level')?.hasError('max') && ctrl.get('level')?.touched) {
-                      <mat-error>最大 20</mat-error>
-                    }
+                    <mat-label>等級</mat-label>
+                    <input matInput type="number" min="1" max="20"
+                      [value]="entry.level"
+                      (change)="updateClassLevel(i, $event)" />
                   </mat-form-field>
-
-                  <button type="button" mat-icon-button color="warn"
-                    [disabled]="classesArray.length <= 1"
-                    matTooltip="刪除此職業"
-                    (click)="removeClassLevel($index)">
-                    <mat-icon>remove_circle_outline</mat-icon>
-                  </button>
+                  @if (classEntries().length > 1) {
+                    <button type="button" mat-icon-button color="warn"
+                      style="margin-top: 8px;"
+                      (click)="removeClass(i)" matTooltip="移除此職業">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
                 </div>
               }
             </div>
-
-            @if (classesArray.length === 0) {
-              <p class="hint-text">至少需要一筆職業/等級</p>
-            }
+            <p class="hint-text" style="color: var(--mat-sys-outline); font-size:0.8rem; margin: 4px 0 16px;">
+              總等級：{{ totalLevel() }}　兼職最多可達 20 級
+            </p>
           }
         </section>
+
+
 
         <!-- 操作按鈕 -->
         <div class="form-actions">

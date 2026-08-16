@@ -37,11 +37,13 @@ public class AdventureEntry {
     private Integer catchupCount;
     private String adventureNotes;
     private String soulCoinChargesUsed;
+
+    private String startingClassesString;
+    private String endingClassesString;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     /** 由 Mapper 查詢填入 */
     private List<DowntimeActivity> downtimeActivities = new ArrayList<>();
-    private List<AdventureEntryClassSnapshot> startingClassSnapshot = new ArrayList<>();
-    private List<AdventureEntryClassSnapshot> endingClassSnapshot = new ArrayList<>();
 }

@@ -30,21 +30,11 @@ public class AdventureEntryResponse {
     private BigDecimal goldDowntimeChange;
     private Integer downtimeDowntimeChange;
     private Integer magicItemsDowntimeChange;
-    private String levelUpClassName;
-    private String catchupClassName;
-    private Integer catchupCount;
+    private String startingClassesString;
+    private String endingClassesString;
     private String adventureNotes;
     private String soulCoinChargesUsed;
     private List<DowntimeActivityResponse> downtimeActivities;
-    private List<ClassSnapshotItem> startingClassSnapshot;
-    private List<ClassSnapshotItem> endingClassSnapshot;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    @Data
-    public static class ClassSnapshotItem {
-        private String className;
-        private Integer level;
-        private Integer sortOrder;
-    }
 }

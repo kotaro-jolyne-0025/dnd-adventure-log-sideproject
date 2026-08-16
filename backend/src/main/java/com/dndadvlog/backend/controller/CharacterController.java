@@ -35,17 +35,15 @@ public class CharacterController {
 
     @PostMapping
     public ResponseEntity<CharacterResponse> createCharacter(@Valid @RequestBody CharacterRequest request) {
-        log.info("➕ [POST /api/characters] 建立角色: 名稱={}, 玩家={}, 職業數={}",
-                request.getCharacterName(), request.getPlayerName(),
-                request.getClassLevels() != null ? request.getClassLevels().size() : 0);
+        log.info("➕ [POST /api/characters] 建立角色: 名稱={}, 玩家={}",
+                request.getCharacterName(), request.getPlayerName());
         return ResponseEntity.status(HttpStatus.CREATED).body(characterService.createCharacter(request));
     }
 
     @PutMapping("/{id}")
     public CharacterResponse updateCharacter(@PathVariable UUID id, @Valid @RequestBody CharacterRequest request) {
-        log.info("✏️ [PUT /api/characters/{}] 更新角色: 名稱={}, 玩家={}, 職業={}",
-                id, request.getCharacterName(), request.getPlayerName(),
-                request.getClassLevels() != null ? request.getClassLevels() : "[]");
+        log.info("✏️ [PUT /api/characters/{}] 更新角色: 名稱={}, 玩家={}",
+                id, request.getCharacterName(), request.getPlayerName());
         return characterService.updateCharacter(id, request);
     }
 

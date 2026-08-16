@@ -23,10 +23,7 @@ public class AdventureEntryRequest {
     private BigDecimal goldDowntimeChange;
     private Integer downtimeDowntimeChange;
     private Integer magicItemsDowntimeChange;
-    private String levelUpClassName;
-    private String catchupClassName;
-    private Integer catchupCount;
+    private String endingClassesString;
     private String adventureNotes;
     private String soulCoinChargesUsed;
-    private List<CharacterRequest.ClassLevelRequest> classLevels;
 }

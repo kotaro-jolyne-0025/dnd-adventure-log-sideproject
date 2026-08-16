@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS character (
     player_name VARCHAR(100) NOT NULL,
     race VARCHAR(100) NOT NULL,
     faction VARCHAR(100),
+    current_classes_string VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -19,25 +20,7 @@ CREATE TABLE IF NOT EXISTS character (
 
 ---
 
-## Step 2：建立 character_class_level 資料表（職業/等級動態列）
-
-```sql
-CREATE TABLE IF NOT EXISTS character_class_level (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    character_id UUID NOT NULL REFERENCES character(id) ON DELETE CASCADE,
-    class_name VARCHAR(100) NOT NULL,
-    level INTEGER NOT NULL,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-> **職業名稱允許值（前端下拉選單對應，共 13 種官方核心職業）：**
-> `戰士` `法師` `牧師` `遊蕩者` `遊俠` `吟遊詩人` `德魯伊` `武僧` `聖騎士` `契術師` `術士` `野蠻人` `奇械師`
-
----
-
-## Step 3：建立 adventure_entry 資料表
+## Step 2：建立 adventure_entry 資料表
 
 ```sql
 CREATE TABLE IF NOT EXISTS adventure_entry (
@@ -49,6 +32,8 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     dm_name VARCHAR(100),
     starting_level INTEGER,
     ending_level INTEGER,
+    starting_classes_string VARCHAR(255),
+    ending_classes_string VARCHAR(255),
     starting_gold DECIMAL(10,2),
     gold_change DECIMAL(10,2),
     gold_total DECIMAL(10,2),
@@ -89,10 +74,16 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
 >     ADD COLUMN IF NOT EXISTS magic_items_downtime_change INTEGER;
 > ```
 >
-> **Migration 3（T12）：**
+> **Migration 3：String-Based Class Levels**
 > ```sql
-> ALTER TABLE adventure_entry
->     ADD COLUMN IF NOT EXISTS level_up_class_name VARCHAR(100);
+> -- 新增字串欄位
+> ALTER TABLE "character" ADD COLUMN IF NOT EXISTS current_classes_string VARCHAR(255);
+> ALTER TABLE "adventure_entry" ADD COLUMN IF NOT EXISTS starting_classes_string VARCHAR(255);
+> ALTER TABLE "adventure_entry" ADD COLUMN IF NOT EXISTS ending_classes_string VARCHAR(255);
+> 
+> -- 刪除不再使用的複雜關聯表
+> DROP TABLE IF EXISTS "adventure_entry_class_snapshot" CASCADE;
+> DROP TABLE IF EXISTS "character_class_level" CASCADE;
 > ```
 >
 > **Migration 4（T14）：**
@@ -104,22 +95,6 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
 
 ---
 
-## Step 4a：建立 adventure_entry_class_snapshot 資料表（職業快照）
-
-```sql
-CREATE TABLE IF NOT EXISTS adventure_entry_class_snapshot (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    adventure_entry_id UUID NOT NULL REFERENCES adventure_entry(id) ON DELETE CASCADE,
-    snapshot_type VARCHAR(10) NOT NULL,  -- 'starting' 或 'ending'
-    class_name VARCHAR(100) NOT NULL,
-    level INTEGER NOT NULL,
-    sort_order INTEGER DEFAULT 0
-);
-```
-
-> **Migration 5（T15）：**（若資料表不存在則建立）
-> ```sql
-> CREATE TABLE IF NOT EXISTS adventure_entry_class_snapshot (
 >     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 >     adventure_entry_id UUID NOT NULL REFERENCES adventure_entry(id) ON DELETE CASCADE,
 >     snapshot_type VARCHAR(10) NOT NULL,

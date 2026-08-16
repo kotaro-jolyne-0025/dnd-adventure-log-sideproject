@@ -14,8 +14,7 @@ public class Character {
     private String playerName;
     private String race;
     private String faction;
+    private String currentClassesString;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    /** 由 CharacterMapper JOIN 查詢填入 */
-    private List<CharacterClassLevel> classLevels = new ArrayList<>();
 }
