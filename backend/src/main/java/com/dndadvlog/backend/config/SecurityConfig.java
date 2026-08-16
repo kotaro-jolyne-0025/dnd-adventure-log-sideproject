@@ -70,12 +70,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        List<String> origins = Arrays.stream(allowedOrigin.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
+        List<String> patterns = new java.util.ArrayList<>(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://*.zeabur.app",
+                "https://adv-log.zeabur.app"
+        ));
+        for (String origin : allowedOrigin.split(",")) {
+            String trimmed = origin.trim();
+            if (!trimmed.isEmpty() && !patterns.contains(trimmed)) {
+                patterns.add(trimmed);
+            }
+        }
 
-        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedOriginPatterns(patterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setAllowCredentials(true);
