@@ -131,7 +131,7 @@ export class AdventureFormComponent implements OnInit {
   protected form: FormGroup = this.fb.group({
     adventureCode: [''],
     adventureName: [''],
-    playDate: [null],
+    playDate: [null, Validators.required],
     dmName: [''],
     startingGold: [null],
     goldChange: [null],
@@ -390,6 +390,11 @@ export class AdventureFormComponent implements OnInit {
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.snackBar.open('請填寫必填欄位（遊玩日期）', '關閉', { duration: 3000 });
+      return;
+    }
+    if (!this.isLevelBalanced()) {
+      this.snackBar.open('職業等級加總與結束等級不符，請調整後再儲存', '關閉', { duration: 3000 });
       return;
     }
 

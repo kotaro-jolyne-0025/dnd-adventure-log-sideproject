@@ -26,6 +26,7 @@
             <input matInput [matDatepicker]="picker" formControlName="playDate" />
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
+            <mat-error>遊玩日期為必填</mat-error>
           </mat-form-field>
           <mat-form-field appearance="outline" class="flex-1">
             <mat-label>DM 名稱</mat-label>
@@ -268,7 +269,7 @@
     <!-- Actions -->
     <div class="form-actions">
       <button type="button" mat-stroked-button (click)="onBack()">取消</button>
-      <button type="submit" mat-flat-button color="primary" [disabled]="isSaving()">
+      <button type="submit" mat-flat-button color="primary" [disabled]="isSaving() || !isLevelBalanced()">
         @if (isSaving()) {
           <mat-spinner diameter="20"></mat-spinner>
         } @else {
