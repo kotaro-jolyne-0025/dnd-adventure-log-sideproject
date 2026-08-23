@@ -1,11 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
+import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { AdventureEntry } from '../../../core/models/adventure.model';
@@ -14,12 +13,12 @@ import { AdventureEntry } from '../../../core/models/adventure.model';
   selector: 'app-adventure-list',
   standalone: true,
   imports: [
+    CommonModule,
     DatePipe,
-    MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   templateUrl: './adventure-list.component.html',
   styleUrl: './adventure-list.component.scss',
@@ -34,10 +33,7 @@ export class AdventureListComponent implements OnInit {
   protected isLoading = signal(true);
   protected characterId!: string;
 
-  protected displayedColumns = ['playDate', 'adventureCode', 'adventureName', 'dmName'];
-
   ngOnInit(): void {
-    // characterId comes from the parent shell route param
     this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
       this.route.snapshot.paramMap.get('id') ?? '';
@@ -48,7 +44,13 @@ export class AdventureListComponent implements OnInit {
     this.isLoading.set(true);
     this.adventureService.getAllByCharacter(this.characterId).subscribe({
       next: (list) => {
-        this.entries.set(list);
+        // Sort newest first by playDate & createdAt
+        const sorted = [...list].sort((a, b) => {
+          const dateA = a.playDate ? new Date(a.playDate).getTime() : 0;
+          const dateB = b.playDate ? new Date(b.playDate).getTime() : 0;
+          return dateB - dateA;
+        });
+        this.entries.set(sorted);
         this.isLoading.set(false);
       },
       error: () => {
@@ -62,7 +64,39 @@ export class AdventureListComponent implements OnInit {
     this.router.navigate(['/characters', this.characterId, 'adventures', 'new']);
   }
 
-  protected onViewEntry(entryId: number): void {
+  protected onViewEntry(entryId: string): void {
     this.router.navigate(['/characters', this.characterId, 'adventures', entryId]);
+  }
+
+  protected formatGoldChange(entry: AdventureEntry): string | null {
+    const change = (entry.goldChange ?? 0) + (entry.goldDowntimeChange ?? 0);
+    if (change === 0 && entry.goldChange == null && entry.goldDowntimeChange == null) return null;
+    return change >= 0 ? `+${change} GP` : `${change} GP`;
+  }
+
+  protected formatDowntimeChange(entry: AdventureEntry): string | null {
+    const change = (entry.downtimeChange ?? 0) + (entry.downtimeDowntimeChange ?? 0);
+    if (change === 0 && entry.downtimeChange == null && entry.downtimeDowntimeChange == null) return null;
+    return change >= 0 ? `+${change} 天` : `${change} 天`;
+  }
+
+  protected formatMagicItemChange(entry: AdventureEntry): string | null {
+    const change = (entry.magicItemsChange ?? 0) + (entry.magicItemsDowntimeChange ?? 0);
+    if (change === 0 && entry.magicItemsChange == null && entry.magicItemsDowntimeChange == null) return null;
+    return change >= 0 ? `+${change} 魔法物品` : `${change} 魔法物品`;
+  }
+
+  protected getLevelProgress(entry: AdventureEntry): string {
+    const start = entry.startingLevel;
+    const end = entry.endingLevel;
+    if (start != null && end != null) {
+      if (end > start) {
+        return `Lv.${start} ➔ Lv.${end}`;
+      }
+      return `Lv.${end}`;
+    }
+    if (end != null) return `Lv.${end}`;
+    if (start != null) return `Lv.${start}`;
+    return '—';
   }
 }
