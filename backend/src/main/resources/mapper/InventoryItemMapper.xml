@@ -25,7 +25,7 @@
 
     <select id="findByCharacterIdAndItemType" resultMap="itemMap">
         SELECT * FROM inventory_item
-        WHERE character_id = #{characterId}::uuid AND item_type = #{itemType}
+        WHERE character_id = #{characterId}::uuid AND item_type = #{itemType}::item_type
         ORDER BY created_at ASC
     </select>
 
@@ -35,14 +35,14 @@
 
     <insert id="insert">
         INSERT INTO inventory_item (id, character_id, item_name, item_type, rarity, quantity, source, notes, created_at, updated_at)
-        VALUES (#{id}::uuid, #{characterId}::uuid, #{itemName}, #{itemType}, #{rarity}, #{quantity}, #{source}, #{notes}, NOW(), NOW())
+        VALUES (#{id}::uuid, #{characterId}::uuid, #{itemName}, #{itemType}::item_type, CAST(#{rarity, jdbcType=VARCHAR} AS item_rarity), #{quantity}, #{source}, #{notes}, NOW(), NOW())
     </insert>
 
     <update id="update">
         UPDATE inventory_item SET
             item_name  = #{itemName},
-            item_type  = #{itemType},
-            rarity     = #{rarity},
+            item_type  = #{itemType}::item_type,
+            rarity     = CAST(#{rarity, jdbcType=VARCHAR} AS item_rarity),
             quantity   = #{quantity},
             source     = #{source},
             notes      = #{notes},

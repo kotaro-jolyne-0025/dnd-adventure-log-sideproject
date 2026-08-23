@@ -9,7 +9,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { AdventureService } from '../../../core/services/adventure.service';
+import { InventoryService } from '../../../core/services/inventory.service';
 import { AdventureEntry } from '../../../core/models/adventure.model';
+import { InventoryItem, ITEM_RARITY_LABELS, RARITY_COLORS } from '../../../core/models/inventory.model';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -33,11 +35,17 @@ export class AdventureDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly adventureService = inject(AdventureService);
+  private readonly inventoryService = inject(InventoryService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
 
   protected entry = signal<AdventureEntry | null>(null);
+  protected magicItems = signal<InventoryItem[]>([]);
+  protected consumableItems = signal<InventoryItem[]>([]);
   protected isLoading = signal(true);
+
+  readonly rarityLabels = ITEM_RARITY_LABELS;
+  readonly rarityColors = RARITY_COLORS;
 
   private characterId!: string;
   private entryId!: string;
@@ -56,11 +64,38 @@ export class AdventureDetailComponent implements OnInit {
       next: (e) => {
         this.entry.set(e);
         this.isLoading.set(false);
+        this.loadGainedItems(e);
       },
       error: () => {
         this.snackBar.open('找不到此冒險記錄', '關閉', { duration: 3000 });
         this.router.navigate(['/characters', this.characterId, 'adventures']);
       },
+    });
+  }
+
+  private loadGainedItems(entry: AdventureEntry): void {
+    this.inventoryService.getAllByCharacter(this.characterId).subscribe({
+      next: (items) => {
+        const advName = entry.adventureName?.trim().toLowerCase();
+        const advCode = entry.adventureCode?.trim().toLowerCase();
+        const matchedMagic = items.filter(item => {
+          if (item.itemType !== 'PERMANENT' || !item.source) return false;
+          const s = item.source.trim().toLowerCase();
+          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
+        });
+        this.magicItems.set(matchedMagic);
+
+        const matchedConsumables = items.filter(item => {
+          if (item.itemType !== 'CONSUMABLE' || !item.source) return false;
+          const s = item.source.trim().toLowerCase();
+          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
+        });
+        this.consumableItems.set(matchedConsumables);
+      },
+      error: () => {
+        this.magicItems.set([]);
+        this.consumableItems.set([]);
+      }
     });
   }
 

@@ -165,3 +165,66 @@
     color: var(--mat-sys-outline);
   }
 }
+
+/* 獲得永久性魔法物品清單 */
+.magic-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.magic-item-row {
+  padding: 10px 12px;
+  background: var(--mat-sys-surface-container-low, #f9f9fa);
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-main-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .item-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+}
+
+.rarity-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.quantity-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0288d1;
+  background: rgba(2, 136, 209, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(2, 136, 209, 0.25);
+}
+
+.item-notes {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--mat-sys-on-surface-variant, #555);
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.simple-gain-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mat-sys-primary, #1976d2);
+  margin: 4px 0;
+}

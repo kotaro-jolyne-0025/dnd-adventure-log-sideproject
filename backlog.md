@@ -529,4 +529,21 @@
 
 ---
 
+### T20 — 冒險日誌支援記錄獲得消耗品 (Gained Consumables) 與自動入庫
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **前端表單擴充 (`AdventureFormComponent`)**：新增「🧪 獲得消耗品」動態區塊，支援記錄物品名稱、自訂數量（min 1）、稀有度下拉選單與效果備註。
+  2. **倉庫自動同步**：冒險記錄新增/編輯儲存時，自動將獲得的消耗品同步寫入角色倉庫 (`itemType: 'CONSUMABLE'`, `quantity`, `source`, `notes`)。
+  3. **冒險詳情顯示 (`AdventureDetailComponent`)**：新增「🧪 獲得消耗品」區塊，顯示名稱、數量徽章（`× N`）、稀有度標籤與效果備註。
+- **影響範圍：**
+  - 前端：`adventure-detail.component.*`, `adventure-form.component.*`
+  - 文檔：`system-requirements-spec.md`, `backlog.md`, `walkthrough.md`
+- **完成項目：**
+  - [x] `AdventureDetailComponent` 增加 `consumableItems` 狀態與「🧪 獲得消耗品」視圖
+  - [x] `AdventureFormComponent` 增加 `gainedConsumableItems` 狀態、數量輸入與自動入庫同步邏輯
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+  - [x] 規格書與 Backlog 更新
+
+---
+
 ## 如何使用這個 Backlog

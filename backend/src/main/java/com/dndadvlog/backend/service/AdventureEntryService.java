@@ -4,6 +4,7 @@ import com.dndadvlog.backend.dto.*;
 import com.dndadvlog.backend.entity.AdventureEntry;
 import com.dndadvlog.backend.entity.Character;
 import com.dndadvlog.backend.entity.DowntimeActivity;
+import com.dndadvlog.backend.exception.BusinessException;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
 import com.dndadvlog.backend.mapper.AdventureEntryMapper;
 import com.dndadvlog.backend.mapper.CharacterMapper;
@@ -84,6 +85,7 @@ public class AdventureEntryService {
 
     @Transactional
     public AdventureEntryResponse createEntry(UUID characterId, AdventureEntryRequest request) {
+        validateResources(request);
         Character character = characterService.findCharacterInternal(characterId);
         AdventureEntry entry = new AdventureEntry();
         entry.setId(UUID.randomUUID());
@@ -108,6 +110,7 @@ public class AdventureEntryService {
 
     @Transactional
     public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request) {
+        validateResources(request);
         AdventureEntry entry = findEntry(entryId);
         UUID characterId = entry.getCharacterId();
         
@@ -183,6 +186,33 @@ public class AdventureEntryService {
     public void deleteActivity(UUID activityId) {
         findActivity(activityId);
         downtimeActivityMapper.deleteById(activityId);
+    }
+
+    private void validateResources(AdventureEntryRequest request) {
+        if (request.getStartingGold() != null && request.getStartingGold().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("起始金幣不得為負數");
+        }
+        if (request.getStartingDowntime() != null && request.getStartingDowntime() < 0) {
+            throw new BusinessException("起始休整期天數不得為負數");
+        }
+        if (request.getStartingMagicItems() != null && request.getStartingMagicItems() < 0) {
+            throw new BusinessException("起始魔法物品數量不得為負數");
+        }
+
+        BigDecimal goldTotal = calcTotal(request.getStartingGold(), request.getGoldChange(), request.getGoldDowntimeChange());
+        if (goldTotal != null && goldTotal.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("金幣合計不得為負數");
+        }
+
+        Integer downtimeTotal = calcTotalInt(request.getStartingDowntime(), request.getDowntimeChange(), request.getDowntimeDowntimeChange());
+        if (downtimeTotal != null && downtimeTotal < 0) {
+            throw new BusinessException("休整期天數合計不得為負數");
+        }
+
+        Integer magicItemsTotal = calcTotalInt(request.getStartingMagicItems(), request.getMagicItemsChange(), request.getMagicItemsDowntimeChange());
+        if (magicItemsTotal != null && magicItemsTotal < 0) {
+            throw new BusinessException("魔法物品合計不得為負數");
+        }
     }
 
     private BigDecimal calcTotal(BigDecimal starting, BigDecimal change, BigDecimal downtimeChange) {
