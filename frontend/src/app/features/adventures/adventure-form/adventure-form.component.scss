@@ -32,6 +32,7 @@
 
   .flex-1 { flex: 1; min-width: 140px; }
   .flex-2 { flex: 2; min-width: 200px; }
+  .qty-field { max-width: 120px; min-width: 90px; }
 }
 
 .full-width {
@@ -64,6 +65,36 @@
   width: 100px;
   flex: 1;
   min-width: 80px;
+
+  &.field-negative {
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      background-color: rgba(211, 47, 47, 0.08) !important;
+    }
+    input {
+      color: #d32f2f !important;
+      font-weight: bold;
+    }
+  }
+}
+
+.resource-warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  border-radius: 6px;
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+  font-size: 0.88rem;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 }
 
 /* Actions */
@@ -91,7 +122,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
+  padding: 6px 0;
   border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
 
   &:last-of-type {
@@ -110,15 +141,68 @@
   margin: 4px 0 12px;
 }
 
-.activity-input-row {
+/* 新增活動面板 */
+.activity-input-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low, #f8f9fa);
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  margin-top: 8px;
 }
 
-.activity-input-field {
-  flex: 1;
+.activity-preset-row {
+  display: flex;
+  width: 100%;
+
+  .activity-preset-field {
+    width: 100%;
+    margin-bottom: -1.25em;
+  }
+}
+
+.activity-input-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .activity-desc-field {
+    flex: 1;
+    min-width: 220px;
+    margin-bottom: -1.25em; /* 調整 mat-form-field 底部間距 */
+  }
+
+  .activity-add-btn {
+    height: 52px;
+    white-space: nowrap;
+  }
+}
+
+.activity-resource-deltas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+
+  .deltas-label {
+    font-size: 0.78rem;
+    color: var(--mat-sys-outline, #666);
+  }
+
+  .deltas-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    .delta-field {
+      flex: 1;
+      min-width: 120px;
+      margin-bottom: -1.25em;
+    }
+  }
 }
 
 .ending-level-display {
@@ -226,4 +310,38 @@
     width: 100px;
     min-width: 80px;
   }
+}
+
+/* 獲得永久性魔法物品清單 */
+.gained-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.gained-item-card {
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low, #f8f9fa);
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  display: flex;
+  flex-direction: column;
+
+  .gained-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .gained-item-index {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--mat-sys-primary, #1976d2);
+    }
+  }
+}
+
+.add-gained-btn {
+  margin-top: 4px;
 }

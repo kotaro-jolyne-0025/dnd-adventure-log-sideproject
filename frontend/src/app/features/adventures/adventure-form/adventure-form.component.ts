@@ -19,8 +19,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdventureService } from '../../../core/services/adventure.service';
-import { AdventureEntryRequest, DowntimeActivity } from '../../../core/models/adventure.model';
-import { from, concatMap, toArray } from 'rxjs';
+import { InventoryService } from '../../../core/services/inventory.service';
+import { AdventureEntry, AdventureEntryRequest, DowntimeActivity } from '../../../core/models/adventure.model';
+import { ItemRarity, ITEM_RARITY_LABELS, InventoryItemRequest } from '../../../core/models/inventory.model';
+import { from, of, concatMap, toArray, map, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-adventure-form',
@@ -47,6 +49,7 @@ export class AdventureFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly adventureService = inject(AdventureService);
+  private readonly inventoryService = inject(InventoryService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly CLASS_OPTIONS = [
@@ -123,23 +126,90 @@ export class AdventureFormComponent implements OnInit {
     return (s ?? 0) + (c ?? 0) + (d ?? 0);
   });
 
+  // 資源非負值校驗（起始值與合計皆不得為負數）
+  protected readonly isResourceValid = computed(() => {
+    const sg = this._startingGold();
+    const sd = this._startingDowntime();
+    const sm = this._startingMagicItems();
+    if (sg !== null && sg < 0) return false;
+    if (sd !== null && sd < 0) return false;
+    if (sm !== null && sm < 0) return false;
+
+    const gt = this.goldTotal();
+    const dt = this.downtimeTotal();
+    const mt = this.magicItemsTotal();
+    if (gt !== null && gt < 0) return false;
+    if (dt !== null && dt < 0) return false;
+    if (mt !== null && mt < 0) return false;
+    return true;
+  });
+
   // ── 休整期活動 ──────────────────────────────────────────────────────────────
+  protected readonly DOWNTIME_PRESETS = [
+    { label: '迎頭趕上（升等）', name: '迎頭趕上', downtime: -10, gold: null, magicItems: null },
+    { label: '魔法物品交易', name: '魔法物品交易', downtime: -5, gold: null, magicItems: null },
+    { label: '抄寫法術（0~4 環）', name: '抄寫法術', downtime: -1, gold: -50, magicItems: null },
+    { label: '抄寫高階法術（5 環以上）', name: '抄寫高階法術', downtime: -2, gold: -250, magicItems: null },
+    { label: '釀造治療藥水', name: '釀造治療藥水', downtime: -5, gold: -25, magicItems: null },
+    { label: '製作法術卷軸', name: '製作法術卷軸', downtime: -5, gold: -25, magicItems: null },
+    { label: '交換傳送法陣座標', name: '交換傳送法陣座標', downtime: -10, gold: null, magicItems: null },
+    { label: '學習語言或工具', name: '學習語言或工具', downtime: -10, gold: -10, magicItems: null },
+  ];
+
+  protected selectedPreset: string = '';
+
+  protected onPresetSelect(presetLabel: string): void {
+    this.selectedPreset = presetLabel;
+    const preset = this.DOWNTIME_PRESETS.find(p => p.label === presetLabel);
+    if (!preset) return;
+    if (preset.name) {
+      this.newActivityText = preset.name;
+    }
+    this.newActivityDowntime = preset.downtime;
+    this.newActivityGold = preset.gold;
+    this.newActivityMagicItems = preset.magicItems;
+  }
+
+  // ── 本次獲得的永久性魔法物品清單 ──────────────────────────────────────────
+  readonly rarities: (ItemRarity | '')[] = ['', 'COMMON', 'UNCOMMON', 'RARE', 'VERY_RARE', 'LEGENDARY', 'ARTIFACT'];
+  readonly rarityLabels = ITEM_RARITY_LABELS;
+
+  protected gainedMagicItems = signal<{
+    id?: string;
+    itemName: string;
+    rarity: ItemRarity | '';
+    notes: string;
+  }[]>([]);
+
+  protected gainedConsumableItems = signal<{
+    id?: string;
+    itemName: string;
+    quantity: number;
+    rarity: ItemRarity | '';
+    notes: string;
+  }[]>([]);
+
+  private deletedItemIds: string[] = [];
+
   protected pendingActivities = signal<string[]>([]);
   protected existingActivities = signal<DowntimeActivity[]>([]);
   protected newActivityText = '';
+  protected newActivityGold: number | null = null;
+  protected newActivityDowntime: number | null = null;
+  protected newActivityMagicItems: number | null = null;
 
   protected form: FormGroup = this.fb.group({
     adventureCode: [''],
     adventureName: [''],
     playDate: [new Date(), Validators.required],
     dmName: [''],
-    startingGold: [null],
+    startingGold: [null, [Validators.min(0)]],
     goldChange: [null],
     goldDowntimeChange: [null],
-    startingDowntime: [null],
+    startingDowntime: [null, [Validators.min(0)]],
     downtimeChange: [null],
     downtimeDowntimeChange: [null],
-    startingMagicItems: [null],
+    startingMagicItems: [null, [Validators.min(0)]],
     magicItemsChange: [null],
     magicItemsDowntimeChange: [null],
     adventureNotes: [''],
@@ -246,11 +316,50 @@ export class AdventureFormComponent implements OnInit {
           adventureNotes: entry.adventureNotes ?? '',
           soulCoinChargesUsed: entry.soulCoinChargesUsed ?? '',
         });
+
+        this.loadGainedItems(entry);
       },
       error: () => {
         this.snackBar.open('載入記錄失敗', '關閉', { duration: 3000 });
         this.onBack();
       },
+    });
+  }
+
+  private loadGainedItems(entry: AdventureEntry): void {
+    this.inventoryService.getAllByCharacter(this.characterId).subscribe({
+      next: (items) => {
+        const advName = entry.adventureName?.trim().toLowerCase();
+        const advCode = entry.adventureCode?.trim().toLowerCase();
+        const matchedMagic = items.filter(item => {
+          if (item.itemType !== 'PERMANENT' || !item.source) return false;
+          const s = item.source.trim().toLowerCase();
+          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
+        });
+        this.gainedMagicItems.set(matchedMagic.map(item => ({
+          id: item.id,
+          itemName: item.itemName,
+          rarity: (item.rarity as ItemRarity) ?? '',
+          notes: item.notes ?? '',
+        })));
+
+        const matchedConsumables = items.filter(item => {
+          if (item.itemType !== 'CONSUMABLE' || !item.source) return false;
+          const s = item.source.trim().toLowerCase();
+          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
+        });
+        this.gainedConsumableItems.set(matchedConsumables.map(item => ({
+          id: item.id,
+          itemName: item.itemName,
+          quantity: item.quantity || 1,
+          rarity: (item.rarity as ItemRarity) ?? '',
+          notes: item.notes ?? '',
+        })));
+      },
+      error: () => {
+        this.gainedMagicItems.set([]);
+        this.gainedConsumableItems.set([]);
+      }
     });
   }
 
@@ -322,12 +431,56 @@ export class AdventureFormComponent implements OnInit {
   // ── 休整期活動操作 ──────────────────────────────────────────────────────────
 
   protected addActivity(): void {
-    const text = this.newActivityText.trim();
-    if (!text) return;
+    let text = this.newActivityText.trim();
+    const gold = this.newActivityGold;
+    const downtime = this.newActivityDowntime;
+    const magicItems = this.newActivityMagicItems;
+
+    // 若未輸入文字且未輸入任何資源變動，則不執行
+    if (!text && (gold == null || isNaN(gold)) && (downtime == null || isNaN(downtime)) && (magicItems == null || isNaN(magicItems))) {
+      return;
+    }
+    if (!text) {
+      text = '休整期活動';
+    }
+
+    // 格式化資源變動標籤（例如：🪙 -50gp, 🏕️ -10天, ✨ +1件）
+    const deltas: string[] = [];
+    if (gold != null && !isNaN(gold) && gold !== 0) {
+      deltas.push(`🪙 ${gold > 0 ? '+' : ''}${gold} gp`);
+    }
+    if (downtime != null && !isNaN(downtime) && downtime !== 0) {
+      deltas.push(`🏕️ ${downtime > 0 ? '+' : ''}${downtime} 天`);
+    }
+    if (magicItems != null && !isNaN(magicItems) && magicItems !== 0) {
+      deltas.push(`✨ ${magicItems > 0 ? '+' : ''}${magicItems} 永久性魔法物品`);
+    }
+
+    const fullDescription = deltas.length > 0 ? `${text} (${deltas.join(', ')})` : text;
+
+    // ── 單向累加至上方「休整期變化」欄位 ──────────────────────────────────
+    if (gold != null && !isNaN(gold) && gold !== 0) {
+      const current = Number(this.form.get('goldDowntimeChange')?.value) || 0;
+      this.form.patchValue({ goldDowntimeChange: current + gold });
+    }
+    if (downtime != null && !isNaN(downtime) && downtime !== 0) {
+      const current = Number(this.form.get('downtimeDowntimeChange')?.value) || 0;
+      this.form.patchValue({ downtimeDowntimeChange: current + downtime });
+    }
+    if (magicItems != null && !isNaN(magicItems) && magicItems !== 0) {
+      const current = Number(this.form.get('magicItemsDowntimeChange')?.value) || 0;
+      this.form.patchValue({ magicItemsDowntimeChange: current + magicItems });
+    }
+
+    // 清空輸入欄位
+    this.selectedPreset = '';
     this.newActivityText = '';
+    this.newActivityGold = null;
+    this.newActivityDowntime = null;
+    this.newActivityMagicItems = null;
 
     if (this.isEditMode() && this.entryId) {
-      this.adventureService.addDowntime(this.entryId, { description: text }).subscribe({
+      this.adventureService.addDowntime(this.entryId, { description: fullDescription }).subscribe({
         next: (created) => {
           this.existingActivities.update(list => [...list, created]);
         },
@@ -336,7 +489,7 @@ export class AdventureFormComponent implements OnInit {
         },
       });
     } else {
-      this.pendingActivities.update(list => [...list, text]);
+      this.pendingActivities.update(list => [...list, fullDescription]);
     }
   }
 
@@ -354,6 +507,133 @@ export class AdventureFormComponent implements OnInit {
     } else {
       this.pendingActivities.update(list => list.filter((_, i) => i !== index));
     }
+  }
+
+  // ── 獲得永久性魔法物品清單操作 ──────────────────────────────────────────
+  protected addGainedItem(): void {
+    this.gainedMagicItems.update(list => [
+      ...list,
+      { itemName: '', rarity: '', notes: '' },
+    ]);
+    const current = Number(this.form.get('magicItemsChange')?.value) || 0;
+    this.form.patchValue({ magicItemsChange: current + 1 });
+  }
+
+  protected removeGainedItem(index: number): void {
+    const item = this.gainedMagicItems()[index];
+    if (item?.id) {
+      this.deletedItemIds.push(item.id);
+    }
+    this.gainedMagicItems.update(list => list.filter((_, i) => i !== index));
+    const current = Number(this.form.get('magicItemsChange')?.value) || 0;
+    this.form.patchValue({ magicItemsChange: Math.max(0, current - 1) });
+  }
+
+  protected updateGainedItemName(index: number, name: string): void {
+    this.gainedMagicItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, itemName: name } : item)
+    );
+  }
+
+  protected updateGainedItemRarity(index: number, rarity: ItemRarity | ''): void {
+    this.gainedMagicItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, rarity } : item)
+    );
+  }
+
+  protected updateGainedItemNotes(index: number, notes: string): void {
+    this.gainedMagicItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, notes } : item)
+    );
+  }
+
+  // ── 獲得消耗品清單操作 ──────────────────────────────────────────
+  protected addGainedConsumableItem(): void {
+    this.gainedConsumableItems.update(list => [
+      ...list,
+      { itemName: '', quantity: 1, rarity: '', notes: '' },
+    ]);
+  }
+
+  protected removeGainedConsumableItem(index: number): void {
+    const item = this.gainedConsumableItems()[index];
+    if (item?.id) {
+      this.deletedItemIds.push(item.id);
+    }
+    this.gainedConsumableItems.update(list => list.filter((_, i) => i !== index));
+  }
+
+  protected updateGainedConsumableItemName(index: number, name: string): void {
+    this.gainedConsumableItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, itemName: name } : item)
+    );
+  }
+
+  protected updateGainedConsumableItemQuantity(index: number, qty: unknown): void {
+    const num = Math.max(1, parseInt(String(qty), 10) || 1);
+    this.gainedConsumableItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, quantity: num } : item)
+    );
+  }
+
+  protected updateGainedConsumableItemRarity(index: number, rarity: ItemRarity | ''): void {
+    this.gainedConsumableItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, rarity } : item)
+    );
+  }
+
+  protected updateGainedConsumableItemNotes(index: number, notes: string): void {
+    this.gainedConsumableItems.update(list =>
+      list.map((item, i) => i === index ? { ...item, notes } : item)
+    );
+  }
+
+  private syncGainedItemsToInventory(sourceName: string): Observable<unknown> {
+    const deleteOps$: Observable<unknown>[] = this.deletedItemIds.map(id =>
+      this.inventoryService.delete(this.characterId, id)
+    );
+
+    const validMagicItems = this.gainedMagicItems().filter(i => i.itemName && i.itemName.trim());
+    const magicSaveOps$: Observable<unknown>[] = validMagicItems.map(item => {
+      const req: InventoryItemRequest = {
+        itemName: item.itemName.trim(),
+        itemType: 'PERMANENT',
+        rarity: item.rarity || null,
+        quantity: 1,
+        source: sourceName,
+        notes: item.notes?.trim() || null,
+      };
+      if (item.id) {
+        return this.inventoryService.update(this.characterId, item.id, req);
+      } else {
+        return this.inventoryService.create(this.characterId, req);
+      }
+    });
+
+    const validConsumables = this.gainedConsumableItems().filter(i => i.itemName && i.itemName.trim());
+    const consumableSaveOps$: Observable<unknown>[] = validConsumables.map(item => {
+      const req: InventoryItemRequest = {
+        itemName: item.itemName.trim(),
+        itemType: 'CONSUMABLE',
+        rarity: item.rarity || null,
+        quantity: Math.max(1, item.quantity || 1),
+        source: sourceName,
+        notes: item.notes?.trim() || null,
+      };
+      if (item.id) {
+        return this.inventoryService.update(this.characterId, item.id, req);
+      } else {
+        return this.inventoryService.create(this.characterId, req);
+      }
+    });
+
+    const allOps = [...deleteOps$, ...magicSaveOps$, ...consumableSaveOps$];
+    if (allOps.length === 0) return of(null);
+
+    return from(allOps).pipe(
+      concatMap(op$ => op$),
+      toArray(),
+    );
   }
 
   private buildRequest(): AdventureEntryRequest {
@@ -390,19 +670,26 @@ export class AdventureFormComponent implements OnInit {
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.snackBar.open('請填寫必填欄位（遊玩日期）', '關閉', { duration: 3000 });
+      this.snackBar.open('請填寫必填欄位且確認起始數值不可為負數', '關閉', { duration: 3000 });
       return;
     }
     if (!this.isLevelBalanced()) {
       this.snackBar.open('職業等級加總與結束等級不符，請調整後再儲存', '關閉', { duration: 3000 });
       return;
     }
+    if (!this.isResourceValid()) {
+      this.snackBar.open('資源起始值與合計皆不得為負值，請調整後再儲存', '關閉', { duration: 3000 });
+      return;
+    }
 
     this.isSaving.set(true);
     const req = this.buildRequest();
+    const sourceName = req.adventureName || req.adventureCode || '冒險獲得';
 
     if (this.isEditMode() && this.entryId) {
-      this.adventureService.update(this.characterId, this.entryId, req).subscribe({
+      this.adventureService.update(this.characterId, this.entryId, req).pipe(
+        concatMap(updated => this.syncGainedItemsToInventory(sourceName).pipe(map(() => updated))),
+      ).subscribe({
         next: (updated) => {
           this.snackBar.open('記錄已更新', '關閉', { duration: 2500 });
           this.router.navigate(['/characters', this.characterId, 'adventures', updated.id]);
@@ -413,27 +700,25 @@ export class AdventureFormComponent implements OnInit {
         },
       });
     } else {
-      this.adventureService.create(this.characterId, req).subscribe({
-        next: (created) => {
+      this.adventureService.create(this.characterId, req).pipe(
+        concatMap(created => {
           const pending = this.pendingActivities();
-          if (pending.length === 0) {
-            this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });
-            this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
-            return;
-          }
-          from(pending).pipe(
-            concatMap(desc => this.adventureService.addDowntime(created.id, { description: desc })),
-            toArray(),
-          ).subscribe({
-            next: () => {
-              this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });
-              this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
-            },
-            error: () => {
-              this.snackBar.open('冒險記錄已新增（部分活動儲存失敗）', '關閉', { duration: 3500 });
-              this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
-            },
-          });
+          const activity$: Observable<unknown> = pending.length > 0
+            ? from(pending).pipe(
+                concatMap(desc => this.adventureService.addDowntime(created.id, { description: desc })),
+                toArray(),
+              )
+            : of(null);
+
+          return activity$.pipe(
+            concatMap(() => this.syncGainedItemsToInventory(sourceName)),
+            map(() => created),
+          );
+        }),
+      ).subscribe({
+        next: (created) => {
+          this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });
+          this.router.navigate(['/characters', this.characterId, 'adventures', created.id]);
         },
         error: () => {
           this.isSaving.set(false);

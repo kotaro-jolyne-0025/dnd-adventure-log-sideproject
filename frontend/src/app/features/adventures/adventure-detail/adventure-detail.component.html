@@ -106,7 +106,7 @@
               <td class="total-cell">{{ entry()!.downtimeTotal ?? '—' }}</td>
             </tr>
             <tr>
-              <td class="resource-label">✨ 魔法物品</td>
+              <td class="resource-label">✨ 永久性魔法物品</td>
               <td>{{ entry()!.startingMagicItems ?? '—' }}</td>
               <td [class.positive]="(entry()!.magicItemsChange ?? 0) > 0"
                   [class.negative]="(entry()!.magicItemsChange ?? 0) < 0">
@@ -148,6 +148,71 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <!-- ✨ 獲得永久性魔法物品 -->
+    @if (magicItems().length > 0 || (entry()!.magicItemsChange ?? 0) > 0) {
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>✨ 獲得永久性魔法物品</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (magicItems().length > 0) {
+            <div class="magic-items-list">
+              @for (item of magicItems(); track item.id) {
+                <div class="magic-item-row">
+                  <div class="item-main-info">
+                    <span class="item-name">✨ {{ item.itemName }}</span>
+                    @if (item.rarity) {
+                      <span class="rarity-badge"
+                            [style.color]="rarityColors[item.rarity]"
+                            [style.borderColor]="rarityColors[item.rarity]">
+                        {{ rarityLabels[item.rarity] }}
+                      </span>
+                    }
+                  </div>
+                  @if (item.notes) {
+                    <p class="item-notes">{{ item.notes }}</p>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="simple-gain-text">獲得永久性魔法物品：+{{ entry()!.magicItemsChange }} 件</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- 🧪 獲得消耗品 -->
+    @if (consumableItems().length > 0) {
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>🧪 獲得消耗品</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="magic-items-list">
+            @for (item of consumableItems(); track item.id) {
+              <div class="magic-item-row">
+                <div class="item-main-info">
+                  <span class="item-name">🧪 {{ item.itemName }}</span>
+                  <span class="quantity-badge">× {{ item.quantity }}</span>
+                  @if (item.rarity) {
+                    <span class="rarity-badge"
+                          [style.color]="rarityColors[item.rarity]"
+                          [style.borderColor]="rarityColors[item.rarity]">
+                      {{ rarityLabels[item.rarity] }}
+                    </span>
+                  }
+                </div>
+                @if (item.notes) {
+                  <p class="item-notes">{{ item.notes }}</p>
+                }
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
 
     <!-- 🏕️ 休整期活動 -->
     <mat-card class="detail-card">
