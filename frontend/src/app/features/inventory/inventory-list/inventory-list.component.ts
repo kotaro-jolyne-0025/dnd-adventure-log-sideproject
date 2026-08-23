@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,6 +26,7 @@ import {
   selector: 'app-inventory-list',
   standalone: true,
   imports: [
+    CommonModule,
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
@@ -109,6 +111,48 @@ export class InventoryListComponent implements OnInit {
           error: () => this.snackBar.open('刪除失敗', '關閉', { duration: 3000 }),
         });
       });
+  }
+
+  protected onQuickConsume(event: Event, item: InventoryItem): void {
+    event.stopPropagation();
+    const currentQty = item.quantity || 1;
+
+    if (currentQty > 1) {
+      const newQty = currentQty - 1;
+      this.inventoryService.update(this.characterId, item.id, {
+        itemName: item.itemName,
+        itemType: item.itemType,
+        rarity: item.rarity,
+        quantity: newQty,
+        source: item.source,
+        notes: item.notes,
+      }).subscribe({
+        next: () => {
+          this.snackBar.open(`已使用 1 份「${item.itemName}」（剩餘 ${newQty} 份）`, '關閉', { duration: 2500 });
+          this.loadItems();
+        },
+        error: () => this.snackBar.open('扣減失敗', '關閉', { duration: 3000 }),
+      });
+    } else {
+      const data: ConfirmDialogData = {
+        title: '使用並用盡消耗品',
+        message: `已使用最後 1 份「${item.itemName}」，要將其從倉庫移除嗎？`,
+        confirmText: '使用並移除',
+        cancelText: '取消',
+      };
+      this.dialog.open(ConfirmDialogComponent, { data, width: '380px' })
+        .afterClosed()
+        .subscribe((confirmed) => {
+          if (!confirmed) return;
+          this.inventoryService.delete(this.characterId, item.id).subscribe({
+            next: () => {
+              this.snackBar.open(`已使用完「${item.itemName}」`, '關閉', { duration: 2500 });
+              this.loadItems();
+            },
+            error: () => this.snackBar.open('操作失敗', '關閉', { duration: 3000 }),
+          });
+        });
+    }
   }
 
   protected getRarityColor(item: InventoryItem): string {
