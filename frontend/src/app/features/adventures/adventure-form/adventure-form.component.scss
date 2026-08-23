@@ -1,5 +1,5 @@
 .page-container {
-  max-width: 780px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 16px 16px 80px;
 }
@@ -7,202 +7,109 @@
 .page-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.btn-back {
+  color: var(--text-secondary);
+  &:hover {
+    color: var(--text-primary);
+  }
 }
 
 .page-title {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-/* Form Card */
+/* Form Section Card */
 .form-card {
-  margin-bottom: 16px;
-  padding: 4px 0;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
-/* Fields */
+.section-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+
+  .section-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--text-secondary);
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+  }
+}
+
+.field-hint {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* Field Layouts */
 .field-row {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
   margin-bottom: 4px;
 
-  .flex-1 { flex: 1; min-width: 140px; }
-  .flex-2 { flex: 2; min-width: 200px; }
-  .qty-field { max-width: 120px; min-width: 90px; }
+  .flex-1 { flex: 1; min-width: 160px; }
+  .flex-2 { flex: 2; min-width: 240px; }
+  .qty-field { max-width: 130px; min-width: 100px; }
 }
 
 .full-width {
   width: 100%;
 }
 
-.field-hint {
-  font-size: 0.78rem;
-  color: var(--mat-sys-outline);
-  margin: 0 0 12px;
-}
-
-/* Resource Row */
-.resource-row {
+/* Level Row */
+.level-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 4px;
+  gap: 16px;
+  background: var(--bg-surface-elevated);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
-.resource-label {
-  min-width: 90px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.num-field {
-  width: 100px;
-  flex: 1;
-  min-width: 80px;
-
-  &.field-negative {
-    ::ng-deep .mat-mdc-text-field-wrapper {
-      background-color: rgba(211, 47, 47, 0.08) !important;
-    }
-    input {
-      color: #d32f2f !important;
-      font-weight: bold;
-    }
-  }
-}
-
-.resource-warning-banner {
+.level-badge-display {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  margin-top: 12px;
-  border-radius: 6px;
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ffcdd2;
-  font-size: 0.88rem;
-  font-weight: 500;
+  flex-direction: column;
 
-  mat-icon {
-    font-size: 1.25rem;
-    width: 1.25rem;
-    height: 1.25rem;
+  .level-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
   }
-}
 
-/* Actions */
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 4px;
-}
-
-/* Level Row — 起始等級 / 升級 Toggle / 升級職業 / 結束等級 */
-.level-row {
-  align-items: center;
+  .level-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
 }
 
 .level-up-toggle {
   display: flex;
   align-items: center;
-  padding-top: 4px;
-  flex-shrink: 0;
-}
-
-/* Downtime Activity */
-.activity-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
-
-  &:last-of-type {
-    border-bottom: none;
-  }
-}
-
-.activity-text {
-  flex: 1;
-  font-size: 0.9rem;
-}
-
-.activity-empty {
-  font-size: 0.82rem;
-  color: var(--mat-sys-outline);
-  margin: 4px 0 12px;
-}
-
-/* 新增活動面板 */
-.activity-input-panel {
-  margin-top: 12px;
-  padding: 14px;
-  border-radius: 8px;
-  background: var(--mat-sys-surface-container-low, #f8f9fa);
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.activity-preset-row {
-  display: flex;
-  width: 100%;
-
-  .activity-preset-field {
-    width: 100%;
-    margin-bottom: -1.25em;
-  }
-}
-
-.activity-input-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-
-  .activity-desc-field {
-    flex: 1;
-    min-width: 220px;
-    margin-bottom: -1.25em; /* 調整 mat-form-field 底部間距 */
-  }
-
-  .activity-add-btn {
-    height: 52px;
-    white-space: nowrap;
-  }
-}
-
-.activity-resource-deltas {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-
-  .deltas-label {
-    font-size: 0.78rem;
-    color: var(--mat-sys-outline, #666);
-  }
-
-  .deltas-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-
-    .delta-field {
-      flex: 1;
-      min-width: 120px;
-      margin-bottom: -1.25em;
-    }
-  }
+  padding: 4px 0;
 }
 
 .ending-level-display {
@@ -210,32 +117,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 64px;
-  padding: 4px 8px;
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
-  border-radius: 4px;
-  background: var(--mat-sys-surface-variant, #f5f5f5);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-gold-bg);
+  border: 1px solid rgba(217, 119, 6, 0.3);
 
   .ending-level-label {
     font-size: 0.72rem;
-    color: var(--mat-sys-outline);
-    line-height: 1.2;
+    font-weight: 600;
+    color: var(--color-gold);
   }
 
   .ending-level-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    line-height: 1.2;
   }
 }
 
-/* 🎯 升級後職業配置區塊 */
+/* 🎯 結束職業與等級配置 */
 .class-allocation-section {
   margin-top: 16px;
   padding: 16px;
-  border-radius: 8px;
-  background: var(--mat-sys-surface-container-low, #f8f9fa);
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
 
   .section-header {
     display: flex;
@@ -253,12 +160,13 @@
 
   .section-sub-title {
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   .section-sub-hint {
-    font-size: 0.76rem;
-    color: var(--mat-sys-outline, #757575);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
   }
 }
 
@@ -266,10 +174,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  font-size: 0.85rem;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  font-size: 0.86rem;
+  font-weight: 500;
 
   .status-icon {
     font-size: 1.2rem;
@@ -278,22 +187,22 @@
   }
 
   &.status-match {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    background: var(--color-positive-bg);
+    color: var(--color-positive);
+    border: 1px solid rgba(5, 150, 105, 0.3);
   }
 
   &.status-mismatch {
-    background: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffe0b2;
+    background: var(--color-negative-bg);
+    color: var(--color-negative);
+    border: 1px solid rgba(225, 29, 72, 0.3);
   }
 }
 
 .classes-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .class-row {
@@ -303,28 +212,101 @@
 
   .class-name-field {
     flex: 2;
-    min-width: 140px;
+    min-width: 150px;
   }
 
   .class-level-field {
-    width: 100px;
-    min-width: 80px;
+    width: 110px;
+    min-width: 90px;
   }
 }
 
-/* 獲得永久性魔法物品清單 */
+/* 💰 資源變動區塊 */
+.resource-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding: 0 4px;
+
+  .resource-label {
+    min-width: 130px;
+  }
+
+  .resource-col-header {
+    flex: 1;
+    min-width: 90px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+}
+
+.resource-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+
+  .resource-label {
+    min-width: 130px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .num-field {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .total-field {
+    input {
+      font-weight: 700;
+      color: var(--color-gold) !important;
+    }
+
+    &.field-negative input {
+      color: var(--color-negative) !important;
+    }
+  }
+}
+
+.resource-warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-negative-bg);
+  color: var(--color-negative);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* Gained Item Cards */
 .gained-items-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .gained-item-card {
-  padding: 14px;
-  border-radius: 8px;
-  background: var(--mat-sys-surface-container-low, #f8f9fa);
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
 
@@ -332,16 +314,112 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 
     .gained-item-index {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--mat-sys-primary, #1976d2);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--color-primary);
     }
   }
 }
 
 .add-gained-btn {
-  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Downtime Activities */
+.activity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+
+  .activity-text {
+    flex: 1;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+  }
+}
+
+.activity-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 4px 0 12px;
+}
+
+.activity-input-panel {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-preset-field {
+  width: 100%;
+}
+
+.activity-input-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .activity-desc-field {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .activity-add-btn {
+    height: 52px;
+    font-weight: 600;
+  }
+}
+
+.activity-resource-deltas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .deltas-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .deltas-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .delta-field {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+}
+
+/* Actions Footer */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 0;
+  position: sticky;
+  bottom: 0;
+  background: var(--header-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 20px;
+  z-index: 100;
 }

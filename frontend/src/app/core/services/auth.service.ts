@@ -25,7 +25,12 @@ export class AuthService {
     // 啟動時驗證 token
     if (this.token()) {
       this.fetchCurrentUser().subscribe({
-        error: () => this.logout(false),
+        error: (err) => {
+          // 只有明確回傳 401 (Token 失效或未授權) 時才清空登入狀態，避免因網路短暫不穩或伺服器啟動中誤登出
+          if (err?.status === 401) {
+            this.logout(false);
+          }
+        },
       });
     }
   }

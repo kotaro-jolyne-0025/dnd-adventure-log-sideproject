@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +21,9 @@ import {
   selector: 'app-adventure-detail',
   standalone: true,
   imports: [
+    CommonModule,
     DatePipe,
+    DecimalPipe,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -104,18 +106,18 @@ export class AdventureDetailComponent implements OnInit {
       const parts = classesString.split('/').map(seg => {
         const match = seg.trim().match(/^(.+?)(\d+)$/);
         if (match) {
-          return `${match[1]}/Lv.${match[2]}`;
+          return `${match[1]} Lv.${match[2]}`;
         }
         return seg.trim();
       });
-      return parts.join('，');
+      return parts.join(' / ');
     }
     return level != null ? `Lv.${level}` : '—';
   }
 
-  protected formatChange(val?: number | null): string {
-    if (val == null) return '—';
-    return val > 0 ? `+${val}` : `${val}`;
+  protected formatChange(val?: number | null, prefix = ''): string {
+    if (val == null || val === 0) return '—';
+    return val > 0 ? `+${val}${prefix}` : `${val}${prefix}`;
   }
 
   protected onBack(): void {
@@ -132,6 +134,8 @@ export class AdventureDetailComponent implements OnInit {
     const data: ConfirmDialogData = {
       title: '刪除冒險記錄',
       message: '確定要刪除此冒險記錄嗎？此操作無法復原。',
+      confirmText: '確認刪除',
+      cancelText: '取消',
     };
     this.dialog.open(ConfirmDialogComponent, { data, width: '360px' })
       .afterClosed()
@@ -146,5 +150,4 @@ export class AdventureDetailComponent implements OnInit {
         });
       });
   }
-
 }

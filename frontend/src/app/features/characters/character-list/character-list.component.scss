@@ -1,5 +1,5 @@
 .page-container {
-  max-width: 960px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 24px 16px 80px;
 }
@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
   gap: 16px;
 }
@@ -18,21 +18,200 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .title-icon {
-  font-size: 2rem;
-  width: 2rem;
-  height: 2rem;
+  font-size: 1.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  color: var(--color-primary);
 }
 
-/* Loading */
-.loading-wrapper {
+.page-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.btn-create-char {
+  font-weight: 600;
+  height: 42px;
+  padding: 0 18px;
+}
+
+/* Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* Character Card */
+.char-card {
+  padding: 20px;
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-medium) !important;
+  }
+}
+
+.card-header-bar {
+  margin-bottom: 14px;
+}
+
+.avatar-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.char-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 64px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.char-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.char-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.char-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.level-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--color-gold-bg);
+  color: var(--color-gold);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.player-name {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Card Body */
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0 14px;
+}
+
+.meta-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+
+  .tag-icon {
+    font-size: 0.85rem;
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+}
+
+.faction-tag {
+  color: var(--color-info);
+  border-color: rgba(2, 132, 199, 0.2);
+}
+
+.class-summary {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+
+  .class-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .class-value {
+    font-weight: 600;
+  }
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+
+  .btn-enter-char {
+    font-size: 0.82rem;
+    font-weight: 600;
+    height: 34px;
+    padding: 0 10px 0 12px;
+    display: inline-flex;
+    align-items: center;
+
+    .enter-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-left: 2px;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 2px;
+  }
 }
 
 /* Empty State */
@@ -40,74 +219,68 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 80px 16px;
   text-align: center;
-}
+  padding: 56px 24px;
+  max-width: 480px;
+  margin: 40px auto;
 
-.empty-icon {
-  font-size: 64px;
-  width: 64px;
-  height: 64px;
-  color: var(--mat-sys-outline);
-  opacity: 0.5;
-}
+  .empty-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--bg-surface-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
 
-.empty-title {
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin: 0;
-  color: var(--mat-sys-on-surface);
-}
+  .empty-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: var(--text-muted);
+  }
 
-.empty-desc {
-  margin: 0 0 8px;
-  color: var(--mat-sys-outline);
-}
+  .empty-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--text-primary);
+  }
 
-/* Card Grid */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
+  .empty-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
 
-.character-card {
-  cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
-
-  &:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
+  .empty-btn {
+    font-weight: 600;
   }
 }
 
-/* Char Info */
-.char-info {
+/* Skeleton Loading Cards */
+.skeleton-char-card {
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 4px 0;
-}
 
-.info-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
+  .skeleton-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-.info-label {
-  font-size: 0.75rem;
-  color: var(--mat-sys-outline);
-  min-width: 36px;
-  flex-shrink: 0;
-}
+  .skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 
-.info-value {
-  font-size: 0.9rem;
-  color: var(--mat-sys-on-surface);
-}
-
-.info-value.classes {
-  font-weight: 500;
+  .skeleton-lines {
+    flex: 1;
+  }
 }

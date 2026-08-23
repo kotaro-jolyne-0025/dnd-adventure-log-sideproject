@@ -7,7 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from './core/services/auth.service';
+import { ThemeService } from './core/services/theme.service';
 import { EditProfileDialogComponent } from './features/auth/edit-profile-dialog/edit-profile-dialog.component';
 
 @Component({
@@ -23,12 +25,14 @@ import { EditProfileDialogComponent } from './features/auth/edit-profile-dialog/
     MatMenuModule,
     MatDividerModule,
     MatDialogModule,
+    MatTooltipModule,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   readonly authService = inject(AuthService);
+  readonly themeService = inject(ThemeService);
   private readonly dialog = inject(MatDialog);
 
   openEditProfileDialog(): void {
