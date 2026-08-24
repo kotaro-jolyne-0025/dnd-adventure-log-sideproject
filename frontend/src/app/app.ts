@@ -12,6 +12,8 @@ import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
 import { EditProfileDialogComponent } from './features/auth/edit-profile-dialog/edit-profile-dialog.component';
 
+import { LucideDices } from '@lucide/angular';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -26,6 +28,7 @@ import { EditProfileDialogComponent } from './features/auth/edit-profile-dialog/
     MatDividerModule,
     MatDialogModule,
     MatTooltipModule,
+    LucideDices,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

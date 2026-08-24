@@ -6,9 +6,14 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-    <!-- 📋 冒險資訊 -->
+    <!-- 冒險資訊 -->
     <mat-card class="form-card">
-      <mat-card-header><mat-card-title>📋 冒險資訊</mat-card-title></mat-card-header>
+      <mat-card-header>
+        <mat-card-title class="card-title-flex">
+          <svg lucideScrollText [size]="20" class="title-icon"></svg>
+          冒險資訊
+        </mat-card-title>
+      </mat-card-header>
       <mat-card-content>
         <div class="field-row">
           <mat-form-field appearance="outline" class="flex-1">
@@ -69,7 +74,7 @@
           }
         </div>
 
-        <!-- 🎯 結束職業與等級配置 -->
+        <!-- 結束職業與等級配置 -->
         <div class="class-allocation-section">
           <div class="section-header">
             <span class="section-sub-title">結束職業與等級</span>
@@ -118,19 +123,22 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- 💰 資源變動 -->
+    <!-- 資源變動 -->
     <mat-card class="form-card">
       <mat-card-header>
-        <mat-card-title>💰 資源變動</mat-card-title>
+        <mat-card-title class="card-title-flex">
+          <svg lucideCoins [size]="20" class="title-icon gold"></svg>
+          資源變動
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="resource-blocks-grid">
 
-          <!-- 🪙 金幣 -->
+          <!-- 金幣 -->
           <div class="resource-block-card">
             <div class="res-card-header">
               <div class="res-header-left">
-                <span class="res-emoji">🪙</span>
+                <svg lucideCoins [size]="18" class="res-icon gold"></svg>
                 <span class="res-title">金幣 (GP)</span>
               </div>
               <div class="res-total-badge gold" [class.negative]="goldTotal() !== null && goldTotal()! < 0">
@@ -157,11 +165,11 @@
             </div>
           </div>
 
-          <!-- 🏕️ 休整期天數 -->
+          <!-- 休整期天數 -->
           <div class="resource-block-card">
             <div class="res-card-header">
               <div class="res-header-left">
-                <span class="res-emoji">🏕️</span>
+                <svg lucideTent [size]="18" class="res-icon downtime"></svg>
                 <span class="res-title">休整期天數</span>
               </div>
               <div class="res-total-badge downtime" [class.negative]="downtimeTotal() !== null && downtimeTotal()! < 0">
@@ -188,11 +196,11 @@
             </div>
           </div>
 
-          <!-- ✨ 魔法物品 -->
+          <!-- 魔法物品 -->
           <div class="resource-block-card">
             <div class="res-card-header">
               <div class="res-header-left">
-                <span class="res-emoji">✨</span>
+                <svg lucideSparkles [size]="18" class="res-icon magic"></svg>
                 <span class="res-title">魔法物品</span>
               </div>
               <div class="res-total-badge magic" [class.negative]="magicItemsTotal() !== null && magicItemsTotal()! < 0">
@@ -230,10 +238,13 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- ✨ 獲得魔法物品 -->
+    <!-- 獲得魔法物品 -->
     <mat-card class="form-card">
       <mat-card-header>
-        <mat-card-title>✨ 獲得魔法物品</mat-card-title>
+        <mat-card-title class="card-title-flex">
+          <svg lucideSparkles [size]="20" class="title-icon magic"></svg>
+          獲得魔法物品
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="gained-items-list">
@@ -285,10 +296,13 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- 🧪 獲得消耗品 -->
+    <!-- 獲得消耗品 -->
     <mat-card class="form-card">
       <mat-card-header>
-        <mat-card-title>🧪 獲得消耗品</mat-card-title>
+        <mat-card-title class="card-title-flex">
+          <svg lucideFlaskConical [size]="20" class="title-icon consumable"></svg>
+          獲得消耗品
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="gained-items-list">
@@ -345,9 +359,14 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- 📝 備註 -->
+    <!-- 備註 -->
     <mat-card class="form-card">
-      <mat-card-header><mat-card-title>📝 備註</mat-card-title></mat-card-header>
+      <mat-card-header>
+        <mat-card-title class="card-title-flex">
+          <svg lucideFileText [size]="20" class="title-icon"></svg>
+          備註
+        </mat-card-title>
+      </mat-card-header>
       <mat-card-content>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>冒險備註</mat-label>
@@ -361,9 +380,14 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- 🏕️ 休整期活動 -->
+    <!-- 休整期活動 -->
     <mat-card class="form-card">
-      <mat-card-header><mat-card-title>🏕️ 休整期活動</mat-card-title></mat-card-header>
+      <mat-card-header>
+        <mat-card-title class="card-title-flex">
+          <svg lucideTent [size]="20" class="title-icon downtime"></svg>
+          休整期活動
+        </mat-card-title>
+      </mat-card-header>
       <mat-card-content>
         <!-- 編輯模式：已儲存活動 -->
         @if (isEditMode()) {
@@ -394,7 +418,7 @@
           }
         }
 
-        <!-- 🌟 新增活動輸入面板 -->
+        <!-- 新增活動輸入面板 -->
         <div class="activity-input-panel">
           <div class="activity-preset-row">
             <mat-form-field appearance="outline" class="activity-preset-field">
@@ -424,17 +448,17 @@
             <span class="deltas-label">伴隨資源變動：</span>
             <div class="deltas-row">
               <mat-form-field appearance="outline" class="delta-field">
-                <mat-label>🪙 金幣 (GP)</mat-label>
+                <mat-label>金幣 (GP)</mat-label>
                 <input matInput type="number" [(ngModel)]="newActivityGold" [ngModelOptions]="{standalone: true}"
                   placeholder="例：-50" (keydown.enter)="$event.preventDefault(); addActivity()" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="delta-field">
-                <mat-label>🏕️ 休整期 (天)</mat-label>
+                <mat-label>休整期 (天)</mat-label>
                 <input matInput type="number" [(ngModel)]="newActivityDowntime" [ngModelOptions]="{standalone: true}"
                   placeholder="例：-10" (keydown.enter)="$event.preventDefault(); addActivity()" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="delta-field">
-                <mat-label>✨ 魔法物品 (件)</mat-label>
+                <mat-label>魔法物品 (件)</mat-label>
                 <input matInput type="number" [(ngModel)]="newActivityMagicItems" [ngModelOptions]="{standalone: true}"
                   placeholder="例：1" (keydown.enter)="$event.preventDefault(); addActivity()" />
               </mat-form-field>

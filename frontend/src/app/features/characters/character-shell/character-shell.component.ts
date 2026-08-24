@@ -14,6 +14,8 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
 import { CommonModule } from '@angular/common';
 
+import { LucideCoins, LucideTent, LucideSparkles } from '@lucide/angular';
+
 @Component({
   selector: 'app-character-shell',
   standalone: true,
@@ -25,6 +27,9 @@ import { CommonModule } from '@angular/common';
     MatButtonModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    LucideCoins,
+    LucideTent,
+    LucideSparkles,
   ],
   templateUrl: './character-shell.component.html',
   styleUrl: './character-shell.component.scss',

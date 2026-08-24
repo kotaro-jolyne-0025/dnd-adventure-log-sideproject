@@ -87,7 +87,7 @@
             @if (formatGoldChange(row); as gold) {
               <span class="delta-badge" [class.badge-positive]="(row.goldChange ?? 0) + (row.goldDowntimeChange ?? 0) > 0"
                                        [class.badge-negative]="(row.goldChange ?? 0) + (row.goldDowntimeChange ?? 0) < 0">
-                <span>🪙</span>
+                <svg lucideCoins [size]="13" class="badge-icon"></svg>
                 {{ gold }}
               </span>
             }
@@ -96,7 +96,7 @@
             @if (formatDowntimeChange(row); as dt) {
               <span class="delta-badge" [class.badge-positive]="(row.downtimeChange ?? 0) + (row.downtimeDowntimeChange ?? 0) > 0"
                                        [class.badge-negative]="(row.downtimeChange ?? 0) + (row.downtimeDowntimeChange ?? 0) < 0">
-                <span>🏕️</span>
+                <svg lucideTent [size]="13" class="badge-icon"></svg>
                 {{ dt }}
               </span>
             }
@@ -104,7 +104,7 @@
             <!-- Magic item change -->
             @if (formatMagicItemChange(row); as mi) {
               <span class="delta-badge badge-magic">
-                <span>✨</span>
+                <svg lucideSparkles [size]="13" class="badge-icon"></svg>
                 {{ mi }}
               </span>
             }

@@ -22,6 +22,8 @@ import {
   ConfirmDialogData,
 } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
+import { LucideSparkles, LucideFlaskConical } from '@lucide/angular';
+
 @Component({
   selector: 'app-inventory-list',
   standalone: true,
@@ -34,6 +36,8 @@ import {
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTooltipModule,
+    LucideSparkles,
+    LucideFlaskConical,
   ],
   templateUrl: './inventory-list.component.html',
   styleUrl: './inventory-list.component.scss',

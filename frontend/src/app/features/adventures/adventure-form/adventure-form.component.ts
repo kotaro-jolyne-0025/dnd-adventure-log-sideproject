@@ -25,6 +25,15 @@ import { AdventureEntry, AdventureEntryRequest, DowntimeActivity } from '../../.
 import { ItemRarity, ITEM_RARITY_LABELS, InventoryItemRequest } from '../../../core/models/inventory.model';
 import { from, of, concatMap, toArray, map, Observable } from 'rxjs';
 
+import {
+  LucideCoins,
+  LucideTent,
+  LucideSparkles,
+  LucideFlaskConical,
+  LucideScrollText,
+  LucideFileText,
+} from '@lucide/angular';
+
 @Component({
   selector: 'app-adventure-form',
   standalone: true,
@@ -43,6 +52,12 @@ import { from, of, concatMap, toArray, map, Observable } from 'rxjs';
     MatSelectModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    LucideCoins,
+    LucideTent,
+    LucideSparkles,
+    LucideFlaskConical,
+    LucideScrollText,
+    LucideFileText,
   ],
   templateUrl: './adventure-form.component.html',
   styleUrl: './adventure-form.component.scss',
@@ -447,16 +462,16 @@ export class AdventureFormComponent implements OnInit {
       text = '休整期活動';
     }
 
-    // 格式化資源變動標籤（例如：🪙 -50gp, 🏕️ -10天, ✨ +1件）
+    // 格式化資源變動標籤（例如：金幣 -50 gp, 休整期 -10 天, 魔法物品 +1 件）
     const deltas: string[] = [];
     if (gold != null && !isNaN(gold) && gold !== 0) {
-      deltas.push(`🪙 ${gold > 0 ? '+' : ''}${gold} gp`);
+      deltas.push(`金幣 ${gold > 0 ? '+' : ''}${gold} gp`);
     }
     if (downtime != null && !isNaN(downtime) && downtime !== 0) {
-      deltas.push(`🏕️ ${downtime > 0 ? '+' : ''}${downtime} 天`);
+      deltas.push(`休整期 ${downtime > 0 ? '+' : ''}${downtime} 天`);
     }
     if (magicItems != null && !isNaN(magicItems) && magicItems !== 0) {
-      deltas.push(`✨ ${magicItems > 0 ? '+' : ''}${magicItems} 永久性魔法物品`);
+      deltas.push(`魔法物品 ${magicItems > 0 ? '+' : ''}${magicItems} 件`);
     }
 
     const fullDescription = deltas.length > 0 ? `${text} (${deltas.join(', ')})` : text;

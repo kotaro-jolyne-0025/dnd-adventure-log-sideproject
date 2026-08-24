@@ -40,8 +40,10 @@
   }
 
   .brand-icon {
-    font-size: 1.35rem;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
   }
 
   .brand-title {

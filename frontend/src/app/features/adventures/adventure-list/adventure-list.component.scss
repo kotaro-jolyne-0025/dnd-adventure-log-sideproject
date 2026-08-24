@@ -175,9 +175,12 @@
   border: 1px solid var(--border-subtle);
 
   .badge-icon {
-    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 0.95rem;
     height: 0.95rem;
+    flex-shrink: 0;
   }
 }
 
