@@ -1,14 +1,14 @@
 <div class="page-container">
   <div class="page-header">
-    <button mat-icon-button (click)="onBack()"><mat-icon>arrow_back</mat-icon></button>
-    <h1 class="page-title">{{ isEditMode() ? '編輯冒險記錄' : '新增冒險記錄' }}</h1>
+    <button mat-icon-button (click)="onBack()" matTooltip="返回"><mat-icon>arrow_back</mat-icon></button>
+    <h1 class="page-title">{{ isEditMode() ? '編輯冒險紀錄' : '新增冒險紀錄' }}</h1>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-    <!-- 📋 基本資訊 -->
+    <!-- 📋 冒險資訊 -->
     <mat-card class="form-card">
-      <mat-card-header><mat-card-title>📋 基本資訊</mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title>📋 冒險資訊</mat-card-title></mat-card-header>
       <mat-card-content>
         <div class="field-row">
           <mat-form-field appearance="outline" class="flex-1">
@@ -29,20 +29,21 @@
             <mat-error>遊玩日期為必填</mat-error>
           </mat-form-field>
           <mat-form-field appearance="outline" class="flex-1">
-            <mat-label>DM 名稱</mat-label>
+            <mat-label>DM</mat-label>
             <input matInput formControlName="dmName" />
           </mat-form-field>
         </div>
+
         <!-- 等級與升級機制 -->
         <div class="field-row level-row" style="margin-top: 8px;">
           <mat-form-field appearance="outline" class="flex-1">
-            <mat-label>起始等級（自動）</mat-label>
+            <mat-label>起始等級</mat-label>
             <input matInput [value]="'Lv.' + _startingLevel()" readonly disabled />
           </mat-form-field>
 
           <div class="level-up-toggle">
             <mat-slide-toggle [checked]="levelUp()" (change)="onLevelUpToggle($event.checked)" color="primary">
-              本次冒險升級 (+1)
+              本次升級 (+1)
             </mat-slide-toggle>
           </div>
 
@@ -56,7 +57,7 @@
         <div class="field-row" style="align-items: center; margin-top: 4px;">
           <div class="level-up-toggle">
             <mat-slide-toggle [checked]="catchup()" (change)="onCatchupToggle($event.checked)" color="accent">
-              迎頭趕上 (Catch-up)
+              迎頭趕上 (升級)
             </mat-slide-toggle>
           </div>
 
@@ -65,19 +66,13 @@
               <mat-label>升幾等</mat-label>
               <input matInput type="number" min="1" max="19" [value]="catchupCount()" (change)="onCatchupCountChange($event)" />
             </mat-form-field>
-            <span style="font-size: 0.8rem; color: var(--mat-sys-outline); margin-left: 8px;">
-              💡 消耗的休整期天數請在下方「休整期天數」欄位手動填寫扣除
-            </span>
           }
         </div>
 
         <!-- 🎯 結束職業與等級配置 -->
         <div class="class-allocation-section">
           <div class="section-header">
-            <div class="section-title-group">
-              <span class="section-sub-title">結束職業與等級配置</span>
-              <span class="section-sub-hint">請配置各職業等級，其加總需等於結束等級 Lv.{{ endingLevel() }}</span>
-            </div>
+            <span class="section-sub-title">結束職業與等級</span>
             <button type="button" mat-stroked-button (click)="addClass()">
               <mat-icon>add</mat-icon> 新增職業（兼職）
             </button>
@@ -87,10 +82,10 @@
           <div class="level-match-status" [class.status-match]="isLevelBalanced()" [class.status-mismatch]="!isLevelBalanced()">
             @if (isLevelBalanced()) {
               <mat-icon class="status-icon">check_circle</mat-icon>
-              <span>職業等級加總 ({{ classesTotalLevel() }}) 與結束等級 ({{ endingLevel() }}) 一致 ✅</span>
+              <span>等級加總 ({{ classesTotalLevel() }}) 與結束等級 ({{ endingLevel() }}) 一致</span>
             } @else {
               <mat-icon class="status-icon">error_outline</mat-icon>
-              <span>職業等級加總 ({{ classesTotalLevel() }}) 與結束等級 ({{ endingLevel() }}) 不符，請調整各職業等級！</span>
+              <span>等級加總 ({{ classesTotalLevel() }}) 與結束等級 ({{ endingLevel() }}) 不符，請調整職業等級</span>
             }
           </div>
 
@@ -127,34 +122,35 @@
     <mat-card class="form-card">
       <mat-card-header><mat-card-title>💰 資源變動</mat-card-title></mat-card-header>
       <mat-card-content>
-        <p class="field-hint">起始值新增時自動帶入；合計由系統自動計算</p>
-
         <!-- 欄位標題列 -->
         <div class="resource-row resource-header">
           <span class="resource-label"></span>
           <span class="num-field resource-col-header">起始</span>
-          <span class="num-field resource-col-header">冒險中變化</span>
-          <span class="num-field resource-col-header">休整期變化</span>
-          <span class="num-field resource-col-header">合計（自動）</span>
+          <span class="num-field resource-col-header">冒險中</span>
+          <span class="num-field resource-col-header">休整期</span>
+          <span class="num-field resource-col-header">合計</span>
         </div>
 
         <!-- 金幣 -->
         <div class="resource-row">
-          <span class="resource-label">🪙 金幣</span>
+          <span class="resource-label">🪙 金幣 (GP)</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
-            <input matInput type="number" formControlName="startingGold" />
+            <input matInput type="number" min="0" formControlName="startingGold" />
+            @if (form.get('startingGold')?.hasError('min')) {
+              <mat-error>不可為負數</mat-error>
+            }
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>冒險中變化</mat-label>
+            <mat-label>冒險中</mat-label>
             <input matInput type="number" formControlName="goldChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>休整期變化</mat-label>
+            <mat-label>休整期</mat-label>
             <input matInput type="number" formControlName="goldDowntimeChange" />
           </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field total-field">
-            <mat-label>合計（自動）</mat-label>
+          <mat-form-field appearance="outline" class="num-field total-field" [class.field-negative]="goldTotal() !== null && goldTotal()! < 0">
+            <mat-label>合計</mat-label>
             <input matInput [value]="goldTotal() ?? ''" readonly />
           </mat-form-field>
         </div>
@@ -164,57 +160,185 @@
           <span class="resource-label">🏕️ 休整期天數</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
-            <input matInput type="number" formControlName="startingDowntime" />
+            <input matInput type="number" min="0" formControlName="startingDowntime" />
+            @if (form.get('startingDowntime')?.hasError('min')) {
+              <mat-error>不可為負數</mat-error>
+            }
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>冒險中變化</mat-label>
+            <mat-label>冒險中</mat-label>
             <input matInput type="number" formControlName="downtimeChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>休整期變化</mat-label>
+            <mat-label>休整期</mat-label>
             <input matInput type="number" formControlName="downtimeDowntimeChange" />
           </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field total-field">
-            <mat-label>合計（自動）</mat-label>
+          <mat-form-field appearance="outline" class="num-field total-field" [class.field-negative]="downtimeTotal() !== null && downtimeTotal()! < 0">
+            <mat-label>合計</mat-label>
             <input matInput [value]="downtimeTotal() ?? ''" readonly />
           </mat-form-field>
         </div>
 
-        <!-- 魔法物品 -->
+        <!-- 永久性魔法物品 -->
         <div class="resource-row">
           <span class="resource-label">✨ 魔法物品</span>
           <mat-form-field appearance="outline" class="num-field">
             <mat-label>起始</mat-label>
-            <input matInput type="number" formControlName="startingMagicItems" />
+            <input matInput type="number" min="0" formControlName="startingMagicItems" />
+            @if (form.get('startingMagicItems')?.hasError('min')) {
+              <mat-error>不可為負數</mat-error>
+            }
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>冒險中變化</mat-label>
+            <mat-label>冒險中</mat-label>
             <input matInput type="number" formControlName="magicItemsChange" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="num-field">
-            <mat-label>休整期變化</mat-label>
+            <mat-label>休整期</mat-label>
             <input matInput type="number" formControlName="magicItemsDowntimeChange" />
           </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field total-field">
-            <mat-label>合計（自動）</mat-label>
+          <mat-form-field appearance="outline" class="num-field total-field" [class.field-negative]="magicItemsTotal() !== null && magicItemsTotal()! < 0">
+            <mat-label>合計</mat-label>
             <input matInput [value]="magicItemsTotal() ?? ''" readonly />
           </mat-form-field>
         </div>
+
+        @if (!isResourceValid()) {
+          <div class="resource-warning-banner">
+            <mat-icon>error_outline</mat-icon>
+            <span>資源起始值與合計不可為負數</span>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
 
-    <!-- 📝 冒險備註 -->
+    <!-- ✨ 獲得魔法物品 -->
     <mat-card class="form-card">
-      <mat-card-header><mat-card-title>📝 冒險備註</mat-card-title></mat-card-header>
+      <mat-card-header>
+        <mat-card-title>✨ 獲得魔法物品</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="gained-items-list">
+          @for (item of gainedMagicItems(); track $index; let i = $index) {
+            <div class="gained-item-card">
+              <div class="gained-item-header">
+                <span class="gained-item-index">#{{ i + 1 }} 魔法物品</span>
+                <button type="button" mat-icon-button color="warn" (click)="removeGainedItem(i)" matTooltip="移除此物品">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>物品名稱 *</mat-label>
+                  <input matInput [value]="item.itemName" (input)="updateGainedItemName(i, $any($event.target).value)"
+                    placeholder="例：幸運石、火焰舌長劍..." />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>稀有度</mat-label>
+                  <mat-select [value]="item.rarity" (selectionChange)="updateGainedItemRarity(i, $event.value)">
+                    <mat-option value="">— 未設定 —</mat-option>
+                    @for (r of rarities; track r) {
+                      @if (r !== '') {
+                        <mat-option [value]="r">{{ rarityLabels[r] }}</mat-option>
+                      }
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width" style="margin-top: 4px;">
+                <mat-label>描述 / 效果備註</mat-label>
+                <textarea matInput rows="2" [value]="item.notes" (input)="updateGainedItemNotes(i, $any($event.target).value)"
+                  placeholder="例：需要調諧。對所有屬性檢定與豁免檢定獲得 +1 加值..."></textarea>
+              </mat-form-field>
+            </div>
+          }
+
+          @if (gainedMagicItems().length === 0) {
+            <p class="activity-empty">（無）</p>
+          }
+        </div>
+
+        <button type="button" mat-stroked-button color="primary" class="add-gained-btn" (click)="addGainedItem()">
+          <mat-icon>add</mat-icon> 新增獲得魔法物品
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 🧪 獲得消耗品 -->
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>🧪 獲得消耗品</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="gained-items-list">
+          @for (item of gainedConsumableItems(); track $index; let i = $index) {
+            <div class="gained-item-card">
+              <div class="gained-item-header">
+                <span class="gained-item-index">#{{ i + 1 }} 消耗品</span>
+                <button type="button" mat-icon-button color="warn" (click)="removeGainedConsumableItem(i)" matTooltip="移除此物品">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>物品名稱 *</mat-label>
+                  <input matInput [value]="item.itemName" (input)="updateGainedConsumableItemName(i, $any($event.target).value)"
+                    placeholder="例：治療藥水、飛行術卷軸..." />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1 qty-field">
+                  <mat-label>數量 *</mat-label>
+                  <input matInput type="number" min="1" [value]="item.quantity" (input)="updateGainedConsumableItemQuantity(i, $any($event.target).value)" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>稀有度</mat-label>
+                  <mat-select [value]="item.rarity" (selectionChange)="updateGainedConsumableItemRarity(i, $event.value)">
+                    <mat-option value="">— 未設定 —</mat-option>
+                    @for (r of rarities; track r) {
+                      @if (r !== '') {
+                        <mat-option [value]="r">{{ rarityLabels[r] }}</mat-option>
+                      }
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width" style="margin-top: 4px;">
+                <mat-label>描述 / 效果備註</mat-label>
+                <textarea matInput rows="2" [value]="item.notes" (input)="updateGainedConsumableItemNotes(i, $any($event.target).value)"
+                  placeholder="例：飲用後恢復 2d4+2 生命值..."></textarea>
+              </mat-form-field>
+            </div>
+          }
+
+          @if (gainedConsumableItems().length === 0) {
+            <p class="activity-empty">（無）</p>
+          }
+        </div>
+
+        <button type="button" mat-stroked-button color="primary" class="add-gained-btn" (click)="addGainedConsumableItem()">
+          <mat-icon>add</mat-icon> 新增獲得消耗品
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 📝 備註 -->
+    <mat-card class="form-card">
+      <mat-card-header><mat-card-title>📝 備註</mat-card-title></mat-card-header>
       <mat-card-content>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>備註</mat-label>
+          <mat-label>冒險備註</mat-label>
           <textarea matInput formControlName="adventureNotes" rows="4"
-            placeholder="自由填寫冒險備註..."></textarea>
+            placeholder="冒險情節摘要、戰利品或特殊經歷..."></textarea>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>靈魂幣使用</mat-label>
-          <input matInput formControlName="soulCoinChargesUsed" placeholder="自由文字" />
+          <mat-label>靈魂幣</mat-label>
+          <input matInput formControlName="soulCoinChargesUsed" placeholder="靈魂幣使用紀錄" />
         </mat-form-field>
       </mat-card-content>
     </mat-card>
@@ -234,7 +358,7 @@
             </div>
           }
           @if (existingActivities().length === 0) {
-            <p class="activity-empty">尚無休整期活動</p>
+            <p class="activity-empty">（無）</p>
           }
         }
         <!-- 新增模式：暫存活動 -->
@@ -248,20 +372,56 @@
             </div>
           }
           @if (pendingActivities().length === 0) {
-            <p class="activity-empty">尚無休整期活動（儲存後一併寫入）</p>
+            <p class="activity-empty">（無）</p>
           }
         }
-        <!-- 輸入列 -->
-        <div class="activity-input-row">
-          <mat-form-field appearance="outline" class="activity-input-field">
-            <mat-label>新增活動描述</mat-label>
-            <input matInput [(ngModel)]="newActivityText" [ngModelOptions]="{standalone: true}"
-              placeholder="例：訓練武器、鑄造魔法物品..."
-              (keydown.enter)="$event.preventDefault(); addActivity()" />
-          </mat-form-field>
-          <button type="button" mat-stroked-button (click)="addActivity()">
-            <mat-icon>add</mat-icon> 新增
-          </button>
+
+        <!-- 🌟 新增活動輸入面板 -->
+        <div class="activity-input-panel">
+          <div class="activity-preset-row">
+            <mat-form-field appearance="outline" class="activity-preset-field">
+              <mat-label>常用活動預設</mat-label>
+              <mat-select [value]="selectedPreset" (selectionChange)="onPresetSelect($event.value)">
+                @for (preset of DOWNTIME_PRESETS; track preset.label) {
+                  <mat-option [value]="preset.label">{{ preset.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="activity-input-top">
+            <mat-form-field appearance="outline" class="activity-desc-field">
+              <mat-label>活動描述</mat-label>
+              <input matInput [(ngModel)]="newActivityText" [ngModelOptions]="{standalone: true}"
+                placeholder="例：訓練語言、抄寫法術卷軸、打工..."
+                (keydown.enter)="$event.preventDefault(); addActivity()" />
+            </mat-form-field>
+            <button type="button" mat-stroked-button color="primary" class="activity-add-btn" (click)="addActivity()">
+              <mat-icon>add</mat-icon> 新增活動
+            </button>
+          </div>
+
+          <!-- 伴隨資源變動 -->
+          <div class="activity-resource-deltas">
+            <span class="deltas-label">伴隨資源變動：</span>
+            <div class="deltas-row">
+              <mat-form-field appearance="outline" class="delta-field">
+                <mat-label>🪙 金幣 (GP)</mat-label>
+                <input matInput type="number" [(ngModel)]="newActivityGold" [ngModelOptions]="{standalone: true}"
+                  placeholder="例：-50" (keydown.enter)="$event.preventDefault(); addActivity()" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="delta-field">
+                <mat-label>🏕️ 休整期 (天)</mat-label>
+                <input matInput type="number" [(ngModel)]="newActivityDowntime" [ngModelOptions]="{standalone: true}"
+                  placeholder="例：-10" (keydown.enter)="$event.preventDefault(); addActivity()" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="delta-field">
+                <mat-label>✨ 魔法物品 (件)</mat-label>
+                <input matInput type="number" [(ngModel)]="newActivityMagicItems" [ngModelOptions]="{standalone: true}"
+                  placeholder="例：1" (keydown.enter)="$event.preventDefault(); addActivity()" />
+              </mat-form-field>
+            </div>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -269,13 +429,13 @@
     <!-- Actions -->
     <div class="form-actions">
       <button type="button" mat-stroked-button (click)="onBack()">取消</button>
-      <button type="submit" mat-flat-button color="primary" [disabled]="isSaving() || !isLevelBalanced()">
+      <button type="submit" mat-flat-button color="primary" [disabled]="isSaving() || !isLevelBalanced() || !isResourceValid() || form.invalid">
         @if (isSaving()) {
           <mat-spinner diameter="20"></mat-spinner>
         } @else {
           <mat-icon>save</mat-icon>
         }
-        {{ isEditMode() ? '儲存變更' : '新增記錄' }}
+        {{ isEditMode() ? '儲存變更' : '新增紀錄' }}
       </button>
     </div>
 
