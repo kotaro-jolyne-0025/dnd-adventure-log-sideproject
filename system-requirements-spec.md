@@ -431,3 +431,24 @@
   - D&D 稀有度色彩：普通 (灰色)、非罕見 (綠色)、罕見 (天藍)、非常罕見 (紫色)、傳奇 (金黃)、神器 (紅色)。
 - **卡片化與清晰邊界**：採用 1px 細微邊框 (`rgba(255,255,255,0.08)`) 與適當間距，提升手機與桌機端的瀏覽舒適度與點擊精準度。
 
+### 9.2 行動裝置體驗規格 (Mobile UX Specification)
+1. **全螢幕安全區域 (Safe Area Insets)**：
+   - 頁面 Meta 包含 `viewport-fit=cover`，支援 iPhone 瀏海/動態島與 Android 虛擬手勢條底欄。
+   - 導覽列與固定式動作列（Sticky Action Footer）自動套用 `env(safe-area-inset-top)` 與 `env(safe-area-inset-bottom)`。
+2. **表單與觸控人體工學**：
+   - 表單輸入框在 `<= 768px` 手機視角下強制維持字體大小 `>= 16px`，防止 iOS Safari 點擊聚焦時畫面強制跳動放大。
+   - 關鍵按鈕（如「儲存」、「建立角色」、「消耗品使用」）最小觸控熱區達 42px~46px，支援滿版寬度配置。
+3. **資源變動卡片化 (Resource Sub-Cards)**：
+   - 冒險表單中的三大資源（金幣、休整期天數、魔法物品）採用獨立卡片化設計。
+   - 卡片頂部整合 **即時結算合計徽章 (Real-time Total Badge)**，輸入框自適應單欄/多欄網格，設定 `min-width: 0` 確保任何解析度下絕不破版溢出。
+4. **邊框銳利化與抗偽影**：
+   - 強化 Outlined 邊框線條色彩對比度，填充純色底層，修復行動端縮放模式下的子像素抗鋸齒模糊。
+
+### 9.3 全域狀態同步架構 (Real-time Reactive State Architecture)
+1. **跨組件資料廣播 (`characterChanged$`)**：
+   - `CharacterService` 提供 `Subject<string>` 作為全域角色資料異動廣播通道。
+   - `AdventureService` 與 `InventoryService` 在執行新增、修改、刪除操作後，透過 RxJS `tap` 自動通知 `CharacterService`。
+2. **頂部戰情看板 (Character HUD) 即時更新**：
+   - 外層 `CharacterShellComponent` 即時訂閱 `characterChanged$` 與路由 `NavigationEnd` 事件。
+   - 子頁面發生冒險紀錄刪除、道具消耗等行為時，外層 HUD 即刻於背景取得最新統計與快照數值，無須使用者手動退回或重新整理頁面。
+
