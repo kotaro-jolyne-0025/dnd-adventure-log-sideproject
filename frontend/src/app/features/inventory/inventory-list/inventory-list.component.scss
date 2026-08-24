@@ -124,8 +124,18 @@
   flex: 1;
 
   .magic-icon {
-    font-size: 1.1rem;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &.magic {
+      color: var(--color-primary);
+    }
+
+    &.consumable {
+      color: var(--color-positive);
+    }
   }
 
   .item-title {

@@ -9,6 +9,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { AdventureEntry } from '../../../core/models/adventure.model';
 
+import { LucideCoins, LucideTent, LucideSparkles } from '@lucide/angular';
+
 @Component({
   selector: 'app-adventure-list',
   standalone: true,
@@ -19,6 +21,9 @@ import { AdventureEntry } from '../../../core/models/adventure.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    LucideCoins,
+    LucideTent,
+    LucideSparkles,
   ],
   templateUrl: './adventure-list.component.html',
   styleUrl: './adventure-list.component.scss',

@@ -205,18 +205,28 @@
   }
 
   .hud-icon {
-    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 1rem;
     height: 1rem;
+    flex-shrink: 0;
   }
 
   .stat-level-icon {
     color: var(--color-primary);
   }
 
-  .hud-emoji {
-    font-size: 0.95rem;
-    line-height: 1;
+  .stat-gold-icon {
+    color: var(--color-gold);
+  }
+
+  .stat-downtime-icon {
+    color: var(--color-positive);
+  }
+
+  .stat-magic-icon {
+    color: var(--color-primary);
   }
 
   .hud-label {

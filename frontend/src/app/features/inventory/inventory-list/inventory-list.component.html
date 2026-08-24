@@ -69,7 +69,7 @@
           <div class="clean-card item-card clickable" (click)="onEditItem($event, item.id)">
             <div class="item-card-header">
               <div class="item-name-group">
-                <span class="magic-icon">✨</span>
+                <svg lucideSparkles class="magic-icon magic" [size]="18"></svg>
                 <h4 class="item-title">{{ item.itemName }}</h4>
               </div>
               @if (item.rarity) {
@@ -124,7 +124,7 @@
           <div class="clean-card item-card clickable" (click)="onEditItem($event, item.id)">
             <div class="item-card-header">
               <div class="item-name-group">
-                <span class="magic-icon">🧪</span>
+                <svg lucideFlaskConical class="magic-icon consumable" [size]="18"></svg>
                 <h4 class="item-title">{{ item.itemName }}</h4>
                 <span class="qty-pill">× {{ item.quantity || 1 }}</span>
               </div>

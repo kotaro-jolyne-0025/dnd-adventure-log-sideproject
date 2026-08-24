@@ -17,6 +17,8 @@ import {
   ConfirmDialogData,
 } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
+import { LucideCoins, LucideTent, LucideSparkles, LucideFlaskConical } from '@lucide/angular';
+
 @Component({
   selector: 'app-adventure-detail',
   standalone: true,
@@ -29,6 +31,10 @@ import {
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    LucideCoins,
+    LucideTent,
+    LucideSparkles,
+    LucideFlaskConical,
   ],
   templateUrl: './adventure-detail.component.html',
   styleUrl: './adventure-detail.component.scss',

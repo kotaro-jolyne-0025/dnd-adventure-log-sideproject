@@ -92,7 +92,7 @@
         <!-- 金幣卡片 -->
         <div class="resource-summary-card">
           <div class="res-card-top">
-            <span class="res-emoji">🪙</span>
+            <svg lucideCoins class="res-icon gold" [size]="18"></svg>
             <span class="res-name">金幣 (GP)</span>
           </div>
           <div class="res-breakdown">
@@ -124,7 +124,7 @@
         <!-- 休整期天數卡片 -->
         <div class="resource-summary-card">
           <div class="res-card-top">
-            <span class="res-emoji">🏕️</span>
+            <svg lucideTent class="res-icon downtime" [size]="18"></svg>
             <span class="res-name">休整期天數</span>
           </div>
           <div class="res-breakdown">
@@ -156,7 +156,7 @@
         <!-- 永久魔法物品卡片 -->
         <div class="resource-summary-card">
           <div class="res-card-top">
-            <span class="res-emoji">✨</span>
+            <svg lucideSparkles class="res-icon magic" [size]="18"></svg>
             <span class="res-name">魔法物品</span>
           </div>
           <div class="res-breakdown">
@@ -187,7 +187,7 @@
       </div>
     </div>
 
-    <!-- ✨ 獲得魔法物品 -->
+    <!-- 獲得魔法物品 -->
     @if (magicItems().length > 0 || (entry()!.magicItemsChange ?? 0) > 0) {
       <div class="detail-section-card clean-card">
         <div class="section-card-header">
@@ -200,7 +200,10 @@
             @for (item of magicItems(); track item.id) {
               <div class="item-entry-card">
                 <div class="item-top-line">
-                  <span class="item-name-bold">✨ {{ item.itemName }}</span>
+                  <span class="item-name-bold">
+                    <svg lucideSparkles [size]="16" class="inline-item-icon"></svg>
+                    {{ item.itemName }}
+                  </span>
                   @if (item.rarity) {
                     <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">
                       {{ rarityLabels[item.rarity] }}
@@ -219,7 +222,7 @@
       </div>
     }
 
-    <!-- 🧪 獲得消耗品 -->
+    <!-- 獲得消耗品 -->
     @if (consumableItems().length > 0) {
       <div class="detail-section-card clean-card">
         <div class="section-card-header">
@@ -231,7 +234,10 @@
           @for (item of consumableItems(); track item.id) {
             <div class="item-entry-card">
               <div class="item-top-line">
-                <span class="item-name-bold">🧪 {{ item.itemName }}</span>
+                <span class="item-name-bold">
+                  <svg lucideFlaskConical [size]="16" class="inline-item-icon consumable"></svg>
+                  {{ item.itemName }}
+                </span>
                 <span class="qty-pill">× {{ item.quantity }}</span>
                 @if (item.rarity) {
                   <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">

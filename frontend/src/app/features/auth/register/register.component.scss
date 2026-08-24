@@ -31,8 +31,11 @@
   margin-bottom: 1.5rem;
 
   .brand-logo {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    margin-bottom: 0.75rem;
   }
 
   mat-card-title {

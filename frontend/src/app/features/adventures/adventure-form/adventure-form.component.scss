@@ -49,6 +49,27 @@
   }
 }
 
+.card-title-flex {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+
+  .title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+
+    &.gold { color: var(--color-gold); }
+    &.downtime { color: var(--color-positive); }
+    &.magic { color: var(--color-primary); }
+    &.consumable { color: var(--color-positive); }
+  }
+}
+
 .section-card-header {
   display: flex;
   align-items: center;
@@ -317,11 +338,19 @@
   .res-header-left {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 
-    .res-emoji {
-      font-size: 1.15rem;
-      line-height: 1;
+    .res-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.15rem;
+      height: 1.15rem;
+      flex-shrink: 0;
+
+      &.gold { color: var(--color-gold); }
+      &.downtime { color: var(--color-positive); }
+      &.magic { color: var(--color-primary); }
     }
 
     .res-title {

@@ -272,12 +272,20 @@
   .res-card-top {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin-bottom: 12px;
 
-    .res-emoji {
-      font-size: 1.1rem;
-      line-height: 1;
+    .res-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.2rem;
+      height: 1.2rem;
+      flex-shrink: 0;
+
+      &.gold { color: var(--color-gold); }
+      &.downtime { color: var(--color-positive); }
+      &.magic { color: var(--color-primary); }
     }
 
     .res-name {
@@ -364,9 +372,21 @@
     flex-wrap: wrap;
 
     .item-name-bold {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-weight: 700;
       font-size: 0.95rem;
       color: var(--text-primary);
+
+      .inline-item-icon {
+        color: var(--color-primary);
+        flex-shrink: 0;
+
+        &.consumable {
+          color: var(--color-positive);
+        }
+      }
     }
 
     .qty-pill {
