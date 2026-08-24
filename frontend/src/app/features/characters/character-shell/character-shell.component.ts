@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { CharacterService } from '../../../core/services/character.service';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { Character } from '../../../core/models/character.model';
 import { EntryDefaults } from '../../../core/models/adventure.model';
+import { filter, Subject, takeUntil } from 'rxjs';
 
 import { CommonModule } from '@angular/common';
 
@@ -28,7 +29,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './character-shell.component.html',
   styleUrl: './character-shell.component.scss',
 })
-export class CharacterShellComponent implements OnInit {
+export class CharacterShellComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly characterService = inject(CharacterService);
@@ -40,9 +41,35 @@ export class CharacterShellComponent implements OnInit {
   protected isLoading = signal(true);
   protected characterId!: string;
 
+  private readonly destroy$ = new Subject<void>();
+
   ngOnInit(): void {
     this.characterId = this.route.snapshot.paramMap.get('id')!;
     this.loadCharacterData();
+
+    // 🌟 即時響應所有資料異動（新增/編輯/刪除冒險記錄、消耗品使用、道具增刪），即時更新頂部 HUD
+    this.characterService.characterChanged$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((id) => {
+        if (!id || id === this.characterId) {
+          this.refreshHud();
+        }
+      });
+
+    // 子路由切換導航完成時，自動刷新統計
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.refreshHud();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadCharacterData(): void {
@@ -67,6 +94,13 @@ export class CharacterShellComponent implements OnInit {
         // Defaults are optional summary, don't block
       },
     });
+  }
+
+  private refreshHud(): void {
+    this.characterService.getById(this.characterId).subscribe({
+      next: (c) => this.character.set(c),
+    });
+    this.loadDefaults();
   }
 
   protected formatClasses(character: Character): string {

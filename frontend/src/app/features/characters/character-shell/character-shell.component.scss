@@ -8,12 +8,21 @@
   max-width: 1080px;
   margin: 0 auto;
   padding: 20px 16px 80px;
+
+  @media (max-width: 600px) {
+    padding: 12px 12px 60px;
+  }
 }
 
 /* Character Hero Card */
 .char-hero-card {
   padding: 20px;
   margin-bottom: 20px;
+
+  @media (max-width: 600px) {
+    padding: 14px;
+    margin-bottom: 14px;
+  }
 }
 
 .char-hero-top {
@@ -23,6 +32,13 @@
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
 }
 
 .hero-identity {
@@ -31,6 +47,11 @@
   gap: 14px;
   flex: 1;
   min-width: 280px;
+
+  @media (max-width: 600px) {
+    min-width: unset;
+    gap: 10px;
+  }
 
   .btn-back {
     color: var(--text-secondary);
@@ -56,6 +77,12 @@
   font-weight: 700;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  @media (max-width: 600px) {
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+  }
 }
 
 .char-identity-text {
@@ -76,6 +103,10 @@
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
+
+  @media (max-width: 600px) {
+    font-size: 1.25rem;
+  }
 }
 
 .level-badge-hero {
@@ -94,6 +125,10 @@
   font-size: 0.88rem;
   color: var(--text-secondary);
   line-height: 1.4;
+
+  @media (max-width: 600px) {
+    font-size: 0.82rem;
+  }
 
   .meta-dot {
     opacity: 0.6;
@@ -117,16 +152,27 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+
+    @media (max-width: 600px) {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }
 
-/* Character HUD Stats Bar */
+/* Character HUD Stats Bar (2x2 on mobile, auto-fit on desktop) */
 .char-hud-bar {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
+
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding-top: 12px;
+  }
 }
 
 .hud-stat-box {
@@ -138,6 +184,10 @@
   border: 1px solid var(--border-subtle);
   transition: transform 0.15s ease, border-color 0.15s ease;
 
+  @media (max-width: 600px) {
+    padding: 8px 10px;
+  }
+
   &:hover {
     border-color: var(--border-medium);
   }
@@ -148,6 +198,11 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 6px;
+
+  @media (max-width: 600px) {
+    margin-bottom: 4px;
+    gap: 4px;
+  }
 
   .hud-icon {
     font-size: 1rem;
@@ -168,6 +223,10 @@
     font-size: 0.76rem;
     color: var(--text-secondary);
     font-weight: 500;
+
+    @media (max-width: 600px) {
+      font-size: 0.72rem;
+    }
   }
 }
 
@@ -176,6 +235,10 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
+
+  @media (max-width: 600px) {
+    font-size: 1.1rem;
+  }
 
   .unit {
     font-size: 0.8rem;
@@ -206,6 +269,13 @@
 
   ::ng-deep .mat-mdc-tab-header {
     margin-bottom: 16px;
+  }
+
+  ::ng-deep .mat-mdc-tab {
+    @media (max-width: 600px) {
+      flex: 1;
+      padding: 0 12px;
+    }
   }
 
   .tab-icon {
