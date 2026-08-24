@@ -120,87 +120,105 @@
 
     <!-- 💰 資源變動 -->
     <mat-card class="form-card">
-      <mat-card-header><mat-card-title>💰 資源變動</mat-card-title></mat-card-header>
+      <mat-card-header>
+        <mat-card-title>💰 資源變動</mat-card-title>
+      </mat-card-header>
       <mat-card-content>
-        <!-- 欄位標題列 -->
-        <div class="resource-row resource-header">
-          <span class="resource-label"></span>
-          <span class="num-field resource-col-header">起始</span>
-          <span class="num-field resource-col-header">冒險中</span>
-          <span class="num-field resource-col-header">休整期</span>
-          <span class="num-field resource-col-header">合計</span>
-        </div>
+        <div class="resource-blocks-grid">
 
-        <!-- 金幣 -->
-        <div class="resource-row">
-          <span class="resource-label">🪙 金幣 (GP)</span>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>起始</mat-label>
-            <input matInput type="number" min="0" formControlName="startingGold" />
-            @if (form.get('startingGold')?.hasError('min')) {
-              <mat-error>不可為負數</mat-error>
-            }
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>冒險中</mat-label>
-            <input matInput type="number" formControlName="goldChange" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>休整期</mat-label>
-            <input matInput type="number" formControlName="goldDowntimeChange" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field total-field" [class.field-negative]="goldTotal() !== null && goldTotal()! < 0">
-            <mat-label>合計</mat-label>
-            <input matInput [value]="goldTotal() ?? ''" readonly />
-          </mat-form-field>
-        </div>
+          <!-- 🪙 金幣 -->
+          <div class="resource-block-card">
+            <div class="res-card-header">
+              <div class="res-header-left">
+                <span class="res-emoji">🪙</span>
+                <span class="res-title">金幣 (GP)</span>
+              </div>
+              <div class="res-total-badge gold" [class.negative]="goldTotal() !== null && goldTotal()! < 0">
+                <span class="total-label">結算合計</span>
+                <span class="total-num">{{ (goldTotal() ?? 0) | number:'1.2-2' }} <small>GP</small></span>
+              </div>
+            </div>
+            <div class="res-inputs-grid">
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>起始</mat-label>
+                <input matInput type="number" min="0" formControlName="startingGold" />
+                @if (form.get('startingGold')?.hasError('min')) {
+                  <mat-error>不可為負數</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>冒險中變化</mat-label>
+                <input matInput type="number" formControlName="goldChange" placeholder="例：100 或 -50" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>休整期變化</mat-label>
+                <input matInput type="number" formControlName="goldDowntimeChange" placeholder="例：-10" />
+              </mat-form-field>
+            </div>
+          </div>
 
-        <!-- 休整期天數 -->
-        <div class="resource-row">
-          <span class="resource-label">🏕️ 休整期天數</span>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>起始</mat-label>
-            <input matInput type="number" min="0" formControlName="startingDowntime" />
-            @if (form.get('startingDowntime')?.hasError('min')) {
-              <mat-error>不可為負數</mat-error>
-            }
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>冒險中</mat-label>
-            <input matInput type="number" formControlName="downtimeChange" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>休整期</mat-label>
-            <input matInput type="number" formControlName="downtimeDowntimeChange" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field total-field" [class.field-negative]="downtimeTotal() !== null && downtimeTotal()! < 0">
-            <mat-label>合計</mat-label>
-            <input matInput [value]="downtimeTotal() ?? ''" readonly />
-          </mat-form-field>
-        </div>
+          <!-- 🏕️ 休整期天數 -->
+          <div class="resource-block-card">
+            <div class="res-card-header">
+              <div class="res-header-left">
+                <span class="res-emoji">🏕️</span>
+                <span class="res-title">休整期天數</span>
+              </div>
+              <div class="res-total-badge downtime" [class.negative]="downtimeTotal() !== null && downtimeTotal()! < 0">
+                <span class="total-label">結算合計</span>
+                <span class="total-num">{{ downtimeTotal() ?? 0 }} <small>天</small></span>
+              </div>
+            </div>
+            <div class="res-inputs-grid">
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>起始</mat-label>
+                <input matInput type="number" min="0" formControlName="startingDowntime" />
+                @if (form.get('startingDowntime')?.hasError('min')) {
+                  <mat-error>不可為負數</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>冒險中變化</mat-label>
+                <input matInput type="number" formControlName="downtimeChange" placeholder="例：10 或 -5" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>休整期變化</mat-label>
+                <input matInput type="number" formControlName="downtimeDowntimeChange" placeholder="例：-10" />
+              </mat-form-field>
+            </div>
+          </div>
 
-        <!-- 永久性魔法物品 -->
-        <div class="resource-row">
-          <span class="resource-label">✨ 魔法物品</span>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>起始</mat-label>
-            <input matInput type="number" min="0" formControlName="startingMagicItems" />
-            @if (form.get('startingMagicItems')?.hasError('min')) {
-              <mat-error>不可為負數</mat-error>
-            }
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>冒險中</mat-label>
-            <input matInput type="number" formControlName="magicItemsChange" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field">
-            <mat-label>休整期</mat-label>
-            <input matInput type="number" formControlName="magicItemsDowntimeChange" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="num-field total-field" [class.field-negative]="magicItemsTotal() !== null && magicItemsTotal()! < 0">
-            <mat-label>合計</mat-label>
-            <input matInput [value]="magicItemsTotal() ?? ''" readonly />
-          </mat-form-field>
+          <!-- ✨ 魔法物品 -->
+          <div class="resource-block-card">
+            <div class="res-card-header">
+              <div class="res-header-left">
+                <span class="res-emoji">✨</span>
+                <span class="res-title">魔法物品</span>
+              </div>
+              <div class="res-total-badge magic" [class.negative]="magicItemsTotal() !== null && magicItemsTotal()! < 0">
+                <span class="total-label">結算合計</span>
+                <span class="total-num">{{ magicItemsTotal() ?? 0 }} <small>件</small></span>
+              </div>
+            </div>
+            <div class="res-inputs-grid">
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>起始</mat-label>
+                <input matInput type="number" min="0" formControlName="startingMagicItems" />
+                @if (form.get('startingMagicItems')?.hasError('min')) {
+                  <mat-error>不可為負數</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>冒險中變化</mat-label>
+                <input matInput type="number" formControlName="magicItemsChange" placeholder="例：1" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="res-field">
+                <mat-label>休整期變化</mat-label>
+                <input matInput type="number" formControlName="magicItemsDowntimeChange" placeholder="例：-1" />
+              </mat-form-field>
+            </div>
+          </div>
+
         </div>
 
         @if (!isResourceValid()) {

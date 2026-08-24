@@ -7,6 +7,7 @@
   background-color: var(--header-bg);
   border-bottom: 1px solid var(--border-subtle);
   transition: background-color 0.2s ease, border-color 0.2s ease;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .app-toolbar {
@@ -18,6 +19,11 @@
   height: 60px;
   display: flex;
   align-items: center;
+
+  @media (max-width: 600px) {
+    padding: 0 12px;
+    height: 56px;
+  }
 }
 
 .brand-container {
@@ -43,6 +49,10 @@
     font-weight: 700;
     letter-spacing: 0.3px;
     color: var(--text-primary);
+
+    @media (max-width: 480px) {
+      font-size: 1.05rem;
+    }
   }
 
   .brand-badge {
@@ -54,6 +64,10 @@
     color: var(--color-gold);
     border: 1px solid rgba(217, 119, 6, 0.3);
     letter-spacing: 0.5px;
+
+    @media (max-width: 420px) {
+      display: none;
+    }
   }
 }
 
@@ -116,6 +130,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    @media (max-width: 540px) {
+      display: none;
+    }
   }
 
   .dropdown-icon {
@@ -123,6 +141,18 @@
     width: 1.2rem;
     height: 1.2rem;
     color: var(--text-muted);
+
+    @media (max-width: 540px) {
+      display: none;
+    }
+  }
+
+  @media (max-width: 540px) {
+    padding: 4px;
+    min-width: 36px;
+    height: 36px;
+    justify-content: center;
+    border-radius: 50%;
   }
 }
 
@@ -137,6 +167,16 @@
 
   .btn-register-nav {
     font-weight: 600;
+  }
+
+  @media (max-width: 480px) {
+    gap: 4px;
+
+    .btn-login-nav,
+    .btn-register-nav {
+      padding: 0 10px;
+      font-size: 0.85rem;
+    }
   }
 }
 

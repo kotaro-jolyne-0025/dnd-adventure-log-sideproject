@@ -2,6 +2,10 @@
   max-width: 680px;
   margin: 0 auto;
   padding: 16px 16px 80px;
+
+  @media (max-width: 600px) {
+    padding: 12px 12px 70px;
+  }
 }
 
 .page-header {
@@ -9,6 +13,11 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
+
+  @media (max-width: 600px) {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
 }
 
 .btn-back {
@@ -23,10 +32,18 @@
   font-size: 1.45rem;
   font-weight: 700;
   color: var(--text-primary);
+
+  @media (max-width: 600px) {
+    font-size: 1.25rem;
+  }
 }
 
 .form-card {
   padding: 24px;
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
 }
 
 .full-width {
@@ -42,6 +59,15 @@
 
   .flex-1 { flex: 1; min-width: 140px; }
   .flex-2 { flex: 2; min-width: 200px; }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 8px;
+
+    .flex-1, .flex-2 {
+      min-width: 100%;
+    }
+  }
 }
 
 .form-actions {
@@ -51,6 +77,16 @@
   padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
   margin-top: 12px;
+
+  @media (max-width: 600px) {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+
+    button {
+      flex: 1;
+      height: 44px;
+      justify-content: center;
+    }
+  }
 
   button {
     font-weight: 600;
