@@ -2,6 +2,10 @@
   max-width: 680px;
   margin: 0 auto;
   padding: 24px 16px 80px;
+
+  @media (max-width: 600px) {
+    padding: 14px 12px 60px;
+  }
 }
 
 .page-header {
@@ -9,22 +13,38 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 24px;
+
+  @media (max-width: 600px) {
+    margin-bottom: 16px;
+  }
 }
 
 .page-title {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
+
+  @media (max-width: 600px) {
+    font-size: 1.25rem;
+  }
 }
 
 /* Card */
 .form-card {
   padding: 8px;
+
+  @media (max-width: 600px) {
+    padding: 4px;
+  }
 }
 
 /* Section */
 .form-section {
   margin-bottom: 32px;
+
+  @media (max-width: 600px) {
+    margin-bottom: 20px;
+  }
 }
 
 .section-header {
@@ -32,6 +52,14 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  @media (max-width: 600px) {
+    button {
+      width: 100%;
+    }
+  }
 }
 
 .section-title {
@@ -71,6 +99,14 @@
     width: 96px;
     flex-shrink: 0;
   }
+
+  @media (max-width: 600px) {
+    gap: 8px;
+
+    .class-level-field {
+      width: 80px;
+    }
+  }
 }
 
 .hint-text {
@@ -85,6 +121,14 @@
   justify-content: flex-end;
   gap: 12px;
   padding-top: 8px;
+
+  @media (max-width: 600px) {
+    button {
+      flex: 1;
+      height: 44px;
+      justify-content: center;
+    }
+  }
 }
 
 .btn-spinner {
@@ -98,6 +142,10 @@
   border-radius: 8px;
   background: var(--mat-sys-surface-container-low, #f8f9fa);
   border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
 }
 
 .readonly-classes-list {

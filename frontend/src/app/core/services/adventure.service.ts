@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AdventureEntry,
@@ -9,10 +9,12 @@ import {
   DowntimeActivityRequest,
   EntryDefaults,
 } from '../models/adventure.model';
+import { CharacterService } from './character.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdventureService {
   private readonly http = inject(HttpClient);
+  private readonly characterService = inject(CharacterService);
   private readonly base = `${environment.apiUrl}/characters`;
 
   // ── AdventureEntry ───────────────────────────────────────────────────────
@@ -40,6 +42,8 @@ export class AdventureService {
     return this.http.post<AdventureEntry>(
       `${this.base}/${characterId}/entries`,
       req
+    ).pipe(
+      tap(() => this.characterService.notifyCharacterChanged(characterId))
     );
   }
 
@@ -51,12 +55,16 @@ export class AdventureService {
     return this.http.put<AdventureEntry>(
       `${environment.apiUrl}/entries/${entryId}`,
       req
+    ).pipe(
+      tap(() => this.characterService.notifyCharacterChanged(characterId))
     );
   }
 
   delete(characterId: string, entryId: string): Observable<void> {
     return this.http.delete<void>(
       `${environment.apiUrl}/entries/${entryId}`
+    ).pipe(
+      tap(() => this.characterService.notifyCharacterChanged(characterId))
     );
   }
 

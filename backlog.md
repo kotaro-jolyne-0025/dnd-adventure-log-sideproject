@@ -655,4 +655,28 @@
 
 ---
 
+### T26 — 手機版 (Mobile UX) 全方位體驗優化
+- **狀態：** `[x] 已完成`
+- **分支：** `feature/mobile-optimization`
+- **變更摘要：**
+  1. **基礎與全螢幕適配**：`index.html` 加入 `viewport-fit=cover` 與 iOS / Android Safe-Area 支援；`styles.scss` 規範觸控最小熱區 (44px) 與 iOS 輸入縮放防護。
+  2. **頂部導覽列**：小螢幕自動縮合品牌徽章與使用者頭像，避免橫向溢出。
+  3. **角色戰情看板 (HUD)**：在手機端升級為乾淨的 **2×2 網格看板**，字體與圖示醒目。
+  4. **冒險紀錄表單 (最核心)**：
+     - 將 4 欄式桌面橫向表格在手機寬度下自動切換為 **獨立資源卡片（2×2 網格輸入 + 結算合計全寬高亮）**，徹底消除擠壓溢出。
+     - 底部固定式動作列（Sticky Action Footer）支援 Safe-Area 與等寬大按鈕。
+  5. **冒險時間軸與詳情**：篇章卡片與 Delta 數值變動標籤自動流式適配；等級進程與資源結算單欄視覺優化。
+  6. **倉庫背包與對話框**：消耗品「使用 ( -1 )」按鈕加大觸控區；彈出對話框自適應手機螢幕寬度。
+- **完成項目：**
+  - [x] 建立並切換專屬 Git 分支 `feature/mobile-optimization`
+  - [x] `index.html` 與 `styles.scss` 加入 Safe-Area 與觸控基礎
+  - [x] `app.scss` 導覽列與使用者頭像手機適配
+  - [x] `character-shell` HUD 2×2 網格與全寬 Tabs
+  - [x] `adventure-form` 資源變動手機卡片式 2x2 網格與底部 Sticky Action
+  - [x] `character-list`、`adventure-list`、`adventure-detail`、`inventory-list` 全站響應式微調
+  - [x] 對話框與 Auth 表單手機尺寸適配
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
 ## 如何使用這個 Backlog
