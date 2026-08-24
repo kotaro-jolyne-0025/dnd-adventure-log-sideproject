@@ -1,147 +1,171 @@
 <div class="page-container">
+  <!-- Header -->
+  <div class="inventory-header">
+    <div class="header-titles">
+      <h2 class="section-title">
+        <mat-icon class="title-icon">inventory_2</mat-icon>
+        倉庫
+      </h2>
+      <span class="count-pill">
+        {{ activeTab() === 0 ? permanentItems().length : consumableItems().length }} 件物品
+      </span>
+    </div>
+    <button mat-flat-button color="primary" (click)="onAddItem()" class="btn-add-item">
+      <mat-icon>add</mat-icon>
+      新增{{ activeTab() === 0 ? '魔法物品' : '消耗品' }}
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <mat-tab-group
+    [selectedIndex]="activeTab()"
+    (selectedIndexChange)="activeTab.set($event)"
+    animationDuration="150ms"
+    class="inventory-sub-tabs">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">auto_awesome</mat-icon>
+        <span>魔法物品 ({{ permanentItems().length }})</span>
+      </ng-template>
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">science</mat-icon>
+        <span>消耗品 ({{ consumableItems().length }})</span>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+
   <!-- Loading -->
   @if (isLoading()) {
-    <div class="loading-wrapper"><mat-spinner diameter="40"></mat-spinner></div>
+    <div class="items-grid">
+      @for (item of [1, 2, 3]; track $index) {
+        <div class="clean-card item-card skeleton-card">
+          <div class="skeleton-box" style="width: 50%; height: 20px; margin-bottom: 8px;"></div>
+          <div class="skeleton-box" style="width: 30%; height: 16px; margin-bottom: 12px;"></div>
+          <div class="skeleton-box" style="width: 100%; height: 36px;"></div>
+        </div>
+      }
+    </div>
   }
 
-  @if (!isLoading()) {
-    <!-- Tab Group -->
-    <mat-tab-group
-      [(selectedIndex)]="activeTab"
-      (selectedIndexChange)="activeTab.set($event)"
-      animationDuration="120ms"
-      class="inventory-tabs">
+  <!-- Tab 0: 永久性魔法物品 -->
+  @if (!isLoading() && activeTab() === 0) {
+    @if (permanentItems().length === 0) {
+      <div class="empty-state clean-card">
+        <div class="empty-icon-wrap">
+          <mat-icon class="empty-icon">auto_awesome</mat-icon>
+        </div>
+        <h3 class="empty-title">尚無魔法物品</h3>
+        <p class="empty-desc">在冒險紀錄表記錄戰利品，或點擊下方新增！</p>
+        <button mat-flat-button color="primary" (click)="onAddItem()" class="empty-btn">
+          <mat-icon>add</mat-icon>
+          新增魔法物品
+        </button>
+      </div>
+    } @else {
+      <div class="items-grid">
+        @for (item of permanentItems(); track item.id) {
+          <div class="clean-card item-card clickable" (click)="onEditItem($event, item.id)">
+            <div class="item-card-header">
+              <div class="item-name-group">
+                <span class="magic-icon">✨</span>
+                <h4 class="item-title">{{ item.itemName }}</h4>
+              </div>
+              @if (item.rarity) {
+                <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">
+                  {{ rarityLabels[item.rarity] }}
+                </span>
+              }
+            </div>
 
-      <!-- ✨ 永久魔法物品 -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          ✨ 永久魔法物品（{{ permanentItems().length }}）
-        </ng-template>
+            @if (item.source) {
+              <div class="item-source-tag">
+                <mat-icon class="source-icon">bookmark</mat-icon>
+                <span>來源：{{ item.source }}</span>
+              </div>
+            }
 
-        <div class="tab-content">
-          <div class="tab-header">
-            <button mat-flat-button color="primary" (click)="onAddItem()">
-              <mat-icon>add</mat-icon> 新增物品
-            </button>
-          </div>
+            @if (item.notes) {
+              <p class="item-notes-text">{{ item.notes }}</p>
+            }
 
-          @if (permanentItems().length === 0) {
-            <div class="empty-state">
-              <mat-icon class="empty-icon">auto_fix_high</mat-icon>
-              <p class="empty-title">尚無永久魔法物品</p>
-              <button mat-stroked-button color="primary" (click)="onAddItem()">
-                新增物品
+            <div class="item-actions" (click)="$event.stopPropagation()">
+              <button mat-icon-button color="primary" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
+                <mat-icon>delete</mat-icon>
               </button>
             </div>
-          }
-
-          @for (item of permanentItems(); track item.id) {
-            <mat-card class="item-card">
-              <mat-card-content>
-                <div class="item-row">
-                  <div class="item-main">
-                    <span class="item-name">{{ item.itemName }}</span>
-                    @if (item.rarity) {
-                      <span class="rarity-badge"
-                        [style.borderColor]="getRarityColor(item)"
-                        [style.color]="getRarityColor(item)">
-                        {{ getRarityLabel(item) }}
-                      </span>
-                    }
-                  </div>
-                  <div class="item-meta">
-                    @if (item.source) {
-                      <span class="meta-text">📜 {{ item.source }}</span>
-                    }
-                    <span class="quantity-badge">× {{ item.quantity }}</span>
-                  </div>
-                  <div class="item-actions">
-                    <button mat-icon-button color="primary"
-                      matTooltip="編輯"
-                      (click)="onEditItem($event, item.id)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn"
-                      matTooltip="刪除"
-                      (click)="onDeleteItem($event, item)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </div>
-                @if (item.notes) {
-                  <p class="item-notes">{{ item.notes }}</p>
-                }
-              </mat-card-content>
-            </mat-card>
-          }
-        </div>
-      </mat-tab>
-
-      <!-- 🧪 消耗品 -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          🧪 消耗品（{{ consumableItems().length }}）
-        </ng-template>
-
-        <div class="tab-content">
-          <div class="tab-header">
-            <button mat-flat-button color="primary" (click)="onAddItem()">
-              <mat-icon>add</mat-icon> 新增物品
-            </button>
           </div>
+        }
+      </div>
+    }
+  }
 
-          @if (consumableItems().length === 0) {
-            <div class="empty-state">
-              <mat-icon class="empty-icon">science</mat-icon>
-              <p class="empty-title">尚無消耗品</p>
-              <button mat-stroked-button color="primary" (click)="onAddItem()">
-                新增物品
-              </button>
-            </div>
-          }
-
-          @for (item of consumableItems(); track item.id) {
-            <mat-card class="item-card">
-              <mat-card-content>
-                <div class="item-row">
-                  <div class="item-main">
-                    <span class="item-name">{{ item.itemName }}</span>
-                    @if (item.rarity) {
-                      <span class="rarity-badge"
-                        [style.borderColor]="getRarityColor(item)"
-                        [style.color]="getRarityColor(item)">
-                        {{ getRarityLabel(item) }}
-                      </span>
-                    }
-                  </div>
-                  <div class="item-meta">
-                    @if (item.source) {
-                      <span class="meta-text">📜 {{ item.source }}</span>
-                    }
-                    <span class="quantity-badge">× {{ item.quantity }}</span>
-                  </div>
-                  <div class="item-actions">
-                    <button mat-icon-button color="primary"
-                      matTooltip="編輯"
-                      (click)="onEditItem($event, item.id)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn"
-                      matTooltip="刪除"
-                      (click)="onDeleteItem($event, item)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </div>
-                @if (item.notes) {
-                  <p class="item-notes">{{ item.notes }}</p>
-                }
-              </mat-card-content>
-            </mat-card>
-          }
+  <!-- Tab 1: 消耗品與藥水卷軸 -->
+  @if (!isLoading() && activeTab() === 1) {
+    @if (consumableItems().length === 0) {
+      <div class="empty-state clean-card">
+        <div class="empty-icon-wrap">
+          <mat-icon class="empty-icon">science</mat-icon>
         </div>
-      </mat-tab>
+        <h3 class="empty-title">尚無消耗品</h3>
+        <p class="empty-desc">記錄您冒險所獲得的治療藥水、法術卷軸等消耗物資！</p>
+        <button mat-flat-button color="primary" (click)="onAddItem()" class="empty-btn">
+          <mat-icon>add</mat-icon>
+          新增消耗品
+        </button>
+      </div>
+    } @else {
+      <div class="items-grid">
+        @for (item of consumableItems(); track item.id) {
+          <div class="clean-card item-card clickable" (click)="onEditItem($event, item.id)">
+            <div class="item-card-header">
+              <div class="item-name-group">
+                <span class="magic-icon">🧪</span>
+                <h4 class="item-title">{{ item.itemName }}</h4>
+                <span class="qty-pill">× {{ item.quantity || 1 }}</span>
+              </div>
+              @if (item.rarity) {
+                <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">
+                  {{ rarityLabels[item.rarity] }}
+                </span>
+              }
+            </div>
 
-    </mat-tab-group>
+            @if (item.source) {
+              <div class="item-source-tag">
+                <mat-icon class="source-icon">bookmark</mat-icon>
+                <span>來源：{{ item.source }}</span>
+              </div>
+            }
+
+            @if (item.notes) {
+              <p class="item-notes-text">{{ item.notes }}</p>
+            }
+
+            <div class="item-actions-bottom" (click)="$event.stopPropagation()">
+              <button mat-stroked-button color="accent" class="btn-quick-consume"
+                matTooltip="使用 1 個此物品"
+                (click)="onQuickConsume($event, item)">
+                <mat-icon>local_drink</mat-icon>
+                <span>使用 ( -1 )</span>
+              </button>
+
+              <div class="crud-btns">
+                <button mat-icon-button color="primary" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
   }
 </div>

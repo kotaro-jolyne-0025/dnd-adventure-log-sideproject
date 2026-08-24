@@ -529,4 +529,130 @@
 
 ---
 
+### T20 — 冒險日誌支援記錄獲得消耗品 (Gained Consumables) 與自動入庫
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **前端表單擴充 (`AdventureFormComponent`)**：新增「🧪 獲得消耗品」動態區塊，支援記錄物品名稱、自訂數量（min 1）、稀有度下拉選單與效果備註。
+  2. **倉庫自動同步**：冒險記錄新增/編輯儲存時，自動將獲得的消耗品同步寫入角色倉庫 (`itemType: 'CONSUMABLE'`, `quantity`, `source`, `notes`)。
+  3. **冒險詳情顯示 (`AdventureDetailComponent`)**：新增「🧪 獲得消耗品」區塊，顯示名稱、數量徽章（`× N`）、稀有度標籤與效果備註。
+- **影響範圍：**
+  - 前端：`adventure-detail.component.*`, `adventure-form.component.*`
+  - 文檔：`system-requirements-spec.md`, `backlog.md`, `walkthrough.md`
+- **完成項目：**
+  - [x] `AdventureDetailComponent` 增加 `consumableItems` 狀態與「🧪 獲得消耗品」視圖
+  - [x] `AdventureFormComponent` 增加 `gainedConsumableItems` 狀態、數量輸入與自動入庫同步邏輯
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+  - [x] 規格書與 Backlog 更新
+
+---
+
+### T21 — UI/UX 重構 Phase 1：雙主題設計系統（A 淺色 / B 炭灰深色切換）與登入檢核健檢
+- **狀態：** `[x] 已完成`
+- **分支：** `feature/uiux-overhaul`
+- **變更摘要：**
+  1. **高易讀性字體導入**：引入 `Inter`（數字與英文字體清晰、對齊精準）與 `Noto Sans TC`（繁體中文思源黑體清晰無襯線），設定全域字體排版系統。
+  2. **雙主題 Design Tokens 體系**：
+     - **風格 A（現代簡約淺色 Clean Light，預設）**：純白卡片 (`#ffffff`) + 柔和淺灰底 (`#f8fafc`) + 靛藍主色 (`#4f46e5`) + 琥珀金/翠綠/珊瑚紅語意標籤。
+     - **風格 B（柔和炭灰深色 Soft Charcoal Dark）**：中性炭灰底 (`#18181b` / `#27272a`，無偏藍或刺眼紫色) + 低飽和魔力紫主色 (`#a855f7`)。
+  3. **Angular Material 3 雙主題無縫整合**：同時配置 `body.theme-light` 與 `body.theme-dark` 雙模式 Material 3 系統變數。
+  4. **ThemeService (Signals) & 頂部切換開關**：實作即時深淺色切換按鈕 (☀️/🌙)，自動持久化於 `localStorage ('dnd_theme')` 並同步瀏覽器 `meta[theme-color]`。
+  5. **登入檢核機制健檢優化**：修復 `AuthService` 啟動時遇到非 401 暫時性網路異常即誤清空登入狀態的 Bug，確保登入狀態 7 天穩定維持。
+- **完成項目：**
+  - [x] 建立並切換專屬 Git 分支 `feature/uiux-overhaul`
+  - [x] `index.html` 引入 Inter 與 Noto Sans TC Google Fonts
+  - [x] 建立 `ThemeService`（Signals 即時響應、深淺模式切換與持久化）
+  - [x] `styles.scss` 建立風格 A / B 雙主題 Design Tokens 與 Material 3 樣式
+  - [x] `app.html` & `app.scss` 增加主題切換按鈕、升級導覽列
+  - [x] `AuthService` 修復非 401 錯誤誤登出問題
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
+### T22 — UI/UX 重構 Phase 2：角色清單卡片與角色總覽看板 (Character HUD) 重構
+- **狀態：** `[x] 已完成`
+- **分支：** `feature/uiux-overhaul`
+- **變更摘要：**
+  1. **角色清單卡片重構 (`character-list`)**：
+     - 卡片採用 `.clean-card.clickable` 懸浮動效與邊框層次。
+     - 角色頭像徽記、姓名、玩家名稱、種族與派系標籤一目了然。
+     - 總等級徽章（`Lv. X`，琥珀金亮點）。
+     - 載入狀態採用骨架屏 (Skeleton loading) 取代轉圈，空狀態視覺美化。
+  2. **角色總覽英雄看板 (`character-shell`)**：
+     - 頂部導覽列整合返回列表按鈕、角色頭像、等級徽章、種族/職業/派系與編輯按鈕。
+     - **即時戰情看板 (Character HUD Stats Bar)**：自動取得角色最新總結數值（🏆 總等級、🪙 金幣資產、🏕️ 休整期天數、✨ 永久魔法物品件數）。
+     - 美化 Tab 導覽列（冒險日誌 / 背包與倉庫）。
+- **完成項目：**
+  - [x] `character-list.component.ts`、`html`、`scss` 全面升級現代卡片排版
+  - [x] `character-shell.component.ts` 串接 `AdventureService.getDefaults` 取得即時統計
+  - [x] `character-shell.component.html`、`scss` 實作 Hero 卡片與 4 欄式 HUD 戰情看板
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
+### T23 — UI/UX 重構 Phase 3：冒險歷程時間軸列表與冒險詳情頁重構
+- **狀態：** `[x] 已完成`
+- **分支：** `feature/uiux-overhaul`
+- **變更摘要：**
+  1. **冒險歷程時間軸列表 (`adventure-list`)**：
+     - 廢除傳統桌面寬表格，升級為手機與桌機皆適配的 **「冒險篇章卡片 (Chronicle Cards)」**。
+     - 每筆冒險自動按遊玩日期最新優先排序。
+     - 卡片頂部標記冒險代碼、遊玩日期、DM 姓名；標題清晰可辨。
+     - **即時數值變更徽章 (Delta Badges)**：等級進程（`Lv.X ➔ Lv.Y`）、🪙 金幣變動（`+1,000 GP`）、🏕️ 休整期天數（`-10 天`）、✨ 獲得魔法物品數。
+     - 冒險備註文字摘要預覽，支援卡片懸浮過渡動效與點擊進入詳情。
+  2. **冒險詳情頁重構 (`adventure-detail`)**：
+     - **Hero Header**：返回按鈕、冒險代碼、遊玩日期、大標題與編輯/刪除操作區。
+     - **等級與職業推進看板**：起始狀態 ➔ 結算狀態視覺箭頭對比盒。
+     - **3 欄式資源變動結算卡片**：金幣、休整期天數、永久魔法物品（起始 ➔ 冒險變化 ➔ 休整變化 ➔ 最終合計）。
+     - **獲得物品清單**：永久魔法物品（含稀有度徽章）、獲得消耗品（含數量徽章 `× N`）。
+     - **備註與休整期活動區塊**：清晰條列備註、靈魂幣使用與活動項目。
+- **完成項目：**
+  - [x] `adventure-list.component.ts`、`html`、`scss` 重構為時間軸篇章卡片
+  - [x] `adventure-detail.component.ts`、`html`、`scss` 重構為資源看板與等級對比盒
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
+### T24 — UI/UX 重構 Phase 4 & Phase 5：冒險記錄表單 (Adventure Form UX) 與角色倉庫背包 (Inventory) 模組重構
+- **狀態：** `[x] 已完成`
+- **分支：** `feature/uiux-overhaul`
+- **變更摘要：**
+  1. **冒險記錄表單優化 (`adventure-form`)**：
+     - 各分區全面套用 `.clean-card` 現代卡片設計與高對比階層。
+     - 等級與職業配置狀態條即時響應平衡檢查。
+     - 資源變動即時試算列（金幣、休整天數、魔法物品）合計自動高亮呈現。
+     - 獲得永久魔法物品與消耗品卡片化動態輸入，支援多筆增刪與稀有度下拉選單。
+     - 休整期活動預設快速帶入面板與伴隨資源異動。
+     - 底部固定式操作列 (Sticky Action Footer)，提供流暢填表體驗。
+  2. **背包與角色倉庫模組重構 (`inventory-list`, `inventory-form`)**：
+     - 分頁切換「永久性魔法物品」與「消耗品與藥水卷軸」。
+     - 物品卡片展示名稱、D&D 稀有度標準色光暈標籤、取得來源與描述。
+     - **消耗品快速操作 (Quick Consume)**：提供「使用 ( -1 )」微操作按鈕，剩餘 1 份時點擊彈出安全確認，大幅提升跑團即時體驗。
+     - 新增/編輯物品表單全面升級雙主題 Design Tokens。
+- **完成項目：**
+  - [x] `adventure-form.component.scss` 與 `html` 升級分區卡片與底部固定動作列
+  - [x] `inventory-list.component.ts`、`html`、`scss` 實作消耗品快捷使用與雙標籤卡片網格
+  - [x] `inventory-form.component.ts`、`html`、`scss` 升級為雙主題乾淨表單
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
+### T25 — UI/UX 文案精簡與標準跑團術語統一（冒險紀錄表 Logsheet）
+- **狀態：** `[x] 已完成`
+- **分支：** `feature/uiux-overhaul`
+- **變更摘要：**
+  1. **標準中文跑團術語統一**：
+     - 將原有的「冒險日誌」、「冒險歷程日誌」、「戰役歷程」全站統一為中文社群慣用的 **「冒險紀錄表」** 或 **「冒險紀錄」**。
+  2. **提示訊息與標題全面精簡 (De-cluttering)**：
+     - 移除冗長贅字與對資深玩家多餘的說明段落（如：「（選填，儲存時自動同步入庫）」、「起始值新增時自動帶入...」、「⚡ 快速帶入常見活動預設（選取後仍可自由修改）」等）。
+     - 簡化表單分區標題（`📋 冒險資訊`、`💰 資源變動`、`✨ 獲得魔法物品`、`🧪 獲得消耗品`、`📝 備註`、`🏕️ 休整期活動`）。
+     - 簡化詳情頁與倉庫分頁名稱（`冒險紀錄表` / `倉庫` / `魔法物品` / `消耗品`），還原如同紙本冒險紀錄表般俐落、乾淨的視覺體驗。
+- **完成項目：**
+  - [x] `index.html`、`app.html` 更新品牌名稱為「D&D 冒險紀錄表」
+  - [x] `character-shell`、`character-list`、`character-form` 統一術語與精簡 HUD 標籤
+  - [x] `adventure-list`、`adventure-detail`、`adventure-form` 移除冗長干擾文字，回歸俐落排版
+  - [x] `inventory-list` 分頁精簡為「魔法物品」與「消耗品」
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
 ## 如何使用這個 Backlog
