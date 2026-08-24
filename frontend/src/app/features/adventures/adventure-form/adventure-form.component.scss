@@ -2,6 +2,10 @@
   max-width: 860px;
   margin: 0 auto;
   padding: 16px 16px 80px;
+
+  @media (max-width: 600px) {
+    padding: 12px 12px 70px;
+  }
 }
 
 .page-header {
@@ -9,6 +13,11 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
+
+  @media (max-width: 600px) {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
 }
 
 .btn-back {
@@ -23,12 +32,21 @@
   font-size: 1.45rem;
   font-weight: 700;
   color: var(--text-primary);
+
+  @media (max-width: 600px) {
+    font-size: 1.25rem;
+  }
 }
 
 /* Form Section Card */
 .form-card {
   padding: 20px;
   margin-bottom: 20px;
+
+  @media (max-width: 600px) {
+    padding: 14px;
+    margin-bottom: 14px;
+  }
 }
 
 .section-card-header {
@@ -71,6 +89,16 @@
   .flex-1 { flex: 1; min-width: 160px; }
   .flex-2 { flex: 2; min-width: 240px; }
   .qty-field { max-width: 130px; min-width: 100px; }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 8px;
+
+    .flex-1, .flex-2, .qty-field {
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
 }
 
 .full-width {
@@ -88,6 +116,13 @@
   border: 1px solid var(--border-subtle);
   margin-top: 8px;
   flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
 }
 
 .level-badge-display {
@@ -144,6 +179,10 @@
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
 
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
+
   .section-header {
     display: flex;
     justify-content: space-between;
@@ -151,6 +190,12 @@
     margin-bottom: 12px;
     flex-wrap: wrap;
     gap: 8px;
+
+    @media (max-width: 600px) {
+      button {
+        width: 100%;
+      }
+    }
   }
 
   .section-title-group {
@@ -184,6 +229,7 @@
     font-size: 1.2rem;
     width: 1.2rem;
     height: 1.2rem;
+    flex-shrink: 0;
   }
 
   &.status-match {
@@ -219,59 +265,143 @@
     width: 110px;
     min-width: 90px;
   }
+
+  @media (max-width: 600px) {
+    gap: 8px;
+
+    .class-name-field {
+      flex: 1;
+      min-width: unset;
+    }
+
+    .class-level-field {
+      width: 85px;
+      min-width: unset;
+    }
+  }
 }
 
 /* 💰 資源變動區塊 */
-.resource-header {
+.resource-blocks-grid {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-  padding: 0 4px;
+  flex-direction: column;
+  gap: 14px;
+}
 
-  .resource-label {
-    min-width: 130px;
+.resource-block-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s ease;
+
+  @media (max-width: 600px) {
+    padding: 12px 14px;
   }
 
-  .resource-col-header {
-    flex: 1;
-    min-width: 90px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-align: center;
+  &:hover {
+    border-color: var(--border-medium);
   }
 }
 
-.resource-row {
+.res-card-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 
-  .resource-label {
-    min-width: 130px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
+  .res-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 
-  .num-field {
-    flex: 1;
-    min-width: 100px;
-  }
-
-  .total-field {
-    input {
-      font-weight: 700;
-      color: var(--color-gold) !important;
+    .res-emoji {
+      font-size: 1.15rem;
+      line-height: 1;
     }
 
-    &.field-negative input {
+    .res-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+  }
+}
+
+.res-total-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+
+  .total-label {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .total-num {
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+
+    small {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+  }
+
+  &.gold .total-num {
+    color: var(--color-gold);
+  }
+
+  &.downtime .total-num {
+    color: var(--color-info);
+  }
+
+  &.magic .total-num {
+    color: var(--color-primary);
+  }
+
+  &.negative {
+    background: var(--color-negative-bg);
+    border-color: rgba(225, 29, 72, 0.3);
+
+    .total-num {
       color: var(--color-negative) !important;
     }
   }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
+}
+
+.res-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.res-field {
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 0;
 }
 
 .resource-warning-banner {
@@ -310,6 +440,10 @@
   display: flex;
   flex-direction: column;
 
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
+
   .gained-item-header {
     display: flex;
     justify-content: space-between;
@@ -326,6 +460,10 @@
 
 .add-gained-btn {
   font-weight: 600;
+
+  @media (max-width: 600px) {
+    width: 100%;
+  }
 }
 
 /* Downtime Activities */
@@ -362,6 +500,10 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
 }
 
 .activity-preset-field {
@@ -382,6 +524,21 @@
   .activity-add-btn {
     height: 52px;
     font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .activity-desc-field {
+      min-width: 100%;
+    }
+
+    .activity-add-btn {
+      width: 100%;
+      height: 44px;
+    }
   }
 }
 
@@ -405,6 +562,15 @@
       flex: 1;
       min-width: 120px;
     }
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      gap: 6px;
+
+      .delta-field {
+        min-width: 100%;
+      }
+    }
   }
 }
 
@@ -422,4 +588,16 @@
   border-top: 1px solid var(--border-subtle);
   margin-top: 20px;
   z-index: 100;
+
+  @media (max-width: 600px) {
+    padding: 12px 0 max(16px, env(safe-area-inset-bottom, 16px));
+    gap: 10px;
+
+    button {
+      flex: 1;
+      height: 46px;
+      font-size: 0.95rem;
+      justify-content: center;
+    }
+  }
 }

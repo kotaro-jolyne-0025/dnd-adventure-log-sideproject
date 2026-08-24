@@ -1,3 +1,4 @@
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -28,6 +29,8 @@ import { from, of, concatMap, toArray, map, Observable } from 'rxjs';
   selector: 'app-adventure-form',
   standalone: true,
   imports: [
+    CommonModule,
+    DecimalPipe,
     ReactiveFormsModule,
     FormsModule,
     MatCardModule,
