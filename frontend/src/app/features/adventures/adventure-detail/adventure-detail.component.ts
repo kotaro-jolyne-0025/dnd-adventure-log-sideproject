@@ -12,6 +12,7 @@ import { AdventureService } from '../../../core/services/adventure.service';
 import { InventoryService } from '../../../core/services/inventory.service';
 import { AdventureEntry } from '../../../core/models/adventure.model';
 import { InventoryItem, ITEM_RARITY_LABELS, RARITY_COLORS } from '../../../core/models/inventory.model';
+import { catchError, forkJoin, of } from 'rxjs';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -68,11 +69,14 @@ export class AdventureDetailComponent implements OnInit {
 
   private loadEntry(): void {
     this.isLoading.set(true);
-    this.adventureService.getById(this.characterId, this.entryId).subscribe({
-      next: (e) => {
-        this.entry.set(e);
+    forkJoin({
+      entry: this.adventureService.getById(this.characterId, this.entryId),
+      items: this.inventoryService.getAllByCharacter(this.characterId).pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ entry, items }) => {
+        this.entry.set(entry);
+        this.processGainedItems(entry, items);
         this.isLoading.set(false);
-        this.loadGainedItems(e);
       },
       error: () => {
         this.snackBar.open('找不到此冒險記錄', '關閉', { duration: 3000 });
@@ -81,30 +85,22 @@ export class AdventureDetailComponent implements OnInit {
     });
   }
 
-  private loadGainedItems(entry: AdventureEntry): void {
-    this.inventoryService.getAllByCharacter(this.characterId).subscribe({
-      next: (items) => {
-        const advName = entry.adventureName?.trim().toLowerCase();
-        const advCode = entry.adventureCode?.trim().toLowerCase();
-        const matchedMagic = items.filter(item => {
-          if (item.itemType !== 'PERMANENT' || !item.source) return false;
-          const s = item.source.trim().toLowerCase();
-          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
-        });
-        this.magicItems.set(matchedMagic);
-
-        const matchedConsumables = items.filter(item => {
-          if (item.itemType !== 'CONSUMABLE' || !item.source) return false;
-          const s = item.source.trim().toLowerCase();
-          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
-        });
-        this.consumableItems.set(matchedConsumables);
-      },
-      error: () => {
-        this.magicItems.set([]);
-        this.consumableItems.set([]);
-      }
+  private processGainedItems(entry: AdventureEntry, items: InventoryItem[]): void {
+    const advName = entry.adventureName?.trim().toLowerCase();
+    const advCode = entry.adventureCode?.trim().toLowerCase();
+    const matchedMagic = items.filter(item => {
+      if (item.itemType !== 'PERMANENT' || !item.source) return false;
+      const s = item.source.trim().toLowerCase();
+      return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
     });
+    this.magicItems.set(matchedMagic);
+
+    const matchedConsumables = items.filter(item => {
+      if (item.itemType !== 'CONSUMABLE' || !item.source) return false;
+      const s = item.source.trim().toLowerCase();
+      return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
+    });
+    this.consumableItems.set(matchedConsumables);
   }
 
   protected formatClassesDisplay(classesString?: string | null, level?: number | null): string {
