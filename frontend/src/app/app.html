@@ -21,11 +21,7 @@
     <!-- 已登入狀態 -->
     @if (authService.currentUser(); as user) {
       <button mat-button [matMenuTriggerFor]="userMenu" class="user-pill-btn">
-        @if (user.avatarUrl) {
-          <img [src]="user.avatarUrl" alt="Avatar" class="user-avatar" />
-        } @else {
-          <mat-icon class="user-avatar-placeholder">account_circle</mat-icon>
-        }
+        <mat-icon class="user-icon">person</mat-icon>
         <span class="user-name">{{ user.displayName }}</span>
         <mat-icon class="dropdown-icon">expand_more</mat-icon>
       </button>
