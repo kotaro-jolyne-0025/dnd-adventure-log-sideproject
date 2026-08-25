@@ -10,7 +10,7 @@ import { CharacterService } from '../../../core/services/character.service';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { Character } from '../../../core/models/character.model';
 import { EntryDefaults } from '../../../core/models/adventure.model';
-import { filter, Subject, takeUntil } from 'rxjs';
+import { catchError, filter, forkJoin, of, Subject, takeUntil } from 'rxjs';
 
 import { CommonModule } from '@angular/common';
 
@@ -47,6 +47,7 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
   protected characterId!: string;
 
   private readonly destroy$ = new Subject<void>();
+  private initialLoadDone = false;
 
   ngOnInit(): void {
     this.characterId = this.route.snapshot.paramMap.get('id')!;
@@ -61,14 +62,16 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
         }
       });
 
-    // 子路由切換導航完成時，自動刷新統計
+    // 子路由切換導航完成時，自動刷新統計（忽略初次載入，避免重複打 API）
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        this.refreshHud();
+        if (this.initialLoadDone) {
+          this.refreshHud();
+        }
       });
   }
 
@@ -79,11 +82,17 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
 
   private loadCharacterData(): void {
     this.isLoading.set(true);
-    this.characterService.getById(this.characterId).subscribe({
-      next: (c) => {
-        this.character.set(c);
+    forkJoin({
+      character: this.characterService.getById(this.characterId),
+      defaults: this.adventureService.getDefaults(this.characterId).pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ character, defaults }) => {
+        this.character.set(character);
+        if (defaults) {
+          this.defaults.set(defaults);
+        }
         this.isLoading.set(false);
-        this.loadDefaults();
+        this.initialLoadDone = true;
       },
       error: () => {
         this.snackBar.open('找不到此角色', '關閉', { duration: 3000 });
@@ -92,20 +101,16 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadDefaults(): void {
-    this.adventureService.getDefaults(this.characterId).subscribe({
-      next: (d) => this.defaults.set(d),
-      error: () => {
-        // Defaults are optional summary, don't block
+  private refreshHud(): void {
+    forkJoin({
+      character: this.characterService.getById(this.characterId).pipe(catchError(() => of(null))),
+      defaults: this.adventureService.getDefaults(this.characterId).pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ character, defaults }) => {
+        if (character) this.character.set(character);
+        if (defaults) this.defaults.set(defaults);
       },
     });
-  }
-
-  private refreshHud(): void {
-    this.characterService.getById(this.characterId).subscribe({
-      next: (c) => this.character.set(c),
-    });
-    this.loadDefaults();
   }
 
   protected formatClasses(character: Character): string {

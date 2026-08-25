@@ -679,4 +679,20 @@
 
 ---
 
+### T27 — 效能與連線最佳化 (Performance & DB Optimization)
+- **狀態：** `[x] 已完成`
+- **分支：** `perf/latency-and-db-optimization`
+- **變更摘要：**
+  1. **後端 HikariCP 連線池調優**：消除 `keepaliveTime >= maxLifetime` 啟動警告，將連線池容量擴增至 10、常駐 2 條熱連線、壽命延長至 10 分鐘（`max-lifetime=600000`）、加入 30 秒心跳保活（`keepalive-time=30000`），徹底解決跨國連線 TLS 重複握手與並發塞車。
+  2. **前端請求去重與平行化**：`CharacterShellComponent` 與 `AdventureDetailComponent` 全面改用 `forkJoin` 平行處理；修復 `router.events` 初始載入重複發送 API 的問題，請求次數減少 60%，消除 Waterfall 瀑布流等待。
+  3. **資料庫效能索引 (Flyway V4)**：建立 `adventure_entry`、`inventory_item`、`downtime_activity`、`character` 常用查詢與排序索引，所有查詢走 Index Scan (< 1ms)。
+- **完成項目：**
+  - [x] `application.properties` 連線池參數更新
+  - [x] 建立 Flyway `V4__add_performance_indexes.sql` 遷移腳本
+  - [x] `database-schema.md` 新增 Migration 6
+  - [x] `character-shell.component.ts` 與 `adventure-detail.component.ts` 平行請求與去重
+  - [x] 前後端建置與編譯驗證通過
+
+---
+
 ## 如何使用這個 Backlog
