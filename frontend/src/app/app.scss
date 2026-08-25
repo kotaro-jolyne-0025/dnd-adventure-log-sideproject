@@ -97,8 +97,8 @@
 .user-pill-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
   background: var(--bg-surface-elevated) !important;
   border: 1px solid var(--border-subtle);
@@ -110,19 +110,11 @@
     border-color: var(--border-medium);
   }
 
-  .user-avatar {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid var(--border-medium);
-  }
-
-  .user-avatar-placeholder {
-    font-size: 26px;
-    width: 26px;
-    height: 26px;
-    color: var(--text-secondary);
+  .user-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
   }
 
   .user-name {
@@ -134,7 +126,7 @@
     white-space: nowrap;
 
     @media (max-width: 540px) {
-      display: none;
+      max-width: 90px;
     }
   }
 
@@ -143,18 +135,10 @@
     width: 1.2rem;
     height: 1.2rem;
     color: var(--text-muted);
-
-    @media (max-width: 540px) {
-      display: none;
-    }
   }
 
   @media (max-width: 540px) {
-    padding: 4px;
-    min-width: 36px;
-    height: 36px;
-    justify-content: center;
-    border-radius: 50%;
+    padding: 4px 8px;
   }
 }
 
