@@ -21,7 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { InventoryService } from '../../../core/services/inventory.service';
-import { AdventureEntry, AdventureEntryRequest, DowntimeActivity } from '../../../core/models/adventure.model';
+import { AdventureEntry, AdventureEntryRequest } from '../../../core/models/adventure.model';
 import { ItemRarity, ITEM_RARITY_LABELS, InventoryItemRequest } from '../../../core/models/inventory.model';
 import { from, of, concatMap, toArray, map, Observable } from 'rxjs';
 
@@ -31,8 +31,18 @@ import {
   LucideSparkles,
   LucideFlaskConical,
   LucideScrollText,
-  LucideFileText,
+  LucideSwords,
+  LucideCalculator,
 } from '@lucide/angular';
+
+export interface DowntimeActivityItem {
+  id?: string;
+  presetLabel?: string;
+  description: string;
+  gold: number | null;
+  downtime: number | null;
+  magicItems: number | null;
+}
 
 @Component({
   selector: 'app-adventure-form',
@@ -57,7 +67,8 @@ import {
     LucideSparkles,
     LucideFlaskConical,
     LucideScrollText,
-    LucideFileText,
+    LucideSwords,
+    LucideCalculator,
   ],
   templateUrl: './adventure-form.component.html',
   styleUrl: './adventure-form.component.scss',
@@ -70,48 +81,58 @@ export class AdventureFormComponent implements OnInit {
   private readonly inventoryService = inject(InventoryService);
   private readonly snackBar = inject(MatSnackBar);
 
-  protected readonly CLASS_OPTIONS = [
-    '戰士', '法師', '牧師', '遊蕩者', '遊俠',
-    '吟遊詩人', '德魯伊', '武僧', '聖騎士', '契術師',
-    '術士', '野蠻人', '奇械師',
-  ];
-
   protected isEditMode = signal(false);
   protected isSaving = signal(false);
-  private characterId!: string;
-  private entryId?: string;
+  protected characterId!: string;
+  protected entryId: string | null = null;
 
-  // ── 起始等級與職業 ──────────────────────────────────────────────────────────
+  // ── 5e 職業選項 ─────────────────────────────────────────────────────────────
+  readonly CLASS_OPTIONS: string[] = [
+    '野蠻人 (Barbarian)',
+    '吟遊詩人 (Bard)',
+    '牧師 (Cleric)',
+    '德魯伊 (Druid)',
+    '戰士 (Fighter)',
+    '武僧 (Monk)',
+    '聖騎士 (Paladin)',
+    '遊俠 (Ranger)',
+    '遊蕩者 (Rogue)',
+    '術士 (Sorcerer)',
+    '契術師 (Warlock)',
+    '法師 (Wizard)',
+    '奇術師 (Artificer)',
+  ];
+
+  // ── 等級與升級機制 Signals ──────────────────────────────────────────────────
   protected readonly _startingLevel = signal<number>(1);
   protected readonly _startingClassesString = signal<string | null>(null);
 
-  // ── 升級機制 ──────────────────────────────────────────────────────────────
   protected levelUp = signal(false);
   protected catchup = signal(false);
   protected catchupCount = signal(1);
 
-  // ── 職業與等級配置列表 ───────────────────────────────────────────────────────
-  protected classEntries = signal<{ className: string; level: number }[]>([]);
-
-  // 結束總等級（起始等級 + 本次升級 + 迎頭趕上）
+  // 結束等級（純衍生）
   protected readonly endingLevel = computed(() => {
-    const base = this._startingLevel();
-    const up = this.levelUp() ? 1 : 0;
-    const cu = this.catchup() ? Math.max(1, this.catchupCount()) : 0;
-    return base + up + cu;
+    let lvl = this._startingLevel();
+    if (this.levelUp()) lvl += 1;
+    if (this.catchup()) lvl += this.catchupCount();
+    return Math.min(20, Math.max(1, lvl));
   });
 
-  // 職業等級配置加總
-  protected readonly classesTotalLevel = computed(() => {
-    return this.classEntries().reduce((sum, e) => sum + (e.level || 0), 0);
-  });
+  // 結束職業與等級配置列表
+  protected classEntries = signal<{ className: string; level: number }[]>([
+    { className: '戰士 (Fighter)', level: 1 },
+  ]);
 
-  // 是否平衡
-  protected readonly isLevelBalanced = computed(() => {
-    return this.classesTotalLevel() === this.endingLevel();
-  });
+  protected readonly classesTotalLevel = computed(() =>
+    this.classEntries().reduce((sum, e) => sum + (e.level || 0), 0)
+  );
 
-  // ── 即時計算合計（顯示用） ──────────────────────────────────────────────────
+  protected readonly isLevelBalanced = computed(() =>
+    this.classesTotalLevel() === this.endingLevel()
+  );
+
+  // ── 資源計算 Signals ────────────────────────────────────────────────────────
   private readonly _startingGold = signal<number | null>(null);
   private readonly _goldChange = signal<number | null>(null);
   private readonly _goldDowntimeChange = signal<number | null>(null);
@@ -162,7 +183,7 @@ export class AdventureFormComponent implements OnInit {
     return true;
   });
 
-  // ── 休整期活動 ──────────────────────────────────────────────────────────────
+  // ── 休整期活動快捷預設定義 ──────────────────────────────────────────────────
   protected readonly DOWNTIME_PRESETS = [
     { label: '迎頭趕上（升等）', name: '迎頭趕上', downtime: -10, gold: null, magicItems: null },
     { label: '魔法物品交易', name: '魔法物品交易', downtime: -5, gold: null, magicItems: null },
@@ -173,20 +194,6 @@ export class AdventureFormComponent implements OnInit {
     { label: '交換傳送法陣座標', name: '交換傳送法陣座標', downtime: -10, gold: null, magicItems: null },
     { label: '學習語言或工具', name: '學習語言或工具', downtime: -10, gold: -10, magicItems: null },
   ];
-
-  protected selectedPreset: string = '';
-
-  protected onPresetSelect(presetLabel: string): void {
-    this.selectedPreset = presetLabel;
-    const preset = this.DOWNTIME_PRESETS.find(p => p.label === presetLabel);
-    if (!preset) return;
-    if (preset.name) {
-      this.newActivityText = preset.name;
-    }
-    this.newActivityDowntime = preset.downtime;
-    this.newActivityGold = preset.gold;
-    this.newActivityMagicItems = preset.magicItems;
-  }
 
   // ── 本次獲得的永久性魔法物品清單 ──────────────────────────────────────────
   readonly rarities: (ItemRarity | '')[] = ['', 'COMMON', 'UNCOMMON', 'RARE', 'VERY_RARE', 'LEGENDARY', 'ARTIFACT'];
@@ -209,12 +216,9 @@ export class AdventureFormComponent implements OnInit {
 
   private deletedItemIds: string[] = [];
 
-  protected pendingActivities = signal<string[]>([]);
-  protected existingActivities = signal<DowntimeActivity[]>([]);
-  protected newActivityText = '';
-  protected newActivityGold: number | null = null;
-  protected newActivityDowntime: number | null = null;
-  protected newActivityMagicItems: number | null = null;
+  // ── 休整期活動卡片清單 ────────────────────────────────────────────────────
+  protected downtimeActivities = signal<DowntimeActivityItem[]>([]);
+  private deletedActivityIds: string[] = [];
 
   protected form: FormGroup = this.fb.group({
     adventureCode: [''],
@@ -327,7 +331,38 @@ export class AdventureFormComponent implements OnInit {
           }
         }
 
-        this.existingActivities.set(entry.downtimeActivities ?? []);
+        // 解析已儲存的休整期活動
+        const items: DowntimeActivityItem[] = (entry.downtimeActivities ?? []).map(act => {
+          const regex = /^(.*?)(?:\s*\((.*?)\))?$/;
+          const match = act.description.match(regex);
+          const mainDesc = match ? match[1].trim() : act.description;
+          const deltasStr = match && match[2] ? match[2] : '';
+
+          let gold: number | null = null;
+          let downtime: number | null = null;
+          let magicItems: number | null = null;
+
+          if (deltasStr) {
+            const goldMatch = deltasStr.match(/金幣\s*([+-]?\d+(?:\.\d+)?)\s*gp/i);
+            if (goldMatch) gold = parseFloat(goldMatch[1]);
+            const dtMatch = deltasStr.match(/休整期\s*([+-]?\d+)\s*天/i);
+            if (dtMatch) downtime = parseInt(dtMatch[1], 10);
+            const magicMatch = deltasStr.match(/魔法物品\s*([+-]?\d+)\s*件/i);
+            if (magicMatch) magicItems = parseInt(magicMatch[1], 10);
+          }
+
+          const matchedPreset = this.DOWNTIME_PRESETS.find(p => p.name === mainDesc || p.label.startsWith(mainDesc));
+
+          return {
+            id: act.id,
+            presetLabel: matchedPreset?.label ?? '',
+            description: mainDesc,
+            gold,
+            downtime,
+            magicItems,
+          };
+        });
+        this.downtimeActivities.set(items);
 
         this.form.patchValue({
           adventureCode: entry.adventureCode ?? '',
@@ -351,192 +386,238 @@ export class AdventureFormComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open('載入記錄失敗', '關閉', { duration: 3000 });
-        this.onBack();
       },
     });
   }
 
   private loadGainedItems(entry: AdventureEntry): void {
+    const source = entry.adventureName || entry.adventureCode || '';
+    if (!source) return;
+
     this.inventoryService.getAllByCharacter(this.characterId).subscribe({
       next: (items) => {
-        const advName = entry.adventureName?.trim().toLowerCase();
-        const advCode = entry.adventureCode?.trim().toLowerCase();
-        const matchedMagic = items.filter(item => {
-          if (item.itemType !== 'PERMANENT' || !item.source) return false;
-          const s = item.source.trim().toLowerCase();
-          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
-        });
-        this.gainedMagicItems.set(matchedMagic.map(item => ({
-          id: item.id,
-          itemName: item.itemName,
-          rarity: (item.rarity as ItemRarity) ?? '',
-          notes: item.notes ?? '',
-        })));
-
-        const matchedConsumables = items.filter(item => {
-          if (item.itemType !== 'CONSUMABLE' || !item.source) return false;
-          const s = item.source.trim().toLowerCase();
-          return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
-        });
-        this.gainedConsumableItems.set(matchedConsumables.map(item => ({
-          id: item.id,
-          itemName: item.itemName,
-          quantity: item.quantity || 1,
-          rarity: (item.rarity as ItemRarity) ?? '',
-          notes: item.notes ?? '',
-        })));
+        const matched = items.filter(
+          item => item.source === source
+        );
+        const magic = matched
+          .filter(item => item.itemType === 'PERMANENT')
+          .map(item => ({
+            id: item.id,
+            itemName: item.itemName,
+            rarity: item.rarity ?? ('' as ItemRarity | ''),
+            notes: item.notes ?? '',
+          }));
+        const consumables = matched
+          .filter(item => item.itemType === 'CONSUMABLE')
+          .map(item => ({
+            id: item.id,
+            itemName: item.itemName,
+            quantity: item.quantity ?? 1,
+            rarity: item.rarity ?? ('' as ItemRarity | ''),
+            notes: item.notes ?? '',
+          }));
+        this.gainedMagicItems.set(magic);
+        this.gainedConsumableItems.set(consumables);
       },
-      error: () => {
-        this.gainedMagicItems.set([]);
-        this.gainedConsumableItems.set([]);
-      }
+      error: () => { /* 靜默略過 */ },
     });
   }
 
-  // ── 升級與職業操作 ──────────────────────────────────────────────────────────
-
+  // ── 升級與兼職操作 ──────────────────────────────────────────────────────────
   protected onLevelUpToggle(checked: boolean): void {
     this.levelUp.set(checked);
-    this.autoAdjustClassLevel(checked ? 1 : -1);
+    this.autoAdjustClassLevels();
   }
 
   protected onCatchupToggle(checked: boolean): void {
     this.catchup.set(checked);
-    const count = this.catchupCount();
-    this.autoAdjustClassLevel(checked ? count : -count);
+    this.autoAdjustClassLevels();
   }
 
   protected onCatchupCountChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const oldCount = this.catchupCount();
-    const newCount = Math.max(1, parseInt(input.value, 10) || 1);
-    this.catchupCount.set(newCount);
-    if (this.catchup()) {
-      this.autoAdjustClassLevel(newCount - oldCount);
-    }
+    const val = parseInt((event.target as HTMLInputElement).value, 10);
+    this.catchupCount.set(isNaN(val) ? 1 : Math.max(1, Math.min(19, val)));
+    this.autoAdjustClassLevels();
   }
 
-  private autoAdjustClassLevel(diff: number): void {
-    if (diff === 0) return;
+  private autoAdjustClassLevels(): void {
+    const target = this.endingLevel();
     const entries = this.classEntries();
-    if (entries.length === 0) {
-      this.classEntries.set([{ className: '戰士', level: Math.max(1, 1 + diff) }]);
-      return;
+    if (entries.length === 1) {
+      this.classEntries.set([{ ...entries[0], level: target }]);
     }
-    // 預設將等級加/減在第一個職業上
-    const first = entries[0];
-    const newLvl = Math.max(1, first.level + diff);
-    this.classEntries.update(list => list.map((e, i) => i === 0 ? { ...e, level: newLvl } : e));
   }
 
   protected addClass(): void {
-    this.classEntries.update(list => [...list, { className: '', level: 1 }]);
+    this.classEntries.update(entries => [
+      ...entries,
+      { className: '法師 (Wizard)', level: 1 },
+    ]);
   }
 
   protected removeClass(index: number): void {
-    this.classEntries.update(list => list.filter((_, i) => i !== index));
+    this.classEntries.update(entries => entries.filter((_, i) => i !== index));
   }
 
-  protected updateClassName(index: number, value: string): void {
-    this.classEntries.update(list =>
-      list.map((e, i) => i === index ? { ...e, className: value } : e)
+  protected updateClassName(index: number, name: string): void {
+    this.classEntries.update(entries =>
+      entries.map((e, i) => i === index ? { ...e, className: name } : e)
     );
   }
 
   protected updateClassLevel(index: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const num = parseInt(input.value, 10);
-    if (isNaN(num) || num < 1) return;
-    this.classEntries.update(list =>
-      list.map((e, i) => i === index ? { ...e, level: num } : e)
+    const val = parseInt((event.target as HTMLInputElement).value, 10);
+    const lvl = isNaN(val) ? 1 : Math.max(1, Math.min(20, val));
+    this.classEntries.update(entries =>
+      entries.map((e, i) => i === index ? { ...e, level: lvl } : e)
     );
   }
 
-  private buildEndingClassesString(): string | null {
-    const filled = this.classEntries().filter(e => e.className.trim());
-    if (filled.length === 0) return null;
+  private buildEndingClassesString(): string {
+    const filled = this.classEntries().filter(e => e.className && e.level > 0);
+    if (filled.length === 0) return '';
     return filled.map(e => `${e.className.trim()}${e.level}`).join('/');
   }
 
-  // ── 休整期活動操作 ──────────────────────────────────────────────────────────
+  // ── 休整期活動操作（卡片清單模式）─────────────────────────────────────────
 
-  protected addActivity(): void {
-    let text = this.newActivityText.trim();
-    const gold = this.newActivityGold;
-    const downtime = this.newActivityDowntime;
-    const magicItems = this.newActivityMagicItems;
-
-    // 若未輸入文字且未輸入任何資源變動，則不執行
-    if (!text && (gold == null || isNaN(gold)) && (downtime == null || isNaN(downtime)) && (magicItems == null || isNaN(magicItems))) {
-      return;
-    }
-    if (!text) {
-      text = '休整期活動';
-    }
-
-    // 格式化資源變動標籤（例如：金幣 -50 gp, 休整期 -10 天, 魔法物品 +1 件）
-    const deltas: string[] = [];
-    if (gold != null && !isNaN(gold) && gold !== 0) {
-      deltas.push(`金幣 ${gold > 0 ? '+' : ''}${gold} gp`);
-    }
-    if (downtime != null && !isNaN(downtime) && downtime !== 0) {
-      deltas.push(`休整期 ${downtime > 0 ? '+' : ''}${downtime} 天`);
-    }
-    if (magicItems != null && !isNaN(magicItems) && magicItems !== 0) {
-      deltas.push(`魔法物品 ${magicItems > 0 ? '+' : ''}${magicItems} 件`);
-    }
-
-    const fullDescription = deltas.length > 0 ? `${text} (${deltas.join(', ')})` : text;
-
-    // ── 單向累加至上方「休整期變化」欄位 ──────────────────────────────────
-    if (gold != null && !isNaN(gold) && gold !== 0) {
-      const current = Number(this.form.get('goldDowntimeChange')?.value) || 0;
-      this.form.patchValue({ goldDowntimeChange: Math.round((current + gold) * 100) / 100 });
-    }
-    if (downtime != null && !isNaN(downtime) && downtime !== 0) {
-      const current = Number(this.form.get('downtimeDowntimeChange')?.value) || 0;
-      this.form.patchValue({ downtimeDowntimeChange: current + downtime });
-    }
-    if (magicItems != null && !isNaN(magicItems) && magicItems !== 0) {
-      const current = Number(this.form.get('magicItemsDowntimeChange')?.value) || 0;
-      this.form.patchValue({ magicItemsDowntimeChange: current + magicItems });
-    }
-
-    // 清空輸入欄位
-    this.selectedPreset = '';
-    this.newActivityText = '';
-    this.newActivityGold = null;
-    this.newActivityDowntime = null;
-    this.newActivityMagicItems = null;
-
-    if (this.isEditMode() && this.entryId) {
-      this.adventureService.addDowntime(this.entryId, { description: fullDescription }).subscribe({
-        next: (created) => {
-          this.existingActivities.update(list => [...list, created]);
-        },
-        error: () => {
-          this.snackBar.open('新增活動失敗', '關閉', { duration: 3000 });
-        },
-      });
-    } else {
-      this.pendingActivities.update(list => [...list, fullDescription]);
-    }
+  protected addDowntimeActivity(): void {
+    this.downtimeActivities.update(list => [
+      ...list,
+      {
+        description: '',
+        presetLabel: '',
+        gold: null,
+        downtime: null,
+        magicItems: null,
+      },
+    ]);
   }
 
-  protected removeActivity(index: number): void {
-    if (this.isEditMode() && this.entryId) {
-      const activity = this.existingActivities()[index];
-      this.adventureService.deleteDowntime(this.entryId, activity.id).subscribe({
-        next: () => {
-          this.existingActivities.update(list => list.filter((_, i) => i !== index));
-        },
-        error: () => {
-          this.snackBar.open('刪除活動失敗', '關閉', { duration: 3000 });
-        },
-      });
-    } else {
-      this.pendingActivities.update(list => list.filter((_, i) => i !== index));
+  protected removeDowntimeActivity(index: number): void {
+    const item = this.downtimeActivities()[index];
+    if (item?.id) {
+      this.deletedActivityIds.push(item.id);
     }
+    this.downtimeActivities.update(list => list.filter((_, i) => i !== index));
+    this.recalculateDowntimeTotals();
+  }
+
+  protected onActivityPresetSelect(index: number, presetLabel: string): void {
+    const preset = this.DOWNTIME_PRESETS.find(p => p.label === presetLabel);
+    this.downtimeActivities.update(list =>
+      list.map((item, i) => {
+        if (i !== index) return item;
+        return {
+          ...item,
+          presetLabel,
+          description: preset?.name ?? item.description,
+          gold: preset ? (preset.gold ?? null) : item.gold,
+          downtime: preset ? (preset.downtime ?? null) : item.downtime,
+          magicItems: preset ? (preset.magicItems ?? null) : item.magicItems,
+        };
+      })
+    );
+    this.recalculateDowntimeTotals();
+  }
+
+  protected updateActivityDescription(index: number, desc: string): void {
+    this.downtimeActivities.update(list =>
+      list.map((item, i) => i === index ? { ...item, description: desc } : item)
+    );
+  }
+
+  protected updateActivityGold(index: number, val: unknown): void {
+    const num = val !== '' && val !== null && val !== undefined && !isNaN(Number(val)) ? Number(val) : null;
+    this.downtimeActivities.update(list =>
+      list.map((item, i) => i === index ? { ...item, gold: num } : item)
+    );
+    this.recalculateDowntimeTotals();
+  }
+
+  protected updateActivityDowntime(index: number, val: unknown): void {
+    const num = val !== '' && val !== null && val !== undefined && !isNaN(Number(val)) ? parseInt(String(val), 10) : null;
+    this.downtimeActivities.update(list =>
+      list.map((item, i) => i === index ? { ...item, downtime: num } : item)
+    );
+    this.recalculateDowntimeTotals();
+  }
+
+  protected updateActivityMagicItems(index: number, val: unknown): void {
+    const num = val !== '' && val !== null && val !== undefined && !isNaN(Number(val)) ? parseInt(String(val), 10) : null;
+    this.downtimeActivities.update(list =>
+      list.map((item, i) => i === index ? { ...item, magicItems: num } : item)
+    );
+    this.recalculateDowntimeTotals();
+  }
+
+  private recalculateDowntimeTotals(): void {
+    const list = this.downtimeActivities();
+    let totalGold = 0;
+    let totalDowntime = 0;
+    let totalMagicItems = 0;
+    let hasGold = false;
+    let hasDowntime = false;
+    let hasMagicItems = false;
+
+    for (const item of list) {
+      if (item.gold != null && !isNaN(item.gold)) {
+        totalGold += item.gold;
+        hasGold = true;
+      }
+      if (item.downtime != null && !isNaN(item.downtime)) {
+        totalDowntime += item.downtime;
+        hasDowntime = true;
+      }
+      if (item.magicItems != null && !isNaN(item.magicItems)) {
+        totalMagicItems += item.magicItems;
+        hasMagicItems = true;
+      }
+    }
+
+    this.form.patchValue({
+      goldDowntimeChange: hasGold ? Math.round(totalGold * 100) / 100 : (list.length > 0 ? 0 : null),
+      downtimeDowntimeChange: hasDowntime ? totalDowntime : (list.length > 0 ? 0 : null),
+      magicItemsDowntimeChange: hasMagicItems ? totalMagicItems : (list.length > 0 ? 0 : null),
+    });
+  }
+
+  private formatActivityFullDescription(item: DowntimeActivityItem): string {
+    const text = item.description.trim() || '休整期活動';
+    const deltas: string[] = [];
+    if (item.gold != null && !isNaN(item.gold) && item.gold !== 0) {
+      deltas.push(`金幣 ${item.gold > 0 ? '+' : ''}${item.gold} gp`);
+    }
+    if (item.downtime != null && !isNaN(item.downtime) && item.downtime !== 0) {
+      deltas.push(`休整期 ${item.downtime > 0 ? '+' : ''}${item.downtime} 天`);
+    }
+    if (item.magicItems != null && !isNaN(item.magicItems) && item.magicItems !== 0) {
+      deltas.push(`魔法物品 ${item.magicItems > 0 ? '+' : ''}${item.magicItems} 件`);
+    }
+    return deltas.length > 0 ? `${text} (${deltas.join(', ')})` : text;
+  }
+
+  private syncDowntimeActivities(entryId: string): Observable<unknown> {
+    const deleteOps$ = this.deletedActivityIds.map(actId =>
+      this.adventureService.deleteDowntime(entryId, actId)
+    );
+
+    const saveOps$ = this.downtimeActivities().map(item => {
+      const fullDesc = this.formatActivityFullDescription(item);
+      if (item.id) {
+        return this.adventureService.updateDowntime(item.id, { description: fullDesc });
+      } else {
+        return this.adventureService.addDowntime(entryId, { description: fullDesc });
+      }
+    });
+
+    const allOps = [...deleteOps$, ...saveOps$];
+    if (allOps.length === 0) return of(null);
+
+    return from(allOps).pipe(
+      concatMap(op$ => op$),
+      toArray(),
+    );
   }
 
   // ── 獲得永久性魔法物品清單操作 ──────────────────────────────────────────
@@ -618,20 +699,19 @@ export class AdventureFormComponent implements OnInit {
     );
   }
 
-  private syncGainedItemsToInventory(sourceName: string): Observable<unknown> {
-    const deleteOps$: Observable<unknown>[] = this.deletedItemIds.map(id =>
+  // ── 同步獲得物品至倉庫 ────────────────────────────────────────────────────
+  private syncGainedItemsToInventory(sourceAdventureName: string): Observable<unknown> {
+    const deleteOps$ = this.deletedItemIds.map(id =>
       this.inventoryService.delete(this.characterId, id)
     );
 
-    const validMagicItems = this.gainedMagicItems().filter(i => i.itemName && i.itemName.trim());
-    const magicSaveOps$: Observable<unknown>[] = validMagicItems.map(item => {
+    const magicSaveOps$ = this.gainedMagicItems().map(item => {
       const req: InventoryItemRequest = {
-        itemName: item.itemName.trim(),
         itemType: 'PERMANENT',
+        itemName: item.itemName.trim() || '未命名魔法物品',
         rarity: item.rarity || null,
-        quantity: 1,
-        source: sourceName,
-        notes: item.notes?.trim() || null,
+        source: sourceAdventureName,
+        notes: item.notes.trim() || null,
       };
       if (item.id) {
         return this.inventoryService.update(this.characterId, item.id, req);
@@ -640,15 +720,14 @@ export class AdventureFormComponent implements OnInit {
       }
     });
 
-    const validConsumables = this.gainedConsumableItems().filter(i => i.itemName && i.itemName.trim());
-    const consumableSaveOps$: Observable<unknown>[] = validConsumables.map(item => {
+    const consumableSaveOps$ = this.gainedConsumableItems().map(item => {
       const req: InventoryItemRequest = {
-        itemName: item.itemName.trim(),
         itemType: 'CONSUMABLE',
+        itemName: item.itemName.trim() || '未命名消耗品',
+        quantity: item.quantity,
         rarity: item.rarity || null,
-        quantity: Math.max(1, item.quantity || 1),
-        source: sourceName,
-        notes: item.notes?.trim() || null,
+        source: sourceAdventureName,
+        notes: item.notes.trim() || null,
       };
       if (item.id) {
         return this.inventoryService.update(this.characterId, item.id, req);
@@ -728,7 +807,10 @@ export class AdventureFormComponent implements OnInit {
 
     if (this.isEditMode() && this.entryId) {
       this.adventureService.update(this.characterId, this.entryId, req).pipe(
-        concatMap(updated => this.syncGainedItemsToInventory(sourceName).pipe(map(() => updated))),
+        concatMap(updated => this.syncDowntimeActivities(updated.id).pipe(
+          concatMap(() => this.syncGainedItemsToInventory(sourceName)),
+          map(() => updated),
+        )),
       ).subscribe({
         next: (updated) => {
           this.snackBar.open('記錄已更新', '關閉', { duration: 2500 });
@@ -741,20 +823,10 @@ export class AdventureFormComponent implements OnInit {
       });
     } else {
       this.adventureService.create(this.characterId, req).pipe(
-        concatMap(created => {
-          const pending = this.pendingActivities();
-          const activity$: Observable<unknown> = pending.length > 0
-            ? from(pending).pipe(
-                concatMap(desc => this.adventureService.addDowntime(created.id, { description: desc })),
-                toArray(),
-              )
-            : of(null);
-
-          return activity$.pipe(
-            concatMap(() => this.syncGainedItemsToInventory(sourceName)),
-            map(() => created),
-          );
-        }),
+        concatMap(created => this.syncDowntimeActivities(created.id).pipe(
+          concatMap(() => this.syncGainedItemsToInventory(sourceName)),
+          map(() => created),
+        )),
       ).subscribe({
         next: (created) => {
           this.snackBar.open('冒險記錄已新增', '關閉', { duration: 2500 });

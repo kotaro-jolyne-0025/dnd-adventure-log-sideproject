@@ -78,6 +78,13 @@ export class AdventureService {
     );
   }
 
+  updateDowntime(downtimeId: string, req: DowntimeActivityRequest): Observable<DowntimeActivity> {
+    return this.http.put<DowntimeActivity>(
+      `${environment.apiUrl}/downtime-activities/${downtimeId}`,
+      req
+    );
+  }
+
   deleteDowntime(entryId: string, downtimeId: string): Observable<void> {
     return this.http.delete<void>(
       `${environment.apiUrl}/downtime-activities/${downtimeId}`
