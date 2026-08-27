@@ -127,7 +127,7 @@ export class AdventureFormComponent implements OnInit {
     const c = this._goldChange();
     const d = this._goldDowntimeChange();
     if (s == null && c == null && d == null) return null;
-    return (s ?? 0) + (c ?? 0) + (d ?? 0);
+    return Math.round(((s ?? 0) + (c ?? 0) + (d ?? 0)) * 100) / 100;
   });
   protected readonly downtimeTotal = computed(() => {
     const s = this._startingDowntime();
@@ -268,6 +268,18 @@ export class AdventureFormComponent implements OnInit {
     }).filter(e => e.className);
   }
 
+  private parseLocalDate(dateStr?: string | null): Date | null {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    return new Date(dateStr);
+  }
+
   private loadDefaults(): void {
     this.adventureService.getDefaults(this.characterId).subscribe({
       next: (d) => {
@@ -320,7 +332,7 @@ export class AdventureFormComponent implements OnInit {
         this.form.patchValue({
           adventureCode: entry.adventureCode ?? '',
           adventureName: entry.adventureName ?? '',
-          playDate: entry.playDate ? new Date(entry.playDate) : null,
+          playDate: this.parseLocalDate(entry.playDate),
           dmName: entry.dmName ?? '',
           startingGold: entry.startingGold ?? null,
           goldChange: entry.goldChange ?? null,
@@ -479,7 +491,7 @@ export class AdventureFormComponent implements OnInit {
     // ── 單向累加至上方「休整期變化」欄位 ──────────────────────────────────
     if (gold != null && !isNaN(gold) && gold !== 0) {
       const current = Number(this.form.get('goldDowntimeChange')?.value) || 0;
-      this.form.patchValue({ goldDowntimeChange: current + gold });
+      this.form.patchValue({ goldDowntimeChange: Math.round((current + gold) * 100) / 100 });
     }
     if (downtime != null && !isNaN(downtime) && downtime !== 0) {
       const current = Number(this.form.get('downtimeDowntimeChange')?.value) || 0;
@@ -656,12 +668,22 @@ export class AdventureFormComponent implements OnInit {
 
   private buildRequest(): AdventureEntryRequest {
     const raw = this.form.getRawValue();
-    const toNum = (v: unknown): number | null =>
-      v !== '' && v !== null && v !== undefined ? Number(v) : null;
-    const toDateStr = (val: Date | null): string | null => {
+    const toDecimal = (v: unknown): number | null =>
+      v !== '' && v !== null && v !== undefined && !isNaN(Number(v)) ? Math.round(Number(v) * 100) / 100 : null;
+    const toInt = (v: unknown): number | null =>
+      v !== '' && v !== null && v !== undefined && !isNaN(Number(v)) ? parseInt(String(v), 10) : null;
+    const toDateStr = (val: Date | string | null): string | null => {
       if (!val) return null;
+      if (typeof val === 'string') {
+        const match = val.match(/^\d{4}-\d{2}-\d{2}/);
+        if (match) return match[0];
+      }
       const d = val instanceof Date ? val : new Date(val);
-      return d.toISOString().split('T')[0];
+      if (isNaN(d.getTime())) return null;
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     };
     return {
       adventureCode: raw.adventureCode?.trim() || null,
@@ -670,15 +692,15 @@ export class AdventureFormComponent implements OnInit {
       dmName: raw.dmName?.trim() || null,
       startingLevel: this._startingLevel(),
       endingLevel: this.endingLevel(),
-      startingGold: toNum(raw.startingGold),
-      goldChange: toNum(raw.goldChange),
-      goldDowntimeChange: toNum(raw.goldDowntimeChange),
-      startingDowntime: toNum(raw.startingDowntime),
-      downtimeChange: toNum(raw.downtimeChange),
-      downtimeDowntimeChange: toNum(raw.downtimeDowntimeChange),
-      startingMagicItems: toNum(raw.startingMagicItems),
-      magicItemsChange: toNum(raw.magicItemsChange),
-      magicItemsDowntimeChange: toNum(raw.magicItemsDowntimeChange),
+      startingGold: toDecimal(raw.startingGold),
+      goldChange: toDecimal(raw.goldChange),
+      goldDowntimeChange: toDecimal(raw.goldDowntimeChange),
+      startingDowntime: toInt(raw.startingDowntime),
+      downtimeChange: toInt(raw.downtimeChange),
+      downtimeDowntimeChange: toInt(raw.downtimeDowntimeChange),
+      startingMagicItems: toInt(raw.startingMagicItems),
+      magicItemsChange: toInt(raw.magicItemsChange),
+      magicItemsDowntimeChange: toInt(raw.magicItemsDowntimeChange),
       adventureNotes: raw.adventureNotes?.trim() || null,
       soulCoinChargesUsed: raw.soulCoinChargesUsed?.trim() || null,
       endingClassesString: this.buildEndingClassesString(),

@@ -74,7 +74,7 @@ export class AdventureListComponent implements OnInit {
   }
 
   protected formatGoldChange(entry: AdventureEntry): string | null {
-    const change = (entry.goldChange ?? 0) + (entry.goldDowntimeChange ?? 0);
+    const change = Math.round(((entry.goldChange ?? 0) + (entry.goldDowntimeChange ?? 0)) * 100) / 100;
     if (change === 0 && entry.goldChange == null && entry.goldDowntimeChange == null) return null;
     return change >= 0 ? `+${change} GP` : `${change} GP`;
   }

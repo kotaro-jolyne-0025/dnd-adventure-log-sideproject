@@ -149,18 +149,18 @@
             <div class="res-inputs-grid">
               <mat-form-field appearance="outline" class="res-field">
                 <mat-label>起始</mat-label>
-                <input matInput type="number" min="0" formControlName="startingGold" />
+                <input matInput type="number" min="0" step="any" formControlName="startingGold" />
                 @if (form.get('startingGold')?.hasError('min')) {
                   <mat-error>不可為負數</mat-error>
                 }
               </mat-form-field>
               <mat-form-field appearance="outline" class="res-field">
                 <mat-label>冒險中變化</mat-label>
-                <input matInput type="number" formControlName="goldChange" placeholder="例：100 或 -50" />
+                <input matInput type="number" step="any" formControlName="goldChange" placeholder="例：100 或 -50" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="res-field">
                 <mat-label>休整期變化</mat-label>
-                <input matInput type="number" formControlName="goldDowntimeChange" placeholder="例：-10" />
+                <input matInput type="number" step="any" formControlName="goldDowntimeChange" placeholder="例：-10" />
               </mat-form-field>
             </div>
           </div>
@@ -449,7 +449,7 @@
             <div class="deltas-row">
               <mat-form-field appearance="outline" class="delta-field">
                 <mat-label>金幣 (GP)</mat-label>
-                <input matInput type="number" [(ngModel)]="newActivityGold" [ngModelOptions]="{standalone: true}"
+                <input matInput type="number" step="any" [(ngModel)]="newActivityGold" [ngModelOptions]="{standalone: true}"
                   placeholder="例：-50" (keydown.enter)="$event.preventDefault(); addActivity()" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="delta-field">

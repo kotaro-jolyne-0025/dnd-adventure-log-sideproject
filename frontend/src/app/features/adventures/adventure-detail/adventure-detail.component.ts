@@ -119,7 +119,8 @@ export class AdventureDetailComponent implements OnInit {
 
   protected formatChange(val?: number | null, prefix = ''): string {
     if (val == null || val === 0) return '—';
-    return val > 0 ? `+${val}${prefix}` : `${val}${prefix}`;
+    const rounded = typeof val === 'number' ? Math.round(val * 100) / 100 : val;
+    return rounded > 0 ? `+${rounded}${prefix}` : `${rounded}${prefix}`;
   }
 
   protected onBack(): void {
