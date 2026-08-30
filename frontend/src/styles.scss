@@ -303,6 +303,12 @@ body {
 /* ==========================================================================
    Mobile Ergonomics & Responsive Overrides
    ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }

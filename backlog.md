@@ -83,6 +83,7 @@
   - `frontend/src/app/core/services/adventure.service.ts`
   - `frontend/src/app/core/models/adventure.model.ts`
   - `frontend/src/app/app.routes.ts`
+- **備註（方案 C 物品解耦）：** 新增冒險時自動同步寫入倉庫；編輯冒險時不覆寫倉庫現有庫存（保護玩家在倉庫已消耗/使用的道具數據）。
 
 ---
 

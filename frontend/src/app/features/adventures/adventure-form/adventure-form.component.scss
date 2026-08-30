@@ -191,12 +191,16 @@
       min-height: 36px;
 
       &.catchup-item {
-        flex-wrap: wrap;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
       }
     }
 
     .catchup-count-field {
-      width: 85px;
+      width: 80px;
+      flex-shrink: 0;
       margin-bottom: 0;
     }
   }
@@ -235,7 +239,7 @@
     .level-toggles-container,
     .ending-level-display {
       width: 100%;
-      min-width: 100%;
+      min-width: 0;
     }
 
     .level-toggles-container {
@@ -245,6 +249,8 @@
       border: 1px solid var(--border-subtle);
 
       .level-toggle-item {
+        display: flex;
+        align-items: center;
         justify-content: space-between;
         width: 100%;
 
@@ -252,6 +258,12 @@
           border-top: 1px dashed var(--border-subtle);
           padding-top: 8px;
           margin-top: 2px;
+          gap: 8px;
+
+          mat-slide-toggle {
+            flex: 1;
+            min-width: 0;
+          }
         }
       }
     }
@@ -338,15 +350,19 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
 
   .class-name-field {
     flex: 2;
-    min-width: 150px;
+    min-width: 0;
+    margin-bottom: 0;
   }
 
   .class-level-field {
-    width: 110px;
-    min-width: 90px;
+    width: 100px;
+    min-width: 70px;
+    flex-shrink: 0;
+    margin-bottom: 0;
   }
 
   @media (max-width: 600px) {
@@ -354,12 +370,13 @@
 
     .class-name-field {
       flex: 1;
-      min-width: unset;
+      min-width: 0;
     }
 
     .class-level-field {
-      width: 85px;
-      min-width: unset;
+      width: 76px;
+      min-width: 65px;
+      flex-shrink: 0;
     }
   }
 }
@@ -471,6 +488,99 @@
       button {
         width: 100%;
       }
+    }
+  }
+}
+
+/* 📦 編輯模式：戰利品入庫說明橫幅 */
+.inventory-sync-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(79, 70, 229, 0.04) 100%);
+  border: 1px solid rgba(2, 132, 199, 0.22);
+  border-left: 4px solid var(--color-info);
+  margin-top: 18px;
+  margin-bottom: 2px;
+  box-shadow: var(--shadow-sm);
+
+  .banner-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--color-info-bg);
+    color: var(--color-info);
+    flex-shrink: 0;
+  }
+
+  .banner-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .banner-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+
+    .banner-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--color-info);
+      background: var(--color-info-bg);
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(2, 132, 199, 0.3);
+    }
+  }
+
+  .banner-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 6px 0;
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+  }
+
+  .banner-tip {
+    font-size: 0.8rem;
+    color: var(--color-info);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+
+    strong {
+      color: var(--color-info);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    padding: 12px;
+    gap: 10px;
+
+    .banner-icon-box {
+      width: 30px;
+      height: 30px;
     }
   }
 }

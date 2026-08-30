@@ -33,7 +33,7 @@
   min-width: 280px;
 
   @media (max-width: 600px) {
-    min-width: unset;
+    min-width: 0;
   }
 
   .btn-back {

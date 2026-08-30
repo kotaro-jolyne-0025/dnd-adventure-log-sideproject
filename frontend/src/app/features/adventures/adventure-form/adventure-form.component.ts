@@ -19,6 +19,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { InventoryService } from '../../../core/services/inventory.service';
 import { AdventureEntry, AdventureEntryRequest } from '../../../core/models/adventure.model';
@@ -33,6 +34,7 @@ import {
   LucideScrollText,
   LucideSwords,
   LucideCalculator,
+  LucidePackageCheck,
 } from '@lucide/angular';
 
 export interface DowntimeActivityItem {
@@ -62,6 +64,7 @@ export interface DowntimeActivityItem {
     MatSelectModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    TextFieldModule,
     LucideCoins,
     LucideTent,
     LucideSparkles,
@@ -69,6 +72,7 @@ export interface DowntimeActivityItem {
     LucideScrollText,
     LucideSwords,
     LucideCalculator,
+    LucidePackageCheck,
   ],
   templateUrl: './adventure-form.component.html',
   styleUrl: './adventure-form.component.scss',
@@ -808,7 +812,6 @@ export class AdventureFormComponent implements OnInit {
     if (this.isEditMode() && this.entryId) {
       this.adventureService.update(this.characterId, this.entryId, req).pipe(
         concatMap(updated => this.syncDowntimeActivities(updated.id).pipe(
-          concatMap(() => this.syncGainedItemsToInventory(sourceName)),
           map(() => updated),
         )),
       ).subscribe({
