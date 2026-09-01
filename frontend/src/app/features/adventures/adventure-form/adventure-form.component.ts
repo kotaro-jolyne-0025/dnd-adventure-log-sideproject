@@ -24,7 +24,7 @@ import { AdventureService } from '../../../core/services/adventure.service';
 import { InventoryService } from '../../../core/services/inventory.service';
 import { AdventureEntry, AdventureEntryRequest } from '../../../core/models/adventure.model';
 import { ItemRarity, ITEM_RARITY_LABELS, InventoryItemRequest } from '../../../core/models/inventory.model';
-import { from, of, concatMap, toArray, map, Observable } from 'rxjs';
+import { from, of, concatMap, toArray, map, Observable, catchError, forkJoin } from 'rxjs';
 
 import {
   LucideCoins,
@@ -34,7 +34,6 @@ import {
   LucideScrollText,
   LucideSwords,
   LucideCalculator,
-  LucidePackageCheck,
 } from '@lucide/angular';
 
 export interface DowntimeActivityItem {
@@ -72,7 +71,6 @@ export interface DowntimeActivityItem {
     LucideScrollText,
     LucideSwords,
     LucideCalculator,
-    LucidePackageCheck,
   ],
   templateUrl: './adventure-form.component.html',
   styleUrl: './adventure-form.component.scss',
@@ -289,8 +287,11 @@ export class AdventureFormComponent implements OnInit {
   }
 
   private loadDefaults(): void {
-    this.adventureService.getDefaults(this.characterId).subscribe({
-      next: (d) => {
+    forkJoin({
+      d: this.adventureService.getDefaults(this.characterId),
+      inventory: this.inventoryService.getAllByCharacter(this.characterId).pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ d, inventory }) => {
         if (d.startingLevel != null) {
           this._startingLevel.set(d.startingLevel);
         }
@@ -301,10 +302,14 @@ export class AdventureFormComponent implements OnInit {
             this.classEntries.set(parsed);
           }
         }
+        const warehouseMagicCount = (inventory ?? [])
+          .filter((i) => i.itemType === 'PERMANENT')
+          .reduce((sum, i) => sum + (i.quantity || 1), 0);
+
         this.form.patchValue({
           startingGold: d.startingGold ?? 0,
           startingDowntime: d.startingDowntime ?? 0,
-          startingMagicItems: d.startingMagicItems ?? 0,
+          startingMagicItems: warehouseMagicCount,
         });
       },
       error: () => { /* 靜默略過 */ },
@@ -500,6 +505,9 @@ export class AdventureFormComponent implements OnInit {
 
   protected removeDowntimeActivity(index: number): void {
     const item = this.downtimeActivities()[index];
+    if (this.isEditMode() && item?.id) {
+      return; // 歷史快照不可刪除
+    }
     if (item?.id) {
       this.deletedActivityIds.push(item.id);
     }
@@ -606,14 +614,13 @@ export class AdventureFormComponent implements OnInit {
       this.adventureService.deleteDowntime(entryId, actId)
     );
 
-    const saveOps$ = this.downtimeActivities().map(item => {
-      const fullDesc = this.formatActivityFullDescription(item);
-      if (item.id) {
-        return this.adventureService.updateDowntime(item.id, { description: fullDesc });
-      } else {
+    // 歷史快照不可編輯，因此僅將新增項目 (!item.id) 呼叫 addDowntime
+    const saveOps$ = this.downtimeActivities()
+      .filter(item => !item.id)
+      .map(item => {
+        const fullDesc = this.formatActivityFullDescription(item);
         return this.adventureService.addDowntime(entryId, { description: fullDesc });
-      }
-    });
+      });
 
     const allOps = [...deleteOps$, ...saveOps$];
     if (allOps.length === 0) return of(null);
@@ -636,6 +643,9 @@ export class AdventureFormComponent implements OnInit {
 
   protected removeGainedItem(index: number): void {
     const item = this.gainedMagicItems()[index];
+    if (this.isEditMode() && item?.id) {
+      return; // 歷史快照不可刪除
+    }
     if (item?.id) {
       this.deletedItemIds.push(item.id);
     }
@@ -672,6 +682,9 @@ export class AdventureFormComponent implements OnInit {
 
   protected removeGainedConsumableItem(index: number): void {
     const item = this.gainedConsumableItems()[index];
+    if (this.isEditMode() && item?.id) {
+      return; // 歷史快照不可刪除
+    }
     if (item?.id) {
       this.deletedItemIds.push(item.id);
     }
@@ -709,36 +722,33 @@ export class AdventureFormComponent implements OnInit {
       this.inventoryService.delete(this.characterId, id)
     );
 
-    const magicSaveOps$ = this.gainedMagicItems().map(item => {
-      const req: InventoryItemRequest = {
-        itemType: 'PERMANENT',
-        itemName: item.itemName.trim() || '未命名魔法物品',
-        rarity: item.rarity || null,
-        source: sourceAdventureName,
-        notes: item.notes.trim() || null,
-      };
-      if (item.id) {
-        return this.inventoryService.update(this.characterId, item.id, req);
-      } else {
+    // 歷史快照不可編輯或重複入庫，因此僅將新增項目 (!item.id) 呼叫 create
+    const magicSaveOps$ = this.gainedMagicItems()
+      .filter(item => !item.id)
+      .map(item => {
+        const req: InventoryItemRequest = {
+          itemType: 'PERMANENT',
+          itemName: item.itemName.trim() || '未命名魔法物品',
+          rarity: item.rarity || null,
+          source: sourceAdventureName,
+          notes: item.notes.trim() || null,
+        };
         return this.inventoryService.create(this.characterId, req);
-      }
-    });
+      });
 
-    const consumableSaveOps$ = this.gainedConsumableItems().map(item => {
-      const req: InventoryItemRequest = {
-        itemType: 'CONSUMABLE',
-        itemName: item.itemName.trim() || '未命名消耗品',
-        quantity: item.quantity,
-        rarity: item.rarity || null,
-        source: sourceAdventureName,
-        notes: item.notes.trim() || null,
-      };
-      if (item.id) {
-        return this.inventoryService.update(this.characterId, item.id, req);
-      } else {
+    const consumableSaveOps$ = this.gainedConsumableItems()
+      .filter(item => !item.id)
+      .map(item => {
+        const req: InventoryItemRequest = {
+          itemType: 'CONSUMABLE',
+          itemName: item.itemName.trim() || '未命名消耗品',
+          quantity: item.quantity,
+          rarity: item.rarity || null,
+          source: sourceAdventureName,
+          notes: item.notes.trim() || null,
+        };
         return this.inventoryService.create(this.characterId, req);
-      }
-    });
+      });
 
     const allOps = [...deleteOps$, ...magicSaveOps$, ...consumableSaveOps$];
     if (allOps.length === 0) return of(null);
@@ -805,6 +815,23 @@ export class AdventureFormComponent implements OnInit {
       return;
     }
 
+    // 防呆驗證：若有新加入的卡片但未填寫名稱或描述，提示使用者填寫或移除
+    const hasEmptyMagic = this.gainedMagicItems().some(item => !item.id && !item.itemName.trim());
+    if (hasEmptyMagic) {
+      this.snackBar.open('請填寫新增魔法物品的名稱，或刪除空白卡片', '關閉', { duration: 3000 });
+      return;
+    }
+    const hasEmptyConsumable = this.gainedConsumableItems().some(item => !item.id && !item.itemName.trim());
+    if (hasEmptyConsumable) {
+      this.snackBar.open('請填寫新增消耗品的名稱，或刪除空白卡片', '關閉', { duration: 3000 });
+      return;
+    }
+    const hasEmptyActivity = this.downtimeActivities().some(act => !act.id && !act.description.trim());
+    if (hasEmptyActivity) {
+      this.snackBar.open('請填寫新增休整期活動的描述，或刪除空白卡片', '關閉', { duration: 3000 });
+      return;
+    }
+
     this.isSaving.set(true);
     const req = this.buildRequest();
     const sourceName = req.adventureName || req.adventureCode || '冒險獲得';
@@ -812,6 +839,7 @@ export class AdventureFormComponent implements OnInit {
     if (this.isEditMode() && this.entryId) {
       this.adventureService.update(this.characterId, this.entryId, req).pipe(
         concatMap(updated => this.syncDowntimeActivities(updated.id).pipe(
+          concatMap(() => this.syncGainedItemsToInventory(sourceName)),
           map(() => updated),
         )),
       ).subscribe({

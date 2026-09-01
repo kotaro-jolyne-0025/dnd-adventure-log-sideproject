@@ -8,10 +8,47 @@
       </h2>
       <span class="count-pill">{{ entries().length }} 筆紀錄</span>
     </div>
-    <button mat-flat-button color="primary" (click)="onAddEntry()" class="btn-add-adv">
-      <mat-icon>add</mat-icon>
-      新增冒險紀錄
-    </button>
+    <div class="header-actions">
+      <!-- 🌟 一體化膠囊排序工具列 -->
+      <div class="sort-toolbar-capsule">
+        <!-- 欄位選擇（左側） -->
+        <label class="capsule-section select-section" matTooltip="點擊切換排序欄位">
+          <svg lucideSlidersHorizontal [size]="16" class="capsule-icon"></svg>
+          <span class="capsule-text">{{ sortFieldLabel() }}</span>
+          <svg lucideChevronDown [size]="15" class="capsule-arrow"></svg>
+          <select
+            class="invisible-native-select"
+            [value]="sortField()"
+            (change)="onSortFieldChange($event)"
+            aria-label="選擇排序依據">
+            <option value="playDate">遊玩日期</option>
+            <option value="createdAt">建立時間</option>
+          </select>
+        </label>
+
+        <!-- 中間高雅細分隔線 -->
+        <div class="capsule-divider"></div>
+
+        <!-- 方向反轉（右側） -->
+        <button
+          type="button"
+          class="capsule-section button-section"
+          (click)="toggleSortOrder()"
+          [matTooltip]="directionTooltip()">
+          @if (sortOrder() === 'desc') {
+            <svg lucideArrowDown [size]="16" class="capsule-icon dir-icon"></svg>
+          } @else {
+            <svg lucideArrowUp [size]="16" class="capsule-icon dir-icon icon-asc"></svg>
+          }
+          <span class="capsule-text">{{ directionLabel() }}</span>
+        </button>
+      </div>
+
+      <button mat-flat-button color="primary" (click)="onAddEntry()" class="btn-add-adv">
+        <svg lucidePlus [size]="18" class="btn-icon"></svg>
+        <span>新增冒險紀錄</span>
+      </button>
+    </div>
   </div>
 
   <!-- Loading Skeletons -->
@@ -36,8 +73,8 @@
       <h3 class="empty-title">尚無冒險紀錄</h3>
       <p class="empty-desc">點擊下方按鈕開始建立第一筆冒險紀錄！</p>
       <button mat-flat-button color="primary" (click)="onAddEntry()" class="empty-btn">
-        <mat-icon>add</mat-icon>
-        新增冒險紀錄
+        <svg lucidePlus [size]="18" class="btn-icon"></svg>
+        <span>新增冒險紀錄</span>
       </button>
     </div>
   }
@@ -58,6 +95,12 @@
                 <mat-icon class="meta-icon">event</mat-icon>
                 {{ row.playDate ? (row.playDate | date:'yyyy/MM/dd') : '未指定日期' }}
               </span>
+              @if (sortField() === 'createdAt' && row.createdAt) {
+                <span class="adv-created-tag" matTooltip="資料庫建立時間">
+                  <svg lucideClock [size]="13" class="meta-icon"></svg>
+                  建立：{{ row.createdAt | date:'yyyy/MM/dd' }}
+                </span>
+              }
               @if (row.dmName) {
                 <span class="adv-dm">
                   <mat-icon class="meta-icon">person</mat-icon>

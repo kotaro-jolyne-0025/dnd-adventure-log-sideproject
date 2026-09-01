@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D 冒險日誌 — 冒險列表排序優化三方案互動演示</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0b0f17;
+      --bg-surface: #141b27;
+      --bg-card: #1c2638;
+      --bg-card-hover: #233046;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.16);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --gold-primary: #f59e0b;
+      --gold-light: #fbbf24;
+      --gold-bg: rgba(245, 158, 11, 0.12);
+      --gold-border: rgba(245, 158, 11, 0.3);
+      --purple-primary: #a855f7;
+      --purple-bg: rgba(168, 85, 247, 0.12);
+      --blue-primary: #3b82f6;
+      --blue-bg: rgba(59, 130, 246, 0.12);
+      --green-primary: #10b981;
+      --green-bg: rgba(16, 185, 129, 0.12);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Top Demo Header */
+    .demo-header {
+      background: linear-gradient(180deg, #182234 0%, #0e1420 100%);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 24px 20px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .demo-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .demo-subtitle {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      max-width: 680px;
+      margin: 0 auto 16px;
+    }
+
+    /* Tab Selector */
+    .scheme-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .scheme-tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      color: var(--text-secondary);
+      padding: 10px 18px;
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .scheme-tab-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      border-color: var(--gold-primary);
+    }
+
+    .scheme-tab-btn.active {
+      background: var(--gold-bg);
+      border-color: var(--gold-primary);
+      color: var(--gold-light);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 28px auto 0;
+      padding: 0 20px;
+    }
+
+    /* Explanation Banner */
+    .scheme-info-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .scheme-info-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .scheme-info-badge {
+      background: var(--gold-bg);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .scheme-info-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .scheme-info-desc {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .scheme-pros {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pro-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pro-pill span {
+      color: var(--green-primary);
+      font-weight: bold;
+    }
+
+    /* Preview Canvas Wrapper */
+    .preview-canvas {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .preview-tag {
+      position: absolute;
+      top: -10px;
+      right: 18px;
+      background: var(--purple-bg);
+      color: var(--purple-primary);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+    }
+
+    /* List Header Bar inside Canvas */
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .header-titles {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .count-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-add-primary {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.88rem;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+      transition: opacity 0.2s;
+    }
+
+    .btn-add-primary:hover {
+      opacity: 0.9;
+    }
+
+    /* Scheme 1 UI Controls */
+    .scheme1-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .custom-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .custom-select:hover {
+      border-color: var(--gold-primary);
+    }
+
+    .btn-dir-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-dir-toggle:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--gold-primary);
+      color: var(--gold-light);
+    }
+
+    /* Scheme 2 UI Controls: Segmented Pill */
+    .segmented-pill-container {
+      display: inline-flex;
+      background: var(--bg-main);
+      padding: 3px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-medium);
+    }
+
+    .pill-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .pill-btn.active {
+      background: var(--bg-card-hover);
+      color: var(--gold-light);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    /* Scheme 3 UI Controls: Tier Filter / Direction */
+    .scheme3-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Card List */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chronicle-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+      position: relative;
+    }
+
+    .chronicle-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+
+    .card-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .meta-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .adv-code {
+      background: var(--purple-bg);
+      color: var(--purple-primary);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .adv-date {
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .adv-created {
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-style: italic;
+    }
+
+    .adv-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .badges-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .delta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .badge-level-up {
+      background: var(--gold-bg);
+      color: var(--gold-light);
+      border-color: var(--gold-border);
+    }
+
+    .badge-gold {
+      background: rgba(245, 158, 11, 0.08);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-magic {
+      background: var(--purple-bg);
+      color: #c084fc;
+      border-color: rgba(168, 85, 247, 0.25);
+    }
+
+    .badge-downtime {
+      background: rgba(16, 185, 129, 0.08);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    /* Scheme 3 Tier Section */
+    .tier-group {
+      margin-bottom: 20px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: rgba(20, 27, 39, 0.5);
+    }
+
+    .tier-header {
+      background: linear-gradient(90deg, #1c2638 0%, #151d2c 100%);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .tier-header:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .tier-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tier-badge {
+      background: var(--gold-bg);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .tier-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
+
+    .tier-stats {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+    }
+
+    .tier-stats span {
+      color: var(--text-secondary);
+    }
+
+    .tier-chevron {
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .tier-group.collapsed .tier-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .tier-group.collapsed .tier-body {
+      display: none;
+    }
+
+    .tier-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Comparison Table */
+    .comparison-section {
+      margin-top: 36px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .comparison-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      color: var(--gold-light);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    .comparison-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-medium);
+      font-weight: 600;
+    }
+
+    .comparison-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      vertical-align: top;
+    }
+
+    .comparison-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .highlight-cell {
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-title">
+      ⚔️ D&D 冒險日誌 — 排序優化方案評估
+    </div>
+    <p class="demo-subtitle">
+      點選下方方案切換即時互動演示。下方卡片清單支援真實即時重排，您可以親自點擊體驗三種方案的操作手感與視覺表現！
+    </p>
+
+    <!-- Scheme Switcher Tabs -->
+    <div class="scheme-tabs">
+      <button class="scheme-tab-btn active" onclick="switchScheme(1)">
+        <span>🎯 方案一：維度解耦</span>
+        <small style="opacity: 0.7;">(遊玩日 vs 建立日 vs 等級)</small>
+      </button>
+      <button class="scheme-tab-btn" onclick="switchScheme(2)">
+        <span>⚡ 方案二：極速膠囊鈕</span>
+        <small style="opacity: 0.7;">(一鍵零延遲切換)</small>
+      </button>
+      <button class="scheme-tab-btn" onclick="switchScheme(3)">
+        <span>📜 方案三：史詩等階篇章</span>
+        <small style="opacity: 0.7;">(Tier 1~4 折疊編年史)</small>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Scheme 1 Container -->
+    <div id="view-scheme-1">
+      <div class="scheme-info-box">
+        <div class="scheme-info-header">
+          <span class="scheme-info-badge">SCHEME 1</span>
+          <h2 class="scheme-info-title">維度解耦方案：排序欄位 ＋ 升降冪獨立控制</h2>
+        </div>
+        <p class="scheme-info-desc">
+          <strong>解決痛點：</strong>玩家事後「補登」以前的冒險時，如果純依創立時間，補登的舊紀錄會被擠到最前面。將「排序欄位（遊玩日期 / 建立時間 / 等級）」與「方向（最新 / 最舊）」拆分，既能按跑團時間線忠實瀏覽，又能在需要時快速依系統登打時間找剛建好的資料！
+        </p>
+        <div class="scheme-pros">
+          <div class="pro-pill"><span>✓</span> 解決補登時間差</div>
+          <div class="pro-pill"><span>✓</span> 支援等級成長史排序</div>
+          <div class="pro-pill"><span>✓</span> 邏輯嚴謹彈性最高</div>
+        </div>
+      </div>
+
+      <div class="preview-canvas">
+        <span class="preview-tag">即時互動演示</span>
+        
+        <div class="list-header">
+          <div class="header-titles">
+            <h3 class="section-title">
+              📜 冒險紀錄表
+            </h3>
+            <span class="count-pill">4 筆紀錄</span>
+          </div>
+
+          <div class="scheme1-controls">
+            <!-- 排序欄位選單 -->
+            <select id="s1-field" class="custom-select" onchange="applyScheme1Sort()">
+              <option value="playDate">📅 排序：遊玩日期</option>
+              <option value="createdAt">🕒 排序：創立時間</option>
+              <option value="level">🎖️ 排序：角色等級</option>
+            </select>
+
+            <!-- 方向反轉按鈕 -->
+            <button id="s1-dir-btn" class="btn-dir-toggle" onclick="toggleScheme1Dir()">
+              <span id="s1-dir-icon">⬇</span>
+              <span id="s1-dir-text">由新至舊</span>
+            </button>
+
+            <button class="btn-add-primary">＋ 新增冒險</button>
+          </div>
+        </div>
+
+        <div id="s1-card-list" class="card-list"></div>
+      </div>
+    </div>
+
+    <!-- Scheme 2 Container -->
+    <div id="view-scheme-2" style="display: none;">
+      <div class="scheme-info-box">
+        <div class="scheme-info-header">
+          <span class="scheme-info-badge">SCHEME 2</span>
+          <h2 class="scheme-info-title">極速膠囊切換鈕（Segmented Pill）</h2>
+        </div>
+        <p class="scheme-info-desc">
+          <strong>解決痛點：</strong>原先的下拉選單需要「點開 ➔ 挑選 ➔ 關閉」三個步驟，在手機觸控上較繁瑣。改為一體化雙格膠囊切換鈕，當前排序狀態一目了然，<strong>手指點一下直接反轉重排</strong>，零選單彈窗干擾。
+        </p>
+        <div class="scheme-pros">
+          <div class="pro-pill"><span>✓</span> 1 鍵直覺切換（零彈窗）</div>
+          <div class="pro-pill"><span>✓</span> 手機觸控友善</div>
+          <div class="pro-pill"><span>✓</span> 視覺現代極簡</div>
+        </div>
+      </div>
+
+      <div class="preview-canvas">
+        <span class="preview-tag">即時互動演示</span>
+
+        <div class="list-header">
+          <div class="header-titles">
+            <h3 class="section-title">
+              📜 冒險紀錄表
+            </h3>
+            <span class="count-pill">4 筆紀錄</span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <!-- 膠囊雙切換鈕 -->
+            <div class="segmented-pill-container">
+              <button id="s2-btn-desc" class="pill-btn active" onclick="setScheme2Order('desc')">
+                <span>⬇ 最新在前</span>
+              </button>
+              <button id="s2-btn-asc" class="pill-btn" onclick="setScheme2Order('asc')">
+                <span>⬆ 最早在前</span>
+              </button>
+            </div>
+
+            <button class="btn-add-primary">＋ 新增冒險</button>
+          </div>
+        </div>
+
+        <div id="s2-card-list" class="card-list"></div>
+      </div>
+    </div>
+
+    <!-- Scheme 3 Container -->
+    <div id="view-scheme-3" style="display: none;">
+      <div class="scheme-info-box">
+        <div class="scheme-info-header">
+          <span class="scheme-info-badge">SCHEME 3</span>
+          <h2 class="scheme-info-title">史詩等階篇章折疊（Tier Timeline Grouping）</h2>
+        </div>
+        <p class="scheme-info-desc">
+          <strong>解決痛點：</strong>當跑團次數超過 10 場以上時，無論由新至舊或由舊至新，滿滿的卡片都會讓人眼花撩亂。本方案依據 D&D 官方四大冒險等階（Tier 1: Lv.1-4 新手, Tier 2: Lv.5-10 英雄...）自動分類折疊，可單獨收合已完成的篇章，並統計各篇章總收益！
+        </p>
+        <div class="scheme-pros">
+          <div class="pro-pill"><span>✓</span> 告別無止盡長列表滾動</div>
+          <div class="pro-pill"><span>✓</span> 具備章節收穫統計彙整</div>
+          <div class="pro-pill"><span>✓</span> RPG 史詩代入感最強</div>
+        </div>
+      </div>
+
+      <div class="preview-canvas">
+        <span class="preview-tag">即時互動演示</span>
+
+        <div class="list-header">
+          <div class="header-titles">
+            <h3 class="section-title">
+              📜 冒險紀錄表
+            </h3>
+            <span class="count-pill">4 筆紀錄（分屬 2 個等階）</span>
+          </div>
+
+          <div class="scheme3-controls">
+            <button id="s3-dir-btn" class="btn-dir-toggle" onclick="toggleScheme3Dir()">
+              <span id="s3-dir-icon">⬇</span>
+              <span id="s3-dir-text">篇章與卡片：最新在前</span>
+            </button>
+            <button class="btn-add-primary">＋ 新增冒險</button>
+          </div>
+        </div>
+
+        <!-- Tier Groups -->
+        <div id="s3-tier-list"></div>
+      </div>
+    </div>
+
+    <!-- Comparison Summary Table -->
+    <div class="comparison-section">
+      <h3 class="comparison-title">📊 三方案全面評估比較</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">評估維度</th>
+            <th style="width: 26%;">方案一：維度解耦</th>
+            <th style="width: 26%;">方案二：極速膠囊鈕</th>
+            <th style="width: 26%;">方案三：等階篇章折疊</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="highlight-cell">操作步驟</td>
+            <td>選單切換欄位 + 1鍵反轉方向</td>
+            <td><strong>1 鍵直接切換（最快）</strong></td>
+            <td>1 鍵反轉 + 可點擊折疊篇章</td>
+          </tr>
+          <tr>
+            <td class="highlight-cell">補登相容性</td>
+            <td><strong>最完美（可切換看遊玩日或建立日）</strong></td>
+            <td>以創立/遊玩時間單一依據</td>
+            <td>優良（依等級/等階自動歸位）</td>
+          </tr>
+          <tr>
+            <td class="highlight-cell">多筆紀錄抗噪</td>
+            <td>一般（單一長列表）</td>
+            <td>一般（單一長列表）</td>
+            <td><strong>極高（可隨意收合歷史篇章）</strong></td>
+          </tr>
+          <tr>
+            <td class="highlight-cell">實作複雜度</td>
+            <td>低（前端純狀態計算）</td>
+            <td>極低（替換目前選單按鈕）</td>
+            <td>中等（分組資料結構與折疊動畫）</td>
+          </tr>
+          <tr>
+            <td class="highlight-cell">推薦玩家情境</td>
+            <td>常常事後補登過往紀錄的玩家</td>
+            <td>喜歡乾淨俐落、手機單手操作玩家</td>
+            <td>跑團場次多、重視角色英雄史詩感的玩家</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // 假資料（包含補登狀況示範：巨龍狂潮是今天建立的，但遊玩日期是三個月前！）
+    const mockAdventures = [
+      {
+        id: 'adv-1',
+        code: 'DDAL-05-01',
+        title: '巨龍狂潮：綠龍的陰影',
+        playDate: '2026-05-10',
+        createdAt: '2026-09-01T21:00:00', // ⚠️ 補登案例：今天才打進系統！
+        dm: 'Gandalf',
+        startLevel: 1,
+        endLevel: 2,
+        goldChange: 120,
+        downtimeChange: 10,
+        magicItemsChange: 1,
+        tier: 1,
+        tierName: 'Tier 1：地方英雄 (Lv. 1-4)'
+      },
+      {
+        id: 'adv-2',
+        code: 'CCC-GHC-01',
+        title: '迷霧森林的狼群騷動',
+        playDate: '2026-06-15',
+        createdAt: '2026-06-16T14:30:00',
+        dm: 'Elrond',
+        startLevel: 2,
+        endLevel: 3,
+        goldChange: 250,
+        downtimeChange: 10,
+        magicItemsChange: 0,
+        tier: 1,
+        tierName: 'Tier 1：地方英雄 (Lv. 1-4)'
+      },
+      {
+        id: 'adv-3',
+        code: 'DDAL-09-03',
+        title: '墮入阿弗納斯：血腥要塞',
+        playDate: '2026-07-20',
+        createdAt: '2026-07-21T09:15:00',
+        dm: 'Zariel DM',
+        startLevel: 4,
+        endLevel: 5,
+        goldChange: 600,
+        downtimeChange: 20,
+        magicItemsChange: 1,
+        tier: 2,
+        tierName: 'Tier 2：王國英雄 (Lv. 5-10)'
+      },
+      {
+        id: 'adv-4',
+        code: 'WBW-PR-02',
+        title: '妖精荒野的奇想嘉年華',
+        playDate: '2026-08-28',
+        createdAt: '2026-08-28T22:00:00',
+        dm: 'Puck',
+        startLevel: 5,
+        endLevel: 6,
+        goldChange: 450,
+        downtimeChange: 10,
+        magicItemsChange: 1,
+        tier: 2,
+        tierName: 'Tier 2：王國英雄 (Lv. 5-10)'
+      }
+    ];
+
+    // 渲染卡片 HTML
+    function renderCard(item) {
+      return `
+        <div class="chronicle-card">
+          <div class="card-meta-bar">
+            <div class="meta-left">
+              <span class="adv-code">${item.code}</span>
+              <span class="adv-date">📅 遊玩：${item.playDate}</span>
+              <span class="adv-created">（建立：${item.createdAt.split('T')[0]}）</span>
+              <span>👤 DM: ${item.dm}</span>
+            </div>
+            <span style="color: var(--text-muted); font-size: 0.9rem;">➔</span>
+          </div>
+          <h4 class="adv-title">${item.title}</h4>
+          <div class="badges-row">
+            <span class="delta-badge badge-level-up">🆙 Lv.${item.startLevel} ➔ Lv.${item.endLevel}</span>
+            <span class="delta-badge badge-gold">💰 +${item.goldChange} GP</span>
+            <span class="delta-badge badge-downtime">⛺ +${item.downtimeChange} 天</span>
+            ${item.magicItemsChange > 0 ? `<span class="delta-badge badge-magic">✨ +${item.magicItemsChange} 魔法物品</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Scheme 1 狀態
+    let s1Field = 'playDate';
+    let s1Dir = 'desc';
+
+    function toggleScheme1Dir() {
+      s1Dir = s1Dir === 'desc' ? 'asc' : 'desc';
+      document.getElementById('s1-dir-icon').textContent = s1Dir === 'desc' ? '⬇' : '⬆';
+      document.getElementById('s1-dir-text').textContent = s1Dir === 'desc' ? '由新至舊' : '由舊至新';
+      applyScheme1Sort();
+    }
+
+    function applyScheme1Sort() {
+      s1Field = document.getElementById('s1-field').value;
+      const list = [...mockAdventures];
+      list.sort((a, b) => {
+        let valA, valB;
+        if (s1Field === 'playDate') {
+          valA = new Date(a.playDate).getTime();
+          valB = new Date(b.playDate).getTime();
+        } else if (s1Field === 'createdAt') {
+          valA = new Date(a.createdAt).getTime();
+          valB = new Date(b.createdAt).getTime();
+        } else if (s1Field === 'level') {
+          valA = a.endLevel;
+          valB = b.endLevel;
+        }
+        return s1Dir === 'desc' ? valB - valA : valA - valB;
+      });
+      document.getElementById('s1-card-list').innerHTML = list.map(renderCard).join('');
+    }
+
+    // Scheme 2 狀態
+    let s2Order = 'desc';
+
+    function setScheme2Order(order) {
+      s2Order = order;
+      document.getElementById('s2-btn-desc').classList.toggle('active', order === 'desc');
+      document.getElementById('s2-btn-asc').classList.toggle('active', order === 'asc');
+      applyScheme2Sort();
+    }
+
+    function applyScheme2Sort() {
+      const list = [...mockAdventures];
+      list.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return s2Order === 'desc' ? timeB - timeA : timeA - timeB;
+      });
+      document.getElementById('s2-card-list').innerHTML = list.map(renderCard).join('');
+    }
+
+    // Scheme 3 狀態
+    let s3Dir = 'desc';
+
+    function toggleScheme3Dir() {
+      s3Dir = s3Dir === 'desc' ? 'asc' : 'desc';
+      document.getElementById('s3-dir-icon').textContent = s3Dir === 'desc' ? '⬇' : '⬆';
+      document.getElementById('s3-dir-text').textContent = s3Dir === 'desc' ? '篇章與卡片：最新在前' : '篇章與卡片：最早在前';
+      applyScheme3Sort();
+    }
+
+    function applyScheme3Sort() {
+      // 分組
+      const groups = {};
+      mockAdventures.forEach(item => {
+        if (!groups[item.tier]) {
+          groups[item.tier] = {
+            tier: item.tier,
+            name: item.tierName,
+            items: []
+          };
+        }
+        groups[item.tier].items.push(item);
+      });
+
+      let tierArray = Object.values(groups);
+      // 排序篇章
+      tierArray.sort((a, b) => s3Dir === 'desc' ? b.tier - a.tier : a.tier - b.tier);
+
+      // 排序內部卡片
+      tierArray.forEach(g => {
+        g.items.sort((a, b) => {
+          const tA = new Date(a.playDate).getTime();
+          const tB = new Date(b.playDate).getTime();
+          return s3Dir === 'desc' ? tB - tA : tA - tB;
+        });
+      });
+
+      const html = tierArray.map(g => {
+        const totalGold = g.items.reduce((s, i) => s + i.goldChange, 0);
+        const totalMagic = g.items.reduce((s, i) => s + i.magicItemsChange, 0);
+        return `
+          <div class="tier-group" id="tier-${g.tier}">
+            <div class="tier-header" onclick="document.getElementById('tier-${g.tier}').classList.toggle('collapsed')">
+              <div class="tier-title-wrap">
+                <span class="tier-badge">TIER ${g.tier}</span>
+                <span class="tier-name">${g.name}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="tier-stats">
+                  <span>${g.items.length} 場冒險</span>・
+                  <span>累積 +${totalGold} GP</span>・
+                  <span>+${totalMagic} 魔法物品</span>
+                </div>
+                <span class="tier-chevron">▼</span>
+              </div>
+            </div>
+            <div class="tier-body">
+              ${g.items.map(renderCard).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('s3-tier-list').innerHTML = html;
+    }
+
+    // 切換大方案 Tab
+    function switchScheme(schemeNumber) {
+      document.querySelectorAll('.scheme-tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx === (schemeNumber - 1));
+      });
+      document.getElementById('view-scheme-1').style.display = schemeNumber === 1 ? 'block' : 'none';
+      document.getElementById('view-scheme-2').style.display = schemeNumber === 2 ? 'block' : 'none';
+      document.getElementById('view-scheme-3').style.display = schemeNumber === 3 ? 'block' : 'none';
+    }
+
+    // 初始載入渲染
+    applyScheme1Sort();
+    applyScheme2Sort();
+    applyScheme3Sort();
+  </script>
+</body>
+</html>

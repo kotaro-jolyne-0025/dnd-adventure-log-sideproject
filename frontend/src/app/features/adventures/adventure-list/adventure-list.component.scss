@@ -53,13 +53,146 @@
   border: 1px solid var(--border-subtle);
 }
 
-.btn-add-adv {
-  font-weight: 600;
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+}
+
+/* 🌟 一體化膠囊排序工具列 (iOS / Notion 現代風格) */
+.sort-toolbar-capsule {
+  display: inline-flex;
+  align-items: center;
   height: 40px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 3px 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+  }
 
   @media (max-width: 600px) {
     width: 100%;
     height: 44px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.capsule-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 16px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.18s ease, color 0.18s ease;
+
+  &:hover {
+    background: var(--bg-surface-elevated);
+    color: var(--color-primary);
+  }
+
+  &:active {
+    background: var(--bg-surface-hover);
+  }
+
+  @media (max-width: 600px) {
+    flex: 1;
+    padding: 0 8px;
+    font-size: 0.86rem;
+  }
+}
+
+.select-section {
+  /* 覆蓋整個按鈕的隱形原生選單，觸控時精準呼叫原生滾輪/選單 */
+  .invisible-native-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+}
+
+.capsule-icon {
+  font-size: 1.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.capsule-text {
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.capsule-arrow {
+  font-size: 1.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-left: -2px;
+}
+
+.capsule-divider {
+  width: 1.5px;
+  height: 20px;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+.button-section {
+  .dir-icon {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &:hover .dir-icon {
+    transform: scale(1.15);
+  }
+}
+
+.btn-add-adv {
+  font-weight: 600;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  .btn-icon {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: 44px;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
     justify-content: center;
   }
 }
@@ -132,6 +265,22 @@
     font-size: 0.95rem;
     width: 0.95rem;
     height: 0.95rem;
+    color: var(--text-muted);
+  }
+}
+
+.adv-created-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+
+  .meta-icon {
+    font-size: 0.88rem;
+    width: 0.88rem;
+    height: 0.88rem;
     color: var(--text-muted);
   }
 }

@@ -4,11 +4,13 @@ import com.dndadvlog.backend.dto.*;
 import com.dndadvlog.backend.entity.AdventureEntry;
 import com.dndadvlog.backend.entity.Character;
 import com.dndadvlog.backend.entity.DowntimeActivity;
+import com.dndadvlog.backend.entity.InventoryItem;
 import com.dndadvlog.backend.exception.BusinessException;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
 import com.dndadvlog.backend.mapper.AdventureEntryMapper;
 import com.dndadvlog.backend.mapper.CharacterMapper;
 import com.dndadvlog.backend.mapper.DowntimeActivityMapper;
+import com.dndadvlog.backend.mapper.InventoryItemMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class AdventureEntryService {
     private final CharacterMapper characterMapper;
     private final DowntimeActivityMapper downtimeActivityMapper;
     private final CharacterService characterService;
+    private final InventoryItemMapper inventoryItemMapper;
 
     public List<AdventureEntryResponse> getEntriesByCharacter(UUID characterId) {
         List<AdventureEntry> entries = entryMapper.findByCharacterIdOrderByPlayDateAsc(characterId);
@@ -48,17 +51,22 @@ public class AdventureEntryService {
             defaults.setStartingLevel(last.getEndingLevel());
             defaults.setStartingGold(last.getGoldTotal());
             defaults.setStartingDowntime(last.getDowntimeTotal());
-            defaults.setStartingMagicItems(last.getMagicItemsTotal());
             defaults.setStartingClassesString(last.getEndingClassesString());
         } else {
             Character character = characterService.findCharacterInternal(characterId);
             defaults.setStartingGold(BigDecimal.ZERO);
             defaults.setStartingDowntime(0);
-            defaults.setStartingMagicItems(0);
             String classesStr = character.getCurrentClassesString();
             defaults.setStartingClassesString(classesStr);
             defaults.setStartingLevel(parseTotalLevelFromClassesString(classesStr));
         }
+
+        // 魔法物品起始件數統一追隨倉庫中實際持有的永久魔法物品數量
+        List<InventoryItem> permanentItems =
+                inventoryItemMapper.findByCharacterIdAndItemType(characterId, "PERMANENT");
+        int magicCount = permanentItems != null ? permanentItems.size() : 0;
+        defaults.setStartingMagicItems(magicCount);
+
         return defaults;
     }
 

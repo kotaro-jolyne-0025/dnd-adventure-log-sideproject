@@ -720,4 +720,65 @@
 
 ---
 
+### T27 — 冒險紀錄編輯模式：戰利品與休整期活動快照鎖定與追加新增功能
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **既有項目歷史快照鎖定**：
+     - 在 `isEditMode = true` 模式下，已存在的魔法物品、消耗品與休整期活動加上 `[歷史快照]` 標籤。
+     - 欄位全面鎖定（`disabled`），並隱藏刪除按鈕，保護歷史資料不被意外竄改或刪除。
+  2. **編輯模式開放追加新增**：
+     - 解鎖編輯模式下的「新增魔法物品」、「新增消耗品」與「新增休整期活動」按鈕。
+     - 新加入之卡片標示 `[新增]` 標籤，各欄位允許正常填寫，並提供刪除按鈕以供儲存前撤銷。
+  3. **同步儲存與防呆校驗**：
+     - 儲存變更時，僅將新建立之魔法物品與消耗品（`!item.id`）同步寫入角色倉庫，既有物品不重複寫入亦不覆蓋現況。
+     - 僅將新建立之休整期活動寫入冒險記錄，既有活動保留原貌。
+     - 新增送出前空白卡片檢查，若有未填寫名稱或描述之新卡片，立即發出提示防呆。
+- **完成項目：**
+  - [x] `AdventureFormComponent` 完善 `removeGainedItem`、`removeGainedConsumableItem`、`removeDowntimeActivity` 的快照保護邏輯
+  - [x] `AdventureFormComponent` 實作 `syncGainedItemsToInventory` 與 `syncDowntimeActivities` 僅同步新項目邏輯，並於編輯模式儲存時連動
+  - [x] `adventure-form.component.html` 移除新增按鈕限制、加入快照標籤與欄位 `disabled` 條件綁定
+  - [x] `adventure-form.component.scss` 新增 `.snapshot-card`、`.snapshot-tag` 與 `.new-tag` 視覺樣式
+  - [x] 更新 `system-requirements-spec.md` 新增 9.4 規格
+### T28 — CharacterShell 頂部 HUD 魔法物品件數連動倉庫實際數量
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **串接倉庫真實數據**：
+     - 原先頂部 HUD 魔法物品件數顯示來自 `defaults.startingMagicItems`（僅抓取前次冒險紀錄計算值），導致使用者在倉庫頁面手動新增、編輯、刪除魔法物品時，HUD 無法同步反映倉庫現況。
+     - 在 `CharacterShellComponent` 引入 `InventoryService`，在初次載入及每次 `refreshHud()` 時查詢該角色所有倉庫物品，統計 `itemType === 'PERMANENT'` 之實際數量存入 `magicItemsCount` signal。
+  2. **跨組件全域反應**：
+     - `InventoryService` 在道具新增/修改/刪除時本已發送 `characterChanged$` 廣播通知，`CharacterShellComponent` 訂閱後立即呼叫 `refreshHud()`，實現倉庫操作與頂部 HUD 魔法物品數值即時無縫連動。
+- **完成項目：**
+  - [x] `CharacterShellComponent` 注入 `InventoryService`，建立 `magicItemsCount` signal
+  - [x] `loadCharacterData()` 與 `refreshHud()` 新增查詢倉庫永久魔法物品統計邏輯
+  - [x] `character-shell.component.html` 魔法物品數值綁定改為 `magicItemsCount()`
+### T29 — AdventureForm 起始魔法物品件數連動倉庫實際數量
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **後端統一收斂來源**：
+     - `AdventureEntryService.getDefaults()` 注入 `InventoryItemMapper`，無論先前是否有冒險紀錄，預設的 `startingMagicItems` 皆改為查詢倉庫中 `itemType = 'PERMANENT'` 之實際持有件數。
+  2. **前端雙重防護連動**：
+     - `AdventureFormComponent.loadDefaults()` 中使用 `forkJoin` 同時向 `InventoryService` 查詢倉庫物品，確保新增冒險紀錄時，「起始魔法物品件數」即時且準確地反映倉庫目前的永久魔法物品數量。
+- **完成項目：**
+  - [x] 後端 `AdventureEntryService` 注入 `InventoryItemMapper` 並更新 `getDefaults()`
+  - [x] 前端 `AdventureFormComponent.loadDefaults()` 更新為倉庫即時統計
+### T30 — AdventureList 冒險紀錄多維度排序與方向切換（方案一：維度解耦）
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **排序欄位與方向解耦**：
+     - `AdventureListComponent` 引入 `sortField`（支援 `playDate` 遊玩日、`createdAt` 建立時間）與 `sortOrder`（`desc` 與 `asc`）Signals。
+     - 搭配 `computed()` 進行極速客戶端排序：
+       - `playDate`：按遊玩歷史排序，相同時以 `createdAt` 次要排序。
+       - `createdAt`：按資料庫輸入時間排序，卡片額外顯示建立日期標籤，相同時以 `playDate` 次要排序。
+     - 整合 `localStorage` 雙重記憶使用者的欄位與方向偏好。
+  2. **直觀控制項與動態標籤**：
+     - 重構為「一體化膠囊排序工具列（Pill Capsule Toolbar）」，消除雙方塊割裂感，左右等寬居中對齊。
+     - 整合隱形原生 select 覆蓋技術，在手機觸控時自動呼叫流暢的原生選取輪盤，兼具極簡美學與順暢手感。
+- **完成項目：**
+  - [x] `AdventureListComponent` 定義 `AdventureSortField`，實作 `sortField`、`sortOrder`、`directionLabel` 與 `computed` 排序運算
+  - [x] `adventure-list.component.html` 整合一體化膠囊工具列、方向反轉按鈕與建立日期輔助標籤
+  - [x] `adventure-list.component.scss` 重構一體化膠囊樣式與手機版完美自適應排版
+  - [x] 前端生產建置驗證通過 (`npm run build`)
+
+---
+
 ## 如何使用這個 Backlog

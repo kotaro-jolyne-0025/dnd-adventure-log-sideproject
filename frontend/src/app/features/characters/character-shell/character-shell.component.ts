@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CharacterService } from '../../../core/services/character.service';
 import { AdventureService } from '../../../core/services/adventure.service';
+import { InventoryService } from '../../../core/services/inventory.service';
 import { Character } from '../../../core/models/character.model';
 import { EntryDefaults } from '../../../core/models/adventure.model';
 import { catchError, filter, forkJoin, of, Subject, takeUntil } from 'rxjs';
@@ -39,10 +40,12 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly characterService = inject(CharacterService);
   private readonly adventureService = inject(AdventureService);
+  private readonly inventoryService = inject(InventoryService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected character = signal<Character | null>(null);
   protected defaults = signal<EntryDefaults | null>(null);
+  protected magicItemsCount = signal<number>(0);
   protected isLoading = signal(true);
   protected characterId!: string;
 
@@ -85,12 +88,17 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
     forkJoin({
       character: this.characterService.getById(this.characterId),
       defaults: this.adventureService.getDefaults(this.characterId).pipe(catchError(() => of(null))),
+      inventory: this.inventoryService.getAllByCharacter(this.characterId).pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ character, defaults }) => {
+      next: ({ character, defaults, inventory }) => {
         this.character.set(character);
         if (defaults) {
           this.defaults.set(defaults);
         }
+        const count = (inventory ?? [])
+          .filter((i) => i.itemType === 'PERMANENT')
+          .reduce((sum, i) => sum + (i.quantity || 1), 0);
+        this.magicItemsCount.set(count);
         this.isLoading.set(false);
         this.initialLoadDone = true;
       },
@@ -105,10 +113,17 @@ export class CharacterShellComponent implements OnInit, OnDestroy {
     forkJoin({
       character: this.characterService.getById(this.characterId).pipe(catchError(() => of(null))),
       defaults: this.adventureService.getDefaults(this.characterId).pipe(catchError(() => of(null))),
+      inventory: this.inventoryService.getAllByCharacter(this.characterId).pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ character, defaults }) => {
+      next: ({ character, defaults, inventory }) => {
         if (character) this.character.set(character);
         if (defaults) this.defaults.set(defaults);
+        if (inventory) {
+          const count = inventory
+            .filter((i) => i.itemType === 'PERMANENT')
+            .reduce((sum, i) => sum + (i.quantity || 1), 0);
+          this.magicItemsCount.set(count);
+        }
       },
     });
   }
