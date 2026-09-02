@@ -399,25 +399,44 @@ export class AdventureFormComponent implements OnInit {
     });
   }
 
-  private loadGainedItems(entry: AdventureEntry): void {
-    const source = entry.adventureName || entry.adventureCode || '';
-    if (!source) return;
+  private isSourceMatch(
+    itemSource: string | null | undefined,
+    advName?: string | null,
+    advCode?: string | null
+  ): boolean {
+    if (!itemSource) return false;
+    const s = itemSource.trim().toLowerCase();
+    const name = advName?.trim().toLowerCase();
+    const code = advCode?.trim().toLowerCase();
 
+    if (!name && !code) {
+      return s === '冒險獲得';
+    }
+
+    const matchText = (sourceText: string, target: string): boolean => {
+      if (target.length < 2) return sourceText === target;
+      return sourceText.includes(target) || target.includes(sourceText);
+    };
+
+    return !!(
+      (name && matchText(s, name)) ||
+      (code && matchText(s, code))
+    );
+  }
+
+  private loadGainedItems(entry: AdventureEntry): void {
     this.inventoryService.getAllByCharacter(this.characterId).subscribe({
       next: (items) => {
-        const matched = items.filter(
-          item => item.source === source
-        );
-        const magic = matched
-          .filter(item => item.itemType === 'PERMANENT')
+        const magic = items
+          .filter(item => item.itemType === 'PERMANENT' && this.isSourceMatch(item.source, entry.adventureName, entry.adventureCode))
           .map(item => ({
             id: item.id,
             itemName: item.itemName,
             rarity: item.rarity ?? ('' as ItemRarity | ''),
             notes: item.notes ?? '',
           }));
-        const consumables = matched
-          .filter(item => item.itemType === 'CONSUMABLE')
+        const consumables = items
+          .filter(item => item.itemType === 'CONSUMABLE' && this.isSourceMatch(item.source, entry.adventureName, entry.adventureCode))
           .map(item => ({
             id: item.id,
             itemName: item.itemName,

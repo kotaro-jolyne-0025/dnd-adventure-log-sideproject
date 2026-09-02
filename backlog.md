@@ -777,6 +777,15 @@
   - [x] `AdventureListComponent` 定義 `AdventureSortField`，實作 `sortField`、`sortOrder`、`directionLabel` 與 `computed` 排序運算
   - [x] `adventure-list.component.html` 整合一體化膠囊工具列、方向反轉按鈕與建立日期輔助標籤
   - [x] `adventure-list.component.scss` 重構一體化膠囊樣式與手機版完美自適應排版
+### T31 — 修復冒險紀錄編輯模式戰利品載入匹配機制（容錯與雙向比對）
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **重構戰利品來源比對邏輯 (`isSourceMatch`)**：
+     - 解決原先 `loadGainedItems` 僅依賴 `adventureName || adventureCode` 且以嚴格全等比對 (`===`)，導致冒險代號與名稱割裂、複合命名（如 `[DDAL09-01] 冒險名稱`）或大小寫差異時戰利品無法載入呈現完全空白之問題。
+     - 抽取出通用之雙向容錯比對方法 `isSourceMatch`，支援大小寫不敏感、去前後空白、雙向子字串比對，並統一套用於 `AdventureFormComponent` 與 `AdventureDetailComponent`，使詳情頁與編輯表單之物品展示 100% 一致。
+- **完成項目：**
+  - [x] `AdventureFormComponent` 實作 `isSourceMatch` 替代嚴格全等過濾
+  - [x] `AdventureDetailComponent` 同步採用一致之 `isSourceMatch` 判定
   - [x] 前端生產建置驗證通過 (`npm run build`)
 
 ---

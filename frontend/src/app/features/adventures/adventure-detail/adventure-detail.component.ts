@@ -85,21 +85,40 @@ export class AdventureDetailComponent implements OnInit {
     });
   }
 
+  private isSourceMatch(
+    itemSource: string | null | undefined,
+    advName?: string | null,
+    advCode?: string | null
+  ): boolean {
+    if (!itemSource) return false;
+    const s = itemSource.trim().toLowerCase();
+    const name = advName?.trim().toLowerCase();
+    const code = advCode?.trim().toLowerCase();
+
+    if (!name && !code) {
+      return s === '冒險獲得';
+    }
+
+    const matchText = (sourceText: string, target: string): boolean => {
+      if (target.length < 2) return sourceText === target;
+      return sourceText.includes(target) || target.includes(sourceText);
+    };
+
+    return !!(
+      (name && matchText(s, name)) ||
+      (code && matchText(s, code))
+    );
+  }
+
   private processGainedItems(entry: AdventureEntry, items: InventoryItem[]): void {
-    const advName = entry.adventureName?.trim().toLowerCase();
-    const advCode = entry.adventureCode?.trim().toLowerCase();
-    const matchedMagic = items.filter(item => {
-      if (item.itemType !== 'PERMANENT' || !item.source) return false;
-      const s = item.source.trim().toLowerCase();
-      return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
-    });
+    const matchedMagic = items.filter(item =>
+      item.itemType === 'PERMANENT' && this.isSourceMatch(item.source, entry.adventureName, entry.adventureCode)
+    );
     this.magicItems.set(matchedMagic);
 
-    const matchedConsumables = items.filter(item => {
-      if (item.itemType !== 'CONSUMABLE' || !item.source) return false;
-      const s = item.source.trim().toLowerCase();
-      return (advName && s.includes(advName)) || (advCode && s.includes(advCode));
-    });
+    const matchedConsumables = items.filter(item =>
+      item.itemType === 'CONSUMABLE' && this.isSourceMatch(item.source, entry.adventureName, entry.adventureCode)
+    );
     this.consumableItems.set(matchedConsumables);
   }
 
