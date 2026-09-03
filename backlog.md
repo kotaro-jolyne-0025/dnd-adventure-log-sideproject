@@ -790,4 +790,86 @@
 
 ---
 
+### T32 — 冒險日誌刪除連帶回滾與倉庫消耗解耦機制
+- **狀態：** `[x] 已完成`
+- **對應計畫：** `implementation_plan.md`
+- **變更摘要：**
+  1. **資料庫層級聯與快照 (Flyway V6)**：
+     - 建立 `adventure_gained_item` 冒險戰利品專屬快照表，與 `adventure_entry` 綁定 `ON DELETE CASCADE`。
+     - `inventory_item` 新增 `adventure_entry_id` 外鍵（`ON DELETE CASCADE`），手動建立之裝備保持 NULL。
+     - 歷史資料平滑回填（Backfill）。
+  2. **後端雙軌維護與狀態回滾**：
+     - `AdventureEntryService` 新增獲得物品端點與處理；`deleteEntry` 支援全維度回退角色等級、職業字串與最新 defaults。
+  3. **前端詳情頁解耦與表單同步**：
+     - 冒險表單儲存時雙軌寫入（快照與倉庫）；詳情頁改讀專屬快照表。
+     - 倉庫日常消耗與刪除道具時，歷史日誌紀錄 100% 維持不變；刪除冒險記錄時，倉庫道具、等級、金錢、休整期與頂部 HUD 即時連帶回退。
+- **完成項目：**
+  - [x] 建立 Flyway `V7__add_adventure_gained_item_and_inventory_fk.sql`
+  - [x] 後端 Entity、DTO、Mapper、Service、Controller 實作
+  - [x] 前端 Model、Service、Component 更新
+  - [x] 前後端建置與編譯驗證通過
+
+---
+
+### T33 — 編輯冒險日誌開放歷史物品與休整期修改（方案 A 增量同步 Delta Sync）
+- **狀態：** `[x] 已完成`
+- **對應計畫：** `implementation_plan.md`
+- **變更摘要：**
+  1. **資料庫層精準綁定 (Flyway V8)**：
+     - `inventory_item` 增加 `adventure_gained_item_id UUID REFERENCES adventure_gained_item(id) ON DELETE CASCADE`。
+     - 建立索引與歷史資料回填，達成倉庫持有物與獲得快照項之 1:1/1:N 精準關聯與自動級聯刪除。
+  2. **後端增量差額同步 (Delta Sync)**：
+     - `AdventureEntryService.updateGainedItem` 實作消耗品差額運算 $\Delta = Q_{\text{new}} - Q_{\text{old}}$：
+       - $\Delta > 0$：倉庫現有數量 $+ \Delta$（若已在倉庫喝光用盡則自動補發 $\Delta$ 瓶）。
+       - $\Delta < 0$：倉庫現有數量扣減 $\max(0, \text{qty} + \Delta)$，歸零自動移除。
+     - 魔法物品修訂：名稱、稀有度、備註雙軌同步更新快照與倉庫背包。
+     - 刪除物品：透過資料庫外鍵自動連帶清理倉庫背包道具。
+     - `AdventureEntryController` 新增 `PUT /api/entries/{entryId}/gained-items/{itemId}`。
+  3. **前端解鎖編輯與全面動態聯動**：
+     - `adventure-form.component.html` 移除所有 `disabled` 唯讀限制，開放編輯魔法物品、消耗品與休整期活動。
+     - 開放刪除按鈕，標籤由「歷史快照」更新為友善的「已入庫 / 已有活動」。
+     - `adventure-form.component.ts` 收集 `deletedItemIds` 與 `deletedActivityIds`，在儲存時同時調用增、刪、改端點。
+     - 編輯或刪除休整期活動時，即時重新加總 `goldDowntimeChange`、`downtimeDowntimeChange`、`magicItemsDowntimeChange`，並刷新頂部 HUD 看板。
+- **完成項目：**
+  - [x] 建立 Flyway `V8__link_inventory_to_gained_item.sql` 並執行遷移
+  - [x] 後端 `InventoryItemMapper`、`AdventureGainedItemMapper`、`AdventureEntryService`、`AdventureEntryController` 更新
+  - [x] 前端 `inventory.model.ts`、`adventure.service.ts`、`adventure-form.component.html`、`adventure-form.component.ts` 更新
+  - [x] 後端 `./mvnw clean package -DskipTests` 與前端 `npm run build` 驗證 0 錯誤
+
+---
+
+### T34 — 倉庫魔法物品與消耗品加入「取得時間」展示與雙向排序
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **道具卡片整合「取得時間」標籤**：
+     - 在永久魔法物品與消耗品卡片整合 `.item-meta-row`，同時呈現「來源」與「取得時間：YYYY/MM/dd」（對應道具在系統中的 `createdAt` 時間戳）。
+  2. **一體化膠囊排序按鈕（雙向切換）**：
+     - 在倉庫頁面頂部新增一體化膠囊按鈕，支援「由新到舊 (最新在先)」與「由舊到新 (最舊在先)」的一鍵點擊切換。
+     - 透過 `computed()` 響應式信號進行毫秒級客戶端排序，並將排序偏好持久化儲存於 `localStorage`。
+- **完成項目：**
+  - [x] `InventoryListComponent` 引入 `sortOrder` 信號與 `sortItems` 排序邏輯，整合 `localStorage` 記憶
+  - [x] `inventory-list.component.html` 新增頂部排序膠囊按鈕與卡片 `item-meta-row` 取得時間標籤
+  - [x] `inventory-list.component.scss` 完成現代膠囊樣式與手機端自適應排版
+  - [x] 前端建置驗證通過 (`npm run build`)
+
+---
+
+### T35 — 全站圖示來源統一化（統一為 Lucide Icons 現代線條風格）
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **規範落實**：
+     - 在 `.agents/rules/project-conventions.md` 確立「全站統一使用 Lucide Icons (`@lucide/angular`)，禁止在同組件/同視圖混用 `mat-icon`」標準。
+  2. **倉庫模組 100% 遷移**：
+     - `inventory-list` 與 `inventory-form` 全面移除 `<mat-icon>`。
+     - 替換為 `LucidePackage`、`LucidePlus`、`LucideSparkles`、`LucideFlaskConical`、`LucideBookmark`、`LucideClock`、`LucidePencil`、`LucideTrash2`、`LucideDroplet`、`LucideArrowLeft`、`LucideSave`。
+  3. **冒險清單模組 100% 遷移**：
+     - `adventure-list` 徹底替換殘留的 `menu_book`, `event`, `person`, `chevron_right`, `upgrade` 為對應的 Lucide SVG（`LucideBookOpen`, `LucideCalendar`, `LucideUser`, `LucideChevronRight`, `LucideTrendingUp`）。
+- **完成項目：**
+  - [x] 更新 `.agents/rules/project-conventions.md`
+  - [x] 重構 `inventory-list` 與 `inventory-form`，達成 0 `mat-icon` 混用
+  - [x] 重構 `adventure-list`，達成 0 `mat-icon` 混用
+  - [x] 前端打包驗證通過 (`npm run build`)
+
+---
+
 ## 如何使用這個 Backlog

@@ -5,6 +5,8 @@ import { environment } from '../../../environments/environment';
 import {
   AdventureEntry,
   AdventureEntryRequest,
+  AdventureGainedItem,
+  AdventureGainedItemRequest,
   DowntimeActivity,
   DowntimeActivityRequest,
   EntryDefaults,
@@ -88,6 +90,35 @@ export class AdventureService {
   deleteDowntime(entryId: string, downtimeId: string): Observable<void> {
     return this.http.delete<void>(
       `${environment.apiUrl}/downtime-activities/${downtimeId}`
+    );
+  }
+
+  // ── AdventureGainedItem (冒險獲得物品快照) ───────────────────────────────────
+  // 後端路徑：/api/entries/{entryId}/gained-items
+
+  getGainedItems(entryId: string): Observable<AdventureGainedItem[]> {
+    return this.http.get<AdventureGainedItem[]>(
+      `${environment.apiUrl}/entries/${entryId}/gained-items`
+    );
+  }
+
+  addGainedItem(entryId: string, req: AdventureGainedItemRequest): Observable<AdventureGainedItem> {
+    return this.http.post<AdventureGainedItem>(
+      `${environment.apiUrl}/entries/${entryId}/gained-items`,
+      req
+    );
+  }
+
+  updateGainedItem(entryId: string, itemId: string, req: AdventureGainedItemRequest): Observable<AdventureGainedItem> {
+    return this.http.put<AdventureGainedItem>(
+      `${environment.apiUrl}/entries/${entryId}/gained-items/${itemId}`,
+      req
+    );
+  }
+
+  deleteGainedItem(itemId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/gained-items/${itemId}`
     );
   }
 }

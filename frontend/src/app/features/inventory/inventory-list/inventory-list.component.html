@@ -3,17 +3,34 @@
   <div class="inventory-header">
     <div class="header-titles">
       <h2 class="section-title">
-        <mat-icon class="title-icon">inventory_2</mat-icon>
+        <svg lucidePackage [size]="22" class="title-icon"></svg>
         倉庫
       </h2>
       <span class="count-pill">
         {{ activeTab() === 0 ? permanentItems().length : consumableItems().length }} 件物品
       </span>
     </div>
-    <button mat-flat-button color="primary" (click)="onAddItem()" class="btn-add-item">
-      <mat-icon>add</mat-icon>
-      新增{{ activeTab() === 0 ? '魔法物品' : '消耗品' }}
-    </button>
+    <div class="header-actions">
+      <!-- 🌟 取得時間排序膠囊按鈕 -->
+      <button
+        type="button"
+        class="sort-toolbar-capsule"
+        (click)="toggleSortOrder()"
+        [matTooltip]="directionTooltip()">
+        <svg lucideClock [size]="15" class="capsule-icon"></svg>
+        <span class="capsule-text">取得時間：{{ directionLabel() }}</span>
+        @if (sortOrder() === 'desc') {
+          <svg lucideArrowDown [size]="15" class="capsule-icon dir-icon"></svg>
+        } @else {
+          <svg lucideArrowUp [size]="15" class="capsule-icon dir-icon icon-asc"></svg>
+        }
+      </button>
+
+      <button mat-flat-button color="primary" (click)="onAddItem()" class="btn-add-item">
+        <svg lucidePlus [size]="18" class="btn-icon"></svg>
+        <span>新增{{ activeTab() === 0 ? '魔法物品' : '消耗品' }}</span>
+      </button>
+    </div>
   </div>
 
   <!-- Tabs -->
@@ -24,13 +41,13 @@
     class="inventory-sub-tabs">
     <mat-tab>
       <ng-template mat-tab-label>
-        <mat-icon class="tab-icon">auto_awesome</mat-icon>
+        <svg lucideSparkles [size]="18" class="tab-icon"></svg>
         <span>魔法物品 ({{ permanentItems().length }})</span>
       </ng-template>
     </mat-tab>
     <mat-tab>
       <ng-template mat-tab-label>
-        <mat-icon class="tab-icon">science</mat-icon>
+        <svg lucideFlaskConical [size]="18" class="tab-icon"></svg>
         <span>消耗品 ({{ consumableItems().length }})</span>
       </ng-template>
     </mat-tab>
@@ -54,13 +71,13 @@
     @if (permanentItems().length === 0) {
       <div class="empty-state clean-card">
         <div class="empty-icon-wrap">
-          <mat-icon class="empty-icon">auto_awesome</mat-icon>
+          <svg lucideSparkles [size]="48" class="empty-icon"></svg>
         </div>
         <h3 class="empty-title">尚無魔法物品</h3>
         <p class="empty-desc">在冒險紀錄表記錄戰利品，或點擊下方新增！</p>
         <button mat-flat-button color="primary" (click)="onAddItem()" class="empty-btn">
-          <mat-icon>add</mat-icon>
-          新增魔法物品
+          <svg lucidePlus [size]="18" class="btn-icon"></svg>
+          <span>新增魔法物品</span>
         </button>
       </div>
     } @else {
@@ -79,12 +96,20 @@
               }
             </div>
 
-            @if (item.source) {
-              <div class="item-source-tag">
-                <mat-icon class="source-icon">bookmark</mat-icon>
-                <span>來源：{{ item.source }}</span>
-              </div>
-            }
+            <div class="item-meta-row">
+              @if (item.source) {
+                <div class="item-source-tag">
+                  <svg lucideBookmark [size]="13" class="source-icon"></svg>
+                  <span>來源：{{ item.source }}</span>
+                </div>
+              }
+              @if (item.createdAt) {
+                <div class="item-date-tag">
+                  <svg lucideClock [size]="13" class="date-icon"></svg>
+                  <span>取得時間：{{ item.createdAt | date:'yyyy/MM/dd' }}</span>
+                </div>
+              }
+            </div>
 
             @if (item.notes) {
               <p class="item-notes-text">{{ item.notes }}</p>
@@ -92,10 +117,10 @@
 
             <div class="item-actions" (click)="$event.stopPropagation()">
               <button mat-icon-button color="primary" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
-                <mat-icon>edit</mat-icon>
+                <svg lucidePencil [size]="17"></svg>
               </button>
               <button mat-icon-button color="warn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
-                <mat-icon>delete</mat-icon>
+                <svg lucideTrash2 [size]="17"></svg>
               </button>
             </div>
           </div>
@@ -109,13 +134,13 @@
     @if (consumableItems().length === 0) {
       <div class="empty-state clean-card">
         <div class="empty-icon-wrap">
-          <mat-icon class="empty-icon">science</mat-icon>
+          <svg lucideFlaskConical [size]="48" class="empty-icon"></svg>
         </div>
         <h3 class="empty-title">尚無消耗品</h3>
         <p class="empty-desc">記錄您冒險所獲得的治療藥水、法術卷軸等消耗物資！</p>
         <button mat-flat-button color="primary" (click)="onAddItem()" class="empty-btn">
-          <mat-icon>add</mat-icon>
-          新增消耗品
+          <svg lucidePlus [size]="18" class="btn-icon"></svg>
+          <span>新增消耗品</span>
         </button>
       </div>
     } @else {
@@ -135,12 +160,20 @@
               }
             </div>
 
-            @if (item.source) {
-              <div class="item-source-tag">
-                <mat-icon class="source-icon">bookmark</mat-icon>
-                <span>來源：{{ item.source }}</span>
-              </div>
-            }
+            <div class="item-meta-row">
+              @if (item.source) {
+                <div class="item-source-tag">
+                  <svg lucideBookmark [size]="13" class="source-icon"></svg>
+                  <span>來源：{{ item.source }}</span>
+                </div>
+              }
+              @if (item.createdAt) {
+                <div class="item-date-tag">
+                  <svg lucideClock [size]="13" class="date-icon"></svg>
+                  <span>取得時間：{{ item.createdAt | date:'yyyy/MM/dd' }}</span>
+                </div>
+              }
+            </div>
 
             @if (item.notes) {
               <p class="item-notes-text">{{ item.notes }}</p>
@@ -150,16 +183,16 @@
               <button mat-stroked-button color="accent" class="btn-quick-consume"
                 matTooltip="使用 1 個此物品"
                 (click)="onQuickConsume($event, item)">
-                <mat-icon>local_drink</mat-icon>
+                <svg lucideDroplet [size]="16" class="btn-icon"></svg>
                 <span>使用 ( -1 )</span>
               </button>
 
               <div class="crud-btns">
                 <button mat-icon-button color="primary" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
-                  <mat-icon>edit</mat-icon>
+                  <svg lucidePencil [size]="17"></svg>
                 </button>
                 <button mat-icon-button color="warn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
-                  <mat-icon>delete</mat-icon>
+                  <svg lucideTrash2 [size]="17"></svg>
                 </button>
               </div>
             </div>

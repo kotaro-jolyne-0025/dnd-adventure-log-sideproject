@@ -93,4 +93,36 @@ public class AdventureEntryController {
         adventureEntryService.deleteActivity(id);
         return ResponseEntity.noContent().build();
     }
+
+    // Gained Items (冒險獲得物品快照)
+    @GetMapping("/api/entries/{entryId}/gained-items")
+    public List<AdventureGainedItemResponse> getGainedItems(@PathVariable UUID entryId) {
+        log.info("🎁 [GET /api/entries/{}/gained-items] 查詢冒險獲得物品快照", entryId);
+        return adventureEntryService.getGainedItems(entryId);
+    }
+
+    @PostMapping("/api/entries/{entryId}/gained-items")
+    public ResponseEntity<AdventureGainedItemResponse> createGainedItem(
+            @PathVariable UUID entryId,
+            @RequestBody AdventureGainedItemRequest request) {
+        log.info("➕ [POST /api/entries/{}/gained-items] 新增冒險獲得物品快照: {}", entryId, request.getItemName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(adventureEntryService.createGainedItem(entryId, request));
+    }
+
+    @PutMapping("/api/entries/{entryId}/gained-items/{itemId}")
+    public AdventureGainedItemResponse updateGainedItem(
+            @PathVariable UUID entryId,
+            @PathVariable UUID itemId,
+            @RequestBody AdventureGainedItemRequest request) {
+        log.info("✏️ [PUT /api/entries/{}/gained-items/{}] 更新冒險獲得物品快照: {}", entryId, itemId, request.getItemName());
+        return adventureEntryService.updateGainedItem(entryId, itemId, request);
+    }
+
+    @DeleteMapping("/api/gained-items/{id}")
+    public ResponseEntity<Void> deleteGainedItem(@PathVariable UUID id) {
+        log.info("🗑️ [DELETE /api/gained-items/{}] 刪除冒險獲得物品快照", id);
+        adventureEntryService.deleteGainedItem(id);
+        return ResponseEntity.noContent().build();
+    }
 }

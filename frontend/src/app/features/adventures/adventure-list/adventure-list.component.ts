@@ -20,6 +20,11 @@ import {
   LucideArrowUp,
   LucideClock,
   LucidePlus,
+  LucideBookOpen,
+  LucideCalendar,
+  LucideUser,
+  LucideChevronRight,
+  LucideTrendingUp,
 } from '@lucide/angular';
 
 export type AdventureSortField = 'playDate' | 'createdAt';
@@ -31,7 +36,6 @@ export type AdventureSortField = 'playDate' | 'createdAt';
     CommonModule,
     DatePipe,
     MatButtonModule,
-    MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
     LucideCoins,
@@ -43,6 +47,11 @@ export type AdventureSortField = 'playDate' | 'createdAt';
     LucideArrowUp,
     LucideClock,
     LucidePlus,
+    LucideBookOpen,
+    LucideCalendar,
+    LucideUser,
+    LucideChevronRight,
+    LucideTrendingUp,
   ],
   templateUrl: './adventure-list.component.html',
   styleUrl: './adventure-list.component.scss',

@@ -66,6 +66,8 @@ public class InventoryItemService {
     }
 
     private void mapRequestToItem(InventoryItemRequest request, InventoryItem item) {
+        item.setAdventureEntryId(request.getAdventureEntryId());
+        item.setAdventureGainedItemId(request.getAdventureGainedItemId());
         item.setItemName(request.getItemName());
         item.setItemType(request.getItemType());
         item.setRarity(request.getRarity());
@@ -78,6 +80,8 @@ public class InventoryItemService {
         InventoryItemResponse response = new InventoryItemResponse();
         response.setId(item.getId());
         response.setCharacterId(item.getCharacterId());
+        response.setAdventureEntryId(item.getAdventureEntryId());
+        response.setAdventureGainedItemId(item.getAdventureGainedItemId());
         response.setItemName(item.getItemName());
         response.setItemType(item.getItemType());
         response.setRarity(item.getRarity());

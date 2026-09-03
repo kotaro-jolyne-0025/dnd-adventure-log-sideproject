@@ -18,11 +18,11 @@
         <div class="field-row">
           <mat-form-field appearance="outline" class="flex-1">
             <mat-label>冒險代碼</mat-label>
-            <input matInput formControlName="adventureCode" placeholder="例：CCC-GHC-BK2-07" />
+            <input matInput formControlName="adventureCode" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="flex-2">
             <mat-label>冒險名稱</mat-label>
-            <input matInput formControlName="adventureName" placeholder="例：死亡騎士" />
+            <input matInput formControlName="adventureName" />
           </mat-form-field>
         </div>
         <div class="field-row">
@@ -158,7 +158,7 @@
               </mat-form-field>
               <mat-form-field appearance="outline" class="res-field">
                 <mat-label>冒險中變化</mat-label>
-                <input matInput type="number" step="any" formControlName="goldChange" placeholder="例：100 或 -50" />
+                <input matInput type="number" step="any" formControlName="goldChange" />
               </mat-form-field>
             </div>
           </div>
@@ -181,7 +181,7 @@
               </mat-form-field>
               <mat-form-field appearance="outline" class="res-field">
                 <mat-label>冒險中變化</mat-label>
-                <input matInput type="number" formControlName="downtimeChange" placeholder="例：10 或 -5" />
+                <input matInput type="number" formControlName="downtimeChange" />
               </mat-form-field>
             </div>
           </div>
@@ -204,7 +204,7 @@
               </mat-form-field>
               <mat-form-field appearance="outline" class="res-field">
                 <mat-label>冒險中變化</mat-label>
-                <input matInput type="number" formControlName="magicItemsChange" placeholder="例：1" />
+                <input matInput type="number" formControlName="magicItemsChange" />
               </mat-form-field>
             </div>
           </div>
@@ -231,29 +231,26 @@
                 <div class="item-header-title">
                   <span class="gained-item-index">#{{ i + 1 }} 魔法物品</span>
                   @if (isEditMode() && item.id) {
-                    <span class="snapshot-tag">歷史快照</span>
+                    <span class="snapshot-tag">已入庫</span>
                   } @else if (isEditMode() && !item.id) {
                     <span class="new-tag">新增</span>
                   }
                 </div>
-                @if (!isEditMode() || !item.id) {
                 <button type="button" mat-icon-button color="warn" (click)="removeGainedItem(i)" matTooltip="移除此物品">
                   <mat-icon>delete</mat-icon>
                 </button>
-                }
               </div>
 
               <div class="field-row">
                 <mat-form-field appearance="outline" class="flex-2">
                   <mat-label>物品名稱 *</mat-label>
-                  <input matInput [value]="item.itemName" [disabled]="isEditMode() && !!item.id"
-                    (input)="updateGainedItemName(i, $any($event.target).value)"
-                    placeholder="例：幸運石、火焰舌長劍..." />
+                  <input matInput [value]="item.itemName"
+                    (input)="updateGainedItemName(i, $any($event.target).value)" />
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="flex-1">
                   <mat-label>稀有度</mat-label>
-                  <mat-select [value]="item.rarity" [disabled]="isEditMode() && !!item.id"
+                  <mat-select [value]="item.rarity"
                     (selectionChange)="updateGainedItemRarity(i, $event.value)">
                     <mat-option value="">— 未設定 —</mat-option>
                     @for (r of rarities; track r) {
@@ -266,11 +263,10 @@
               </div>
 
               <mat-form-field appearance="outline" class="full-width" style="margin-top: 4px;">
-                <mat-label>描述 / 效果備註</mat-label>
+                <mat-label>備註</mat-label>
                 <textarea matInput cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="10"
-                  [value]="item.notes" [disabled]="isEditMode() && !!item.id"
-                  (input)="updateGainedItemNotes(i, $any($event.target).value)"
-                  placeholder="例：需要調諧。對所有屬性檢定與豁免檢定獲得 +1 加值..."></textarea>
+                  [value]="item.notes"
+                  (input)="updateGainedItemNotes(i, $any($event.target).value)"></textarea>
               </mat-form-field>
             </div>
             }
@@ -300,36 +296,33 @@
                 <div class="item-header-title">
                   <span class="gained-item-index">#{{ i + 1 }} 消耗品</span>
                   @if (isEditMode() && item.id) {
-                    <span class="snapshot-tag">歷史快照</span>
+                    <span class="snapshot-tag">已入庫</span>
                   } @else if (isEditMode() && !item.id) {
                     <span class="new-tag">新增</span>
                   }
                 </div>
-                @if (!isEditMode() || !item.id) {
                 <button type="button" mat-icon-button color="warn" (click)="removeGainedConsumableItem(i)"
                   matTooltip="移除此物品">
                   <mat-icon>delete</mat-icon>
                 </button>
-                }
               </div>
 
               <div class="field-row">
                 <mat-form-field appearance="outline" class="flex-2">
                   <mat-label>物品名稱 *</mat-label>
-                  <input matInput [value]="item.itemName" [disabled]="isEditMode() && !!item.id"
-                    (input)="updateGainedConsumableItemName(i, $any($event.target).value)"
-                    placeholder="例：治療藥水、飛行術卷軸..." />
+                  <input matInput [value]="item.itemName"
+                    (input)="updateGainedConsumableItemName(i, $any($event.target).value)" />
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="flex-1 qty-field">
                   <mat-label>數量 *</mat-label>
-                  <input matInput type="number" min="1" [value]="item.quantity" [disabled]="isEditMode() && !!item.id"
+                  <input matInput type="number" min="1" [value]="item.quantity"
                     (input)="updateGainedConsumableItemQuantity(i, $any($event.target).value)" />
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="flex-1">
                   <mat-label>稀有度</mat-label>
-                  <mat-select [value]="item.rarity" [disabled]="isEditMode() && !!item.id"
+                  <mat-select [value]="item.rarity"
                     (selectionChange)="updateGainedConsumableItemRarity(i, $event.value)">
                     <mat-option value="">— 未設定 —</mat-option>
                     @for (r of rarities; track r) {
@@ -342,11 +335,10 @@
               </div>
 
               <mat-form-field appearance="outline" class="full-width" style="margin-top: 4px;">
-                <mat-label>描述 / 效果備註</mat-label>
+                <mat-label>備註</mat-label>
                 <textarea matInput cdkTextareaAutosize [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="10"
-                  [value]="item.notes" [disabled]="isEditMode() && !!item.id"
-                  (input)="updateGainedConsumableItemNotes(i, $any($event.target).value)"
-                  placeholder="例：飲用後恢復 2d4+2 生命值..."></textarea>
+                  [value]="item.notes"
+                  (input)="updateGainedConsumableItemNotes(i, $any($event.target).value)"></textarea>
               </mat-form-field>
             </div>
             }
@@ -383,23 +375,21 @@
               <div class="item-header-title">
                 <span class="gained-item-index">#{{ i + 1 }} 休整期活動</span>
                 @if (isEditMode() && act.id) {
-                  <span class="snapshot-tag">歷史快照</span>
+                  <span class="snapshot-tag">已有活動</span>
                 } @else if (isEditMode() && !act.id) {
                   <span class="new-tag">新增</span>
                 }
               </div>
-              @if (!isEditMode() || !act.id) {
               <button type="button" mat-icon-button color="warn" (click)="removeDowntimeActivity(i)" matTooltip="移除此活動">
                 <mat-icon>delete</mat-icon>
               </button>
-              }
             </div>
 
             <div class="field-row">
               <!-- 常用快捷預設 -->
               <mat-form-field appearance="outline" class="flex-1">
                 <mat-label>常用快捷預設</mat-label>
-                <mat-select [value]="act.presetLabel" [disabled]="isEditMode() && !!act.id"
+                <mat-select [value]="act.presetLabel"
                   (selectionChange)="onActivityPresetSelect(i, $event.value)">
                   <mat-option value="">— 自訂活動 —</mat-option>
                   @for (preset of DOWNTIME_PRESETS; track preset.label) {
@@ -411,8 +401,8 @@
               <!-- 活動描述 -->
               <mat-form-field appearance="outline" class="flex-2">
                 <mat-label>活動描述 *</mat-label>
-                <input matInput [value]="act.description" [disabled]="isEditMode() && !!act.id"
-                  (input)="updateActivityDescription(i, $any($event.target).value)" placeholder="例：訓練語言、抄寫法術卷軸、打工..." />
+                <input matInput [value]="act.description"
+                  (input)="updateActivityDescription(i, $any($event.target).value)" />
               </mat-form-field>
             </div>
 
@@ -420,18 +410,18 @@
             <div class="deltas-row">
               <mat-form-field appearance="outline" class="delta-field">
                 <mat-label>金幣變動 (GP)</mat-label>
-                <input matInput type="number" step="any" [value]="act.gold" [disabled]="isEditMode() && !!act.id"
-                  (input)="updateActivityGold(i, $any($event.target).value)" placeholder="例：-50" />
+                <input matInput type="number" step="any" [value]="act.gold"
+                  (input)="updateActivityGold(i, $any($event.target).value)" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="delta-field">
                 <mat-label>天數變動 (天)</mat-label>
-                <input matInput type="number" [value]="act.downtime" [disabled]="isEditMode() && !!act.id"
-                  (input)="updateActivityDowntime(i, $any($event.target).value)" placeholder="例：-10" />
+                <input matInput type="number" [value]="act.downtime"
+                  (input)="updateActivityDowntime(i, $any($event.target).value)" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="delta-field">
                 <mat-label>魔法物品變動 (件)</mat-label>
-                <input matInput type="number" [value]="act.magicItems" [disabled]="isEditMode() && !!act.id"
-                  (input)="updateActivityMagicItems(i, $any($event.target).value)" placeholder="例：1" />
+                <input matInput type="number" [value]="act.magicItems"
+                  (input)="updateActivityMagicItems(i, $any($event.target).value)" />
               </mat-form-field>
             </div>
           </div>

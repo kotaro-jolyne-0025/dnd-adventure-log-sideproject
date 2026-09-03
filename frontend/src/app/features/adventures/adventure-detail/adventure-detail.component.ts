@@ -10,7 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { AdventureService } from '../../../core/services/adventure.service';
 import { InventoryService } from '../../../core/services/inventory.service';
-import { AdventureEntry } from '../../../core/models/adventure.model';
+import { AdventureEntry, AdventureGainedItem } from '../../../core/models/adventure.model';
 import { InventoryItem, ITEM_RARITY_LABELS, RARITY_COLORS } from '../../../core/models/inventory.model';
 import { catchError, forkJoin, of } from 'rxjs';
 import {
@@ -49,12 +49,12 @@ export class AdventureDetailComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   protected entry = signal<AdventureEntry | null>(null);
-  protected magicItems = signal<InventoryItem[]>([]);
-  protected consumableItems = signal<InventoryItem[]>([]);
+  protected magicItems = signal<(AdventureGainedItem | InventoryItem)[]>([]);
+  protected consumableItems = signal<(AdventureGainedItem | InventoryItem)[]>([]);
   protected isLoading = signal(true);
 
-  readonly rarityLabels = ITEM_RARITY_LABELS;
-  readonly rarityColors = RARITY_COLORS;
+  readonly rarityLabels: Record<string, string> = ITEM_RARITY_LABELS;
+  readonly rarityColors: Record<string, string> = RARITY_COLORS;
 
   private characterId!: string;
   private entryId!: string;
@@ -71,11 +71,18 @@ export class AdventureDetailComponent implements OnInit {
     this.isLoading.set(true);
     forkJoin({
       entry: this.adventureService.getById(this.characterId, this.entryId),
+      gainedItems: this.adventureService.getGainedItems(this.entryId).pipe(catchError(() => of([]))),
       items: this.inventoryService.getAllByCharacter(this.characterId).pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ entry, items }) => {
+      next: ({ entry, gainedItems, items }) => {
         this.entry.set(entry);
-        this.processGainedItems(entry, items);
+        if (gainedItems && gainedItems.length > 0) {
+          this.magicItems.set(gainedItems.filter(i => i.itemType === 'PERMANENT'));
+          this.consumableItems.set(gainedItems.filter(i => i.itemType === 'CONSUMABLE'));
+        } else {
+          // 向後相容：若舊記錄尚未有快照，降級回倉庫比對
+          this.processGainedItems(entry, items);
+        }
         this.isLoading.set(false);
       },
       error: () => {

@@ -16,7 +16,7 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>角色名稱 *</mat-label>
-            <input matInput formControlName="characterName" placeholder="例：蓋歐克" />
+            <input matInput formControlName="characterName" />
             @if (form.get('characterName')?.hasError('required') && form.get('characterName')?.touched) {
             <mat-error>角色名稱為必填</mat-error>
             }
@@ -24,7 +24,7 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>玩家名稱 *</mat-label>
-            <input matInput formControlName="playerName" placeholder="例：Arthur" />
+            <input matInput formControlName="playerName" />
             @if (form.get('playerName')?.hasError('required') && form.get('playerName')?.touched) {
             <mat-error>玩家名稱為必填</mat-error>
             }
@@ -32,7 +32,7 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>種族 *</mat-label>
-            <input matInput formControlName="race" placeholder="例：阿斯莫、精靈、人類" />
+            <input matInput formControlName="race" />
             @if (form.get('race')?.hasError('required') && form.get('race')?.touched) {
             <mat-error>種族為必填</mat-error>
             }
@@ -40,7 +40,7 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>派系（選填）</mat-label>
-            <input matInput formControlName="faction" placeholder="例：豎琴手、鐵手套教團" />
+            <input matInput formControlName="faction" />
           </mat-form-field>
 
           <!-- 職業與等級 -->

@@ -3,7 +3,7 @@
   <div class="list-header">
     <div class="header-titles">
       <h2 class="section-title">
-        <mat-icon class="title-icon">menu_book</mat-icon>
+        <svg lucideBookOpen [size]="22" class="title-icon"></svg>
         冒險紀錄表
       </h2>
       <span class="count-pill">{{ entries().length }} 筆紀錄</span>
@@ -68,7 +68,7 @@
   @if (!isLoading() && entries().length === 0) {
     <div class="empty-state clean-card">
       <div class="empty-icon-wrap">
-        <mat-icon class="empty-icon">menu_book</mat-icon>
+        <svg lucideBookOpen [size]="48" class="empty-icon"></svg>
       </div>
       <h3 class="empty-title">尚無冒險紀錄</h3>
       <p class="empty-desc">點擊下方按鈕開始建立第一筆冒險紀錄！</p>
@@ -92,7 +92,7 @@
                 <span class="adv-code">{{ row.adventureCode }}</span>
               }
               <span class="adv-date">
-                <mat-icon class="meta-icon">event</mat-icon>
+                <svg lucideCalendar [size]="13" class="meta-icon"></svg>
                 {{ row.playDate ? (row.playDate | date:'yyyy/MM/dd') : '未指定日期' }}
               </span>
               @if (sortField() === 'createdAt' && row.createdAt) {
@@ -103,13 +103,13 @@
               }
               @if (row.dmName) {
                 <span class="adv-dm">
-                  <mat-icon class="meta-icon">person</mat-icon>
+                  <svg lucideUser [size]="13" class="meta-icon"></svg>
                   DM: {{ row.dmName }}
                 </span>
               }
             </div>
             <div class="meta-right">
-              <mat-icon class="chevron-icon">chevron_right</mat-icon>
+              <svg lucideChevronRight [size]="18" class="chevron-icon"></svg>
             </div>
           </div>
 
@@ -122,7 +122,7 @@
           <div class="badges-row">
             <!-- Level badge -->
             <span class="delta-badge" [class.badge-level-up]="row.endingLevel && row.startingLevel && row.endingLevel > row.startingLevel">
-              <mat-icon class="badge-icon">upgrade</mat-icon>
+              <svg lucideTrendingUp [size]="13" class="badge-icon"></svg>
               {{ getLevelProgress(row) }}
             </span>
 

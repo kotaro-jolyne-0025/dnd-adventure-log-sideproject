@@ -27,6 +27,8 @@ export const RARITY_COLORS: Record<ItemRarity, string> = {
 export interface InventoryItem {
   id: string;           // UUID
   characterId: string;  // UUID
+  adventureEntryId?: string | null;
+  adventureGainedItemId?: string | null;
   itemName: string;
   itemType: ItemType;
   rarity?: ItemRarity;
@@ -38,6 +40,8 @@ export interface InventoryItem {
 }
 
 export interface InventoryItemRequest {
+  adventureEntryId?: string | null;
+  adventureGainedItemId?: string | null;
   itemName: string;
   itemType: ItemType;
   rarity?: ItemRarity | null;

@@ -22,7 +22,19 @@ import {
   ConfirmDialogData,
 } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
-import { LucideSparkles, LucideFlaskConical } from '@lucide/angular';
+import {
+  LucideSparkles,
+  LucideFlaskConical,
+  LucideClock,
+  LucideArrowDown,
+  LucideArrowUp,
+  LucidePackage,
+  LucidePlus,
+  LucideBookmark,
+  LucidePencil,
+  LucideTrash2,
+  LucideDroplet,
+} from '@lucide/angular';
 
 @Component({
   selector: 'app-inventory-list',
@@ -32,12 +44,20 @@ import { LucideSparkles, LucideFlaskConical } from '@lucide/angular';
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
-    MatIconModule,
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTooltipModule,
     LucideSparkles,
     LucideFlaskConical,
+    LucideClock,
+    LucideArrowDown,
+    LucideArrowUp,
+    LucidePackage,
+    LucidePlus,
+    LucideBookmark,
+    LucidePencil,
+    LucideTrash2,
+    LucideDroplet,
   ],
   templateUrl: './inventory-list.component.html',
   styleUrl: './inventory-list.component.scss',
@@ -54,12 +74,22 @@ export class InventoryListComponent implements OnInit {
   protected activeTab = signal(0); // 0=PERMANENT, 1=CONSUMABLE
   protected characterId!: string;
 
-  protected permanentItems = computed(() =>
-    this.allItems().filter((i) => i.itemType === 'PERMANENT')
+  // 取得時間排序 (預設: desc 由新到舊)
+  protected sortOrder = signal<'desc' | 'asc'>('desc');
+  protected directionLabel = computed(() => (this.sortOrder() === 'desc' ? '由新到舊' : '由舊到新'));
+  protected directionTooltip = computed(() =>
+    this.sortOrder() === 'desc' ? '點擊切換為：取得時間由舊到新' : '點擊切換為：取得時間由新到舊'
   );
-  protected consumableItems = computed(() =>
-    this.allItems().filter((i) => i.itemType === 'CONSUMABLE')
-  );
+
+  protected permanentItems = computed(() => {
+    const list = this.allItems().filter((i) => i.itemType === 'PERMANENT');
+    return this.sortItems(list, this.sortOrder());
+  });
+
+  protected consumableItems = computed(() => {
+    const list = this.allItems().filter((i) => i.itemType === 'CONSUMABLE');
+    return this.sortItems(list, this.sortOrder());
+  });
 
   readonly rarityLabels = ITEM_RARITY_LABELS;
   readonly rarityColors = RARITY_COLORS;
@@ -68,7 +98,27 @@ export class InventoryListComponent implements OnInit {
     this.characterId =
       this.route.parent?.snapshot.paramMap.get('id') ??
       this.route.snapshot.paramMap.get('id') ?? '';
+
+    const savedOrder = localStorage.getItem('inventory_sort_order');
+    if (savedOrder === 'asc' || savedOrder === 'desc') {
+      this.sortOrder.set(savedOrder);
+    }
+
     this.loadItems();
+  }
+
+  protected toggleSortOrder(): void {
+    const next = this.sortOrder() === 'desc' ? 'asc' : 'desc';
+    this.sortOrder.set(next);
+    localStorage.setItem('inventory_sort_order', next);
+  }
+
+  private sortItems(items: InventoryItem[], order: 'desc' | 'asc'): InventoryItem[] {
+    return [...items].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return order === 'desc' ? timeB - timeA : timeA - timeB;
+    });
   }
 
   private loadItems(): void {

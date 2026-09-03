@@ -540,13 +540,8 @@
   }
 
   &.snapshot-card {
-    background: var(--bg-surface);
-    border-color: rgba(148, 163, 184, 0.3);
-    opacity: 0.95;
-
-    .field-row, .deltas-row {
-      pointer-events: none;
-    }
+    background: var(--bg-surface-elevated);
+    border-color: rgba(99, 102, 241, 0.25);
   }
 }
 

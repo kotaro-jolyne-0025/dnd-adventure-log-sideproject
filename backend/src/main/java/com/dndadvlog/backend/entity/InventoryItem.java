@@ -9,6 +9,8 @@ import java.util.UUID;
 public class InventoryItem {
     private UUID id;
     private UUID characterId;
+    private UUID adventureEntryId;
+    private UUID adventureGainedItemId;
     private String itemName;
     private ItemType itemType;
     private Rarity rarity;
