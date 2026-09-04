@@ -74,10 +74,12 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*"
         ));
-        for (String origin : allowedOrigin.split(",")) {
-            String trimmed = origin.trim();
-            if (!trimmed.isEmpty() && !patterns.contains(trimmed)) {
-                patterns.add(trimmed);
+        if (allowedOrigin != null && !allowedOrigin.isBlank()) {
+            for (String origin : allowedOrigin.split(",")) {
+                String trimmed = origin.trim();
+                if (!trimmed.isEmpty() && !patterns.contains(trimmed)) {
+                    patterns.add(trimmed);
+                }
             }
         }
 

@@ -887,11 +887,16 @@
      - `GlobalExceptionHandler.java`：脫敏 500 一般未捕捉例外的錯誤回應，保護內部架構與 SQL 細節。
   4. **前端 HTTP Interceptor Token 發送白名單化**：
      - `auth.interceptor.ts` 由黑名單排除改為白名單比對（`req.url.startsWith('/api') || req.url.startsWith(environment.apiUrl)`），防止未來串接外部服務時 Token 外洩。
+  5. **CORS 環境變數架構純淨化與舊 Token 例外攔截**：
+     - `SecurityConfig.java`：移除任何寫死的業務網域，CORS 完全遵循 12-Factor 原則由環境變數 `CORS_ALLOWED_ORIGIN` 動態注入，維護公開倉庫架構整潔度。
+     - `JwtTokenProvider.java`：廣泛捕捉 `JwtException` 與 `IllegalArgumentException`，防止過期/無效 Token 洩漏未處理例外至 Filter 堆疊。
+     - `auth.interceptor.ts`：排除 `/api/auth/login`、`/api/auth/register`、`/api/auth/oauth` 附加 `Authorization: Bearer`，避免舊金鑰簽署的 Token 污染登入請求。
 - **完成項目：**
   - [x] 後端 Controllers、Services、Config、Exception Handler 程式碼更新
   - [x] 前端 `auth.interceptor.ts` 白名單化更新
   - [x] 後端 `./mvnw clean package -DskipTests` 打包驗證通過
   - [x] 前端 `npm run build` 打包驗證通過
+  - [x] 正式環境 CORS 網域防呆與認證 Interceptor 修正
 
 ---
 

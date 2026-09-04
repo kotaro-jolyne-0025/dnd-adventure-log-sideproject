@@ -11,7 +11,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   let authReq = req;
   const isApiRequest = req.url.startsWith('/api') || req.url.startsWith(environment.apiUrl);
-  if (token && isApiRequest) {
+  const isAuthRequest =
+    req.url.includes('/api/auth/login') ||
+    req.url.includes('/api/auth/register') ||
+    req.url.includes('/api/auth/oauth');
+
+  if (token && isApiRequest && !isAuthRequest) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
@@ -22,8 +27,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((err: unknown) => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
-        // Token 失效或未授權，自動觸發登出
-        if (!req.url.includes('/api/auth/login') && !req.url.includes('/api/auth/register')) {
+        // Token 失效或未授權，自動觸發登出（排除登入與第三方認證請求）
+        if (!isAuthRequest) {
           authService.logout(true);
         }
       }
