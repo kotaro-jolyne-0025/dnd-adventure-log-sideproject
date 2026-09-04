@@ -36,17 +36,19 @@ public class AdventureEntryService {
     private final CharacterService characterService;
     private final InventoryItemMapper inventoryItemMapper;
 
-    public List<AdventureEntryResponse> getEntriesByCharacter(UUID characterId) {
+    public List<AdventureEntryResponse> getEntriesByCharacter(UUID characterId, UUID userId) {
+        characterService.findCharacter(characterId, userId);
         List<AdventureEntry> entries = entryMapper.findByCharacterIdOrderByPlayDateAsc(characterId);
         return entries.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    public AdventureEntryResponse getEntry(UUID entryId) {
-        return toResponse(findEntry(entryId));
+    public AdventureEntryResponse getEntry(UUID entryId, UUID userId) {
+        return toResponse(findEntryAndVerifyOwner(entryId, userId));
     }
 
-    public EntryDefaultsResponse getDefaults(UUID characterId) {
+    public EntryDefaultsResponse getDefaults(UUID characterId, UUID userId) {
         EntryDefaultsResponse defaults = new EntryDefaultsResponse();
+        characterService.findCharacter(characterId, userId);
         Optional<AdventureEntry> lastEntry =
                 entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
         if (lastEntry.isPresent()) {
@@ -56,7 +58,7 @@ public class AdventureEntryService {
             defaults.setStartingDowntime(last.getDowntimeTotal());
             defaults.setStartingClassesString(last.getEndingClassesString());
         } else {
-            Character character = characterService.findCharacterInternal(characterId);
+            Character character = characterService.findCharacter(characterId, userId);
             defaults.setStartingGold(BigDecimal.ZERO);
             defaults.setStartingDowntime(0);
             String classesStr = character.getCurrentClassesString();
@@ -95,9 +97,9 @@ public class AdventureEntryService {
     }
 
     @Transactional
-    public AdventureEntryResponse createEntry(UUID characterId, AdventureEntryRequest request) {
+    public AdventureEntryResponse createEntry(UUID characterId, AdventureEntryRequest request, UUID userId) {
         validateResources(request);
-        Character character = characterService.findCharacterInternal(characterId);
+        Character character = characterService.findCharacter(characterId, userId);
         AdventureEntry entry = new AdventureEntry();
         entry.setId(UUID.randomUUID());
         entry.setCharacterId(characterId);
@@ -120,9 +122,9 @@ public class AdventureEntryService {
     }
 
     @Transactional
-    public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request) {
+    public AdventureEntryResponse updateEntry(UUID entryId, AdventureEntryRequest request, UUID userId) {
         validateResources(request);
-        AdventureEntry entry = findEntry(entryId);
+        AdventureEntry entry = findEntryAndVerifyOwner(entryId, userId);
         UUID characterId = entry.getCharacterId();
         
         // 為了簡單起見，如果這是「最新」的一筆紀錄，我們連帶更新 character 的 string
@@ -132,7 +134,7 @@ public class AdventureEntryService {
         if (request.getEndingClassesString() != null) {
             entry.setEndingClassesString(request.getEndingClassesString());
             if (lastEntry.isPresent() && lastEntry.get().getId().equals(entryId)) {
-                Character character = characterService.findCharacterInternal(characterId);
+                Character character = characterService.findCharacter(characterId, userId);
                 character.setCurrentClassesString(request.getEndingClassesString());
                 characterMapper.update(character);
             }
@@ -146,8 +148,8 @@ public class AdventureEntryService {
     }
 
     @Transactional
-    public void deleteEntry(UUID entryId) {
-        AdventureEntry entry = findEntry(entryId);
+    public void deleteEntry(UUID entryId, UUID userId) {
+        AdventureEntry entry = findEntryAndVerifyOwner(entryId, userId);
         UUID characterId = entry.getCharacterId();
         String fallbackString = entry.getStartingClassesString();
 
@@ -157,7 +159,7 @@ public class AdventureEntryService {
         Optional<AdventureEntry> latestRemaining =
                 entryMapper.findFirstByCharacterIdOrderByPlayDateDescCreatedAtDesc(characterId);
 
-        Character character = characterService.findCharacterInternal(characterId);
+        Character character = characterService.findCharacter(characterId, userId);
         if (latestRemaining.isPresent()) {
             character.setCurrentClassesString(latestRemaining.get().getEndingClassesString());
         } else {
@@ -169,14 +171,15 @@ public class AdventureEntryService {
         log.info("冒險記錄刪除: ID={}", entryId);
     }
 
-    public List<DowntimeActivityResponse> getActivities(UUID entryId) {
+    public List<DowntimeActivityResponse> getActivities(UUID entryId, UUID userId) {
+        findEntryAndVerifyOwner(entryId, userId);
         return downtimeActivityMapper.findByEntryIdOrderByCreatedAtAsc(entryId)
                 .stream().map(this::toActivityResponse).collect(Collectors.toList());
     }
 
     @Transactional
-    public DowntimeActivityResponse createActivity(UUID entryId, DowntimeActivityRequest request) {
-        findEntry(entryId);
+    public DowntimeActivityResponse createActivity(UUID entryId, DowntimeActivityRequest request, UUID userId) {
+        findEntryAndVerifyOwner(entryId, userId);
         DowntimeActivity activity = new DowntimeActivity();
         activity.setId(UUID.randomUUID());
         activity.setAdventureEntryId(entryId);
@@ -186,29 +189,30 @@ public class AdventureEntryService {
     }
 
     @Transactional
-    public DowntimeActivityResponse updateActivity(UUID activityId, DowntimeActivityRequest request) {
-        DowntimeActivity activity = findActivity(activityId);
+    public DowntimeActivityResponse updateActivity(UUID activityId, DowntimeActivityRequest request, UUID userId) {
+        DowntimeActivity activity = findActivityAndVerifyOwner(activityId, userId);
         activity.setDescription(request.getDescription());
         downtimeActivityMapper.update(activity);
         return toActivityResponse(findActivity(activityId));
     }
 
     @Transactional
-    public void deleteActivity(UUID activityId) {
-        findActivity(activityId);
+    public void deleteActivity(UUID activityId, UUID userId) {
+        findActivityAndVerifyOwner(activityId, userId);
         downtimeActivityMapper.deleteById(activityId);
     }
 
     // ── 冒險獲得物品快照 (Gained Items Snapshot) ──────────────────────────────
 
-    public List<AdventureGainedItemResponse> getGainedItems(UUID entryId) {
+    public List<AdventureGainedItemResponse> getGainedItems(UUID entryId, UUID userId) {
+        findEntryAndVerifyOwner(entryId, userId);
         return gainedItemMapper.findByAdventureEntryId(entryId)
                 .stream().map(this::toGainedItemResponse).collect(Collectors.toList());
     }
 
     @Transactional
-    public AdventureGainedItemResponse createGainedItem(UUID entryId, AdventureGainedItemRequest request) {
-        findEntry(entryId);
+    public AdventureGainedItemResponse createGainedItem(UUID entryId, AdventureGainedItemRequest request, UUID userId) {
+        findEntryAndVerifyOwner(entryId, userId);
         AdventureGainedItem item = new AdventureGainedItem();
         item.setId(UUID.randomUUID());
         item.setAdventureEntryId(entryId);
@@ -222,8 +226,8 @@ public class AdventureEntryService {
     }
 
     @Transactional
-    public AdventureGainedItemResponse updateGainedItem(UUID entryId, UUID itemId, AdventureGainedItemRequest request) {
-        AdventureEntry entry = findEntry(entryId);
+    public AdventureGainedItemResponse updateGainedItem(UUID entryId, UUID itemId, AdventureGainedItemRequest request, UUID userId) {
+        AdventureEntry entry = findEntryAndVerifyOwner(entryId, userId);
         AdventureGainedItem snapshot = gainedItemMapper.findById(itemId);
         if (snapshot == null) {
             throw new ResourceNotFoundException("找不到獲得物品快照 ID: " + itemId);
@@ -279,16 +283,14 @@ public class AdventureEntryService {
     }
 
     @Transactional
-    public void deleteGainedItem(UUID itemId) {
-        AdventureGainedItem item = gainedItemMapper.findById(itemId);
-        if (item != null) {
-            AdventureEntry entry = findEntry(item.getAdventureEntryId());
-            InventoryItem warehouseItem = inventoryItemMapper.findByAdventureGainedItemId(itemId);
-            if (warehouseItem != null) {
-                inventoryItemMapper.deleteById(warehouseItem.getId());
-            }
-            gainedItemMapper.deleteById(itemId);
+    public void deleteGainedItem(UUID itemId, UUID userId) {
+        AdventureGainedItem item = findGainedItemAndVerifyOwner(itemId, userId);
+        AdventureEntry entry = findEntry(item.getAdventureEntryId());
+        InventoryItem warehouseItem = inventoryItemMapper.findByAdventureGainedItemId(itemId);
+        if (warehouseItem != null) {
+            inventoryItemMapper.deleteById(warehouseItem.getId());
         }
+        gainedItemMapper.deleteById(itemId);
     }
 
     private InventoryItem.Rarity parseRarity(String rarityStr) {
@@ -375,10 +377,31 @@ public class AdventureEntryService {
         return entry;
     }
 
+    private AdventureEntry findEntryAndVerifyOwner(UUID entryId, UUID userId) {
+        AdventureEntry entry = findEntry(entryId);
+        characterService.findCharacter(entry.getCharacterId(), userId);
+        return entry;
+    }
+
     private DowntimeActivity findActivity(UUID activityId) {
         DowntimeActivity activity = downtimeActivityMapper.findById(activityId);
         if (activity == null) throw new ResourceNotFoundException("找不到休整期活動 ID：" + activityId);
         return activity;
+    }
+
+    private DowntimeActivity findActivityAndVerifyOwner(UUID activityId, UUID userId) {
+        DowntimeActivity activity = findActivity(activityId);
+        findEntryAndVerifyOwner(activity.getAdventureEntryId(), userId);
+        return activity;
+    }
+
+    private AdventureGainedItem findGainedItemAndVerifyOwner(UUID itemId, UUID userId) {
+        AdventureGainedItem item = gainedItemMapper.findById(itemId);
+        if (item == null) {
+            throw new ResourceNotFoundException("找不到獲得物品快照 ID: " + itemId);
+        }
+        findEntryAndVerifyOwner(item.getAdventureEntryId(), userId);
+        return item;
     }
 
     private AdventureEntryResponse toResponse(AdventureEntry entry) {

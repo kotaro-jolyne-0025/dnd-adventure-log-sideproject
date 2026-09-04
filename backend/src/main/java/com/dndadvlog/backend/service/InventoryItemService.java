@@ -4,7 +4,6 @@ import com.dndadvlog.backend.dto.InventoryItemRequest;
 import com.dndadvlog.backend.dto.InventoryItemResponse;
 import com.dndadvlog.backend.entity.InventoryItem;
 import com.dndadvlog.backend.exception.ResourceNotFoundException;
-import com.dndadvlog.backend.mapper.CharacterMapper;
 import com.dndadvlog.backend.mapper.InventoryItemMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +20,10 @@ import java.util.stream.Collectors;
 public class InventoryItemService {
 
     private final InventoryItemMapper inventoryItemMapper;
-    private final CharacterMapper characterMapper;
+    private final CharacterService characterService;
 
-    public List<InventoryItemResponse> getItems(UUID characterId, InventoryItem.ItemType itemType) {
+    public List<InventoryItemResponse> getItems(UUID characterId, InventoryItem.ItemType itemType, UUID userId) {
+        characterService.findCharacter(characterId, userId);
         List<InventoryItem> items = (itemType != null)
                 ? inventoryItemMapper.findByCharacterIdAndItemType(characterId, itemType.name())
                 : inventoryItemMapper.findByCharacterId(characterId);
@@ -31,10 +31,8 @@ public class InventoryItemService {
     }
 
     @Transactional
-    public InventoryItemResponse createItem(UUID characterId, InventoryItemRequest request) {
-        if (characterMapper.findById(characterId) == null) {
-            throw new ResourceNotFoundException("找不到角色 ID：" + characterId);
-        }
+    public InventoryItemResponse createItem(UUID characterId, InventoryItemRequest request, UUID userId) {
+        characterService.findCharacter(characterId, userId);
         InventoryItem item = new InventoryItem();
         item.setId(UUID.randomUUID());
         item.setCharacterId(characterId);
@@ -44,16 +42,24 @@ public class InventoryItemService {
     }
 
     @Transactional
-    public InventoryItemResponse updateItem(UUID itemId, InventoryItemRequest request) {
+    public InventoryItemResponse updateItem(UUID characterId, UUID itemId, InventoryItemRequest request, UUID userId) {
+        characterService.findCharacter(characterId, userId);
         InventoryItem item = findItem(itemId);
+        if (!characterId.equals(item.getCharacterId())) {
+            throw new ResourceNotFoundException("找不到物品 ID：" + itemId);
+        }
         mapRequestToItem(request, item);
         inventoryItemMapper.update(item);
         return toResponse(findItem(itemId));
     }
 
     @Transactional
-    public void deleteItem(UUID itemId) {
-        findItem(itemId);
+    public void deleteItem(UUID characterId, UUID itemId, UUID userId) {
+        characterService.findCharacter(characterId, userId);
+        InventoryItem item = findItem(itemId);
+        if (!characterId.equals(item.getCharacterId())) {
+            throw new ResourceNotFoundException("找不到物品 ID：" + itemId);
+        }
         inventoryItemMapper.deleteById(itemId);
     }
 

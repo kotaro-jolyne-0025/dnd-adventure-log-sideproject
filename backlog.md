@@ -872,4 +872,27 @@
 
 ---
 
+### T36 — 輕量化安全架構補強（BOLA/IDOR 擁有權隔離、OAuth aud 驗證、CORS/Actuator 收斂與 2小時效期）
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **物件層級授權防護 (BOLA/IDOR 防呆)**：
+     - `AdventureEntryController` 與 `InventoryItemController` 所有端點注入 `@AuthenticationPrincipal UserPrincipal principal`。
+     - `AdventureEntryService` 與 `InventoryItemService` 強制在每次資料查詢與異動前檢驗角色擁有權（`characterService.findCharacter(characterId, userId)`），非擁有者回傳 404，徹底杜絕跨玩家誤改、誤刪彼此冒險日誌與倉庫道具。
+  2. **Google OAuth 安全加固**：
+     - `OAuthService.verifyGoogleToken` 新增 `aud` (Audience) 比對，限定僅接受發給本專案 `googleClientId` 的 Token；新增 `email_verified` 檢驗。
+  3. **安全組態收斂與登入效期調整**：
+     - `application.properties`：將 JWT 登入有效期限由 7 天調整為 **2 小時** (`7200000` ms)。
+     - `SecurityConfig.java`：CORS 白名單移除萬用字元子網域（`*.web.app`, `*.firebaseapp.com`）；Actuator 存取限縮為僅開放 `/actuator/health` 與 `/actuator/info`。
+     - `WebConfig.java`：移除重複定義的 CORS，由 `SecurityConfig` 統一管控。
+     - `GlobalExceptionHandler.java`：脫敏 500 一般未捕捉例外的錯誤回應，保護內部架構與 SQL 細節。
+  4. **前端 HTTP Interceptor Token 發送白名單化**：
+     - `auth.interceptor.ts` 由黑名單排除改為白名單比對（`req.url.startsWith('/api') || req.url.startsWith(environment.apiUrl)`），防止未來串接外部服務時 Token 外洩。
+- **完成項目：**
+  - [x] 後端 Controllers、Services、Config、Exception Handler 程式碼更新
+  - [x] 前端 `auth.interceptor.ts` 白名單化更新
+  - [x] 後端 `./mvnw clean package -DskipTests` 打包驗證通過
+  - [x] 前端 `npm run build` 打包驗證通過
+
+---
+
 ## 如何使用這個 Backlog

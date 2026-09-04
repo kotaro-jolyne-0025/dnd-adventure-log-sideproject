@@ -3,12 +3,15 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
+import { environment } from '../../../environments/environment';
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.token();
 
   let authReq = req;
-  if (token && !req.url.startsWith('https://discord.com') && !req.url.startsWith('https://oauth2.googleapis.com')) {
+  const isApiRequest = req.url.startsWith('/api') || req.url.startsWith(environment.apiUrl);
+  if (token && isApiRequest) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
