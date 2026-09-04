@@ -69,53 +69,108 @@
 .sort-toolbar-capsule {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   height: 40px;
-  padding: 0 16px;
   background: var(--bg-surface);
   border: 1.5px solid var(--border-medium);
   border-radius: var(--radius-full);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 3px 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: 44px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.capsule-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 16px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
   color: var(--text-primary);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   user-select: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.18s ease, color 0.18s ease;
 
   &:hover {
-    border-color: var(--color-primary);
     background: var(--bg-surface-elevated);
     color: var(--color-primary);
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
   }
 
   &:active {
     background: var(--bg-surface-hover);
   }
 
-  .capsule-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-primary);
-    flex-shrink: 0;
+  @media (max-width: 600px) {
+    flex: 1;
+    padding: 0 8px;
+    font-size: 0.86rem;
+  }
+}
 
-    &.dir-icon {
-      color: var(--text-secondary);
-      transition: transform 0.2s ease;
+.select-section {
+  /* 覆蓋整個按鈕的隱形原生選單，觸控時精準呼叫原生滾輪/選單 */
+  .invisible-native-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+}
 
-      &.icon-asc {
-        color: var(--color-positive);
-      }
+.capsule-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+
+  &.dir-icon {
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+
+    &.icon-asc {
+      color: var(--color-positive);
     }
   }
+}
 
-  @media (max-width: 600px) {
-    width: 100%;
-    height: 44px;
-    justify-content: center;
-  }
+.capsule-text {
+  white-space: nowrap;
+}
+
+.capsule-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.capsule-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-medium);
+  margin: 0 2px;
+  flex-shrink: 0;
 }
 
 .btn-add-item {

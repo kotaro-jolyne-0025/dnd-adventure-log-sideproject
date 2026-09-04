@@ -11,20 +11,40 @@
       </span>
     </div>
     <div class="header-actions">
-      <!-- 🌟 取得時間排序膠囊按鈕 -->
-      <button
-        type="button"
-        class="sort-toolbar-capsule"
-        (click)="toggleSortOrder()"
-        [matTooltip]="directionTooltip()">
-        <svg lucideClock [size]="15" class="capsule-icon"></svg>
-        <span class="capsule-text">取得時間：{{ directionLabel() }}</span>
-        @if (sortOrder() === 'desc') {
-          <svg lucideArrowDown [size]="15" class="capsule-icon dir-icon"></svg>
-        } @else {
-          <svg lucideArrowUp [size]="15" class="capsule-icon dir-icon icon-asc"></svg>
-        }
-      </button>
+      <!-- 🌟 一體化膠囊排序工具列 -->
+      <div class="sort-toolbar-capsule">
+        <!-- 欄位選擇（左側） -->
+        <label class="capsule-section select-section" matTooltip="點擊切換排序欄位">
+          <svg lucideSlidersHorizontal [size]="16" class="capsule-icon"></svg>
+          <span class="capsule-text">{{ sortFieldLabel() }}</span>
+          <svg lucideChevronDown [size]="15" class="capsule-arrow"></svg>
+          <select
+            class="invisible-native-select"
+            [value]="sortField()"
+            (change)="onSortFieldChange($event)"
+            aria-label="選擇倉庫排序依據">
+            <option value="createdAt">取得時間</option>
+            <option value="rarity">稀有度</option>
+          </select>
+        </label>
+
+        <!-- 中間高雅細分隔線 -->
+        <div class="capsule-divider"></div>
+
+        <!-- 方向反轉（右側） -->
+        <button
+          type="button"
+          class="capsule-section button-section"
+          (click)="toggleSortOrder()"
+          [matTooltip]="directionTooltip()">
+          @if (sortOrder() === 'desc') {
+            <svg lucideArrowDown [size]="16" class="capsule-icon dir-icon"></svg>
+          } @else {
+            <svg lucideArrowUp [size]="16" class="capsule-icon dir-icon icon-asc"></svg>
+          }
+          <span class="capsule-text">{{ directionLabel() }}</span>
+        </button>
+      </div>
 
       <button mat-flat-button color="primary" (click)="onAddItem()" class="btn-add-item">
         <svg lucidePlus [size]="18" class="btn-icon"></svg>

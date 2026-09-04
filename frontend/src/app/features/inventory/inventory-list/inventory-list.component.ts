@@ -34,7 +34,20 @@ import {
   LucidePencil,
   LucideTrash2,
   LucideDroplet,
+  LucideSlidersHorizontal,
+  LucideChevronDown,
 } from '@lucide/angular';
+
+export type InventorySortField = 'createdAt' | 'rarity';
+
+const RARITY_WEIGHT: Record<string, number> = {
+  COMMON: 1,
+  UNCOMMON: 2,
+  RARE: 3,
+  VERY_RARE: 4,
+  LEGENDARY: 5,
+  ARTIFACT: 6,
+};
 
 @Component({
   selector: 'app-inventory-list',
@@ -58,6 +71,8 @@ import {
     LucidePencil,
     LucideTrash2,
     LucideDroplet,
+    LucideSlidersHorizontal,
+    LucideChevronDown,
   ],
   templateUrl: './inventory-list.component.html',
   styleUrl: './inventory-list.component.scss',
@@ -69,26 +84,52 @@ export class InventoryListComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
 
+  private readonly SORT_FIELD_KEY = 'inventory_sort_field';
+  private readonly SORT_ORDER_KEY = 'inventory_sort_order';
+
   protected allItems = signal<InventoryItem[]>([]);
   protected isLoading = signal(true);
   protected activeTab = signal(0); // 0=PERMANENT, 1=CONSUMABLE
   protected characterId!: string;
 
-  // 取得時間排序 (預設: desc 由新到舊)
-  protected sortOrder = signal<'desc' | 'asc'>('desc');
-  protected directionLabel = computed(() => (this.sortOrder() === 'desc' ? '由新到舊' : '由舊到新'));
-  protected directionTooltip = computed(() =>
-    this.sortOrder() === 'desc' ? '點擊切換為：取得時間由舊到新' : '點擊切換為：取得時間由新到舊'
+  // 排序欄位與方向
+  protected readonly sortField = signal<InventorySortField>(
+    (localStorage.getItem(this.SORT_FIELD_KEY) as InventorySortField) === 'rarity' ? 'rarity' : 'createdAt'
   );
+  protected readonly sortOrder = signal<'desc' | 'asc'>(
+    (localStorage.getItem(this.SORT_ORDER_KEY) as 'desc' | 'asc') || 'desc'
+  );
+
+  protected readonly sortFieldLabel = computed(() => {
+    return this.sortField() === 'rarity' ? '稀有度' : '取得時間';
+  });
+
+  protected readonly directionLabel = computed(() => {
+    const field = this.sortField();
+    const order = this.sortOrder();
+    if (field === 'rarity') {
+      return order === 'desc' ? '由高至低' : '由低至高';
+    }
+    return order === 'desc' ? '由新至舊' : '由舊至新';
+  });
+
+  protected readonly directionTooltip = computed(() => {
+    const field = this.sortField();
+    const order = this.sortOrder();
+    if (field === 'rarity') {
+      return order === 'desc' ? '目前：由高至低（點擊切換為由低至高）' : '目前：由低至高（點擊切換為由高至低）';
+    }
+    return order === 'desc' ? '目前：由新至舊（點擊切換為由舊至新）' : '目前：由舊至新（點擊切換為由新至舊）';
+  });
 
   protected permanentItems = computed(() => {
     const list = this.allItems().filter((i) => i.itemType === 'PERMANENT');
-    return this.sortItems(list, this.sortOrder());
+    return this.sortItems(list, this.sortField(), this.sortOrder());
   });
 
   protected consumableItems = computed(() => {
     const list = this.allItems().filter((i) => i.itemType === 'CONSUMABLE');
-    return this.sortItems(list, this.sortOrder());
+    return this.sortItems(list, this.sortField(), this.sortOrder());
   });
 
   readonly rarityLabels = ITEM_RARITY_LABELS;
@@ -99,25 +140,54 @@ export class InventoryListComponent implements OnInit {
       this.route.parent?.snapshot.paramMap.get('id') ??
       this.route.snapshot.paramMap.get('id') ?? '';
 
-    const savedOrder = localStorage.getItem('inventory_sort_order');
-    if (savedOrder === 'asc' || savedOrder === 'desc') {
-      this.sortOrder.set(savedOrder);
-    }
-
     this.loadItems();
+  }
+
+  protected onSortFieldChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const field = target.value as InventorySortField;
+    this.sortField.set(field);
+    this.sortOrder.set('desc');
+    localStorage.setItem(this.SORT_ORDER_KEY, 'desc');
+    localStorage.setItem(this.SORT_FIELD_KEY, field);
   }
 
   protected toggleSortOrder(): void {
     const next = this.sortOrder() === 'desc' ? 'asc' : 'desc';
     this.sortOrder.set(next);
-    localStorage.setItem('inventory_sort_order', next);
+    localStorage.setItem(this.SORT_ORDER_KEY, next);
   }
 
-  private sortItems(items: InventoryItem[], order: 'desc' | 'asc'): InventoryItem[] {
+  private sortItems(
+    items: InventoryItem[],
+    field: InventorySortField,
+    order: 'desc' | 'asc'
+  ): InventoryItem[] {
     return [...items].sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return order === 'desc' ? timeB - timeA : timeA - timeB;
+      let diff = 0;
+      if (field === 'createdAt') {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        const validTimeA = isNaN(timeA) ? 0 : timeA;
+        const validTimeB = isNaN(timeB) ? 0 : timeB;
+        diff = validTimeB - validTimeA;
+      } else if (field === 'rarity') {
+        const rA = a.rarity ? (RARITY_WEIGHT[a.rarity] ?? 0) : 0;
+        const rB = b.rarity ? (RARITY_WEIGHT[b.rarity] ?? 0) : 0;
+        diff = rB - rA;
+      }
+
+      // 次要排序 (Tie-breaker): 若主要欄位相同，依物品名稱與 ID 排序
+      if (diff === 0) {
+        const nameDiff = (a.itemName || '').localeCompare(b.itemName || '', 'zh-Hant');
+        if (nameDiff !== 0) {
+          return order === 'desc' ? -nameDiff : nameDiff;
+        }
+        const idDiff = (a.id || '').localeCompare(b.id || '');
+        return order === 'desc' ? -idDiff : idDiff;
+      }
+
+      return order === 'desc' ? diff : -diff;
     });
   }
 
