@@ -265,21 +265,22 @@ export class InventoryListComponent implements OnInit {
         itemName: item.itemName,
         itemType: item.itemType,
         rarity: item.rarity,
+        requiresAttunement: item.requiresAttunement,
         quantity: newQty,
         source: item.source,
         notes: item.notes,
       }).subscribe({
         next: () => {
-          this.snackBar.open(`已使用 1 份「${item.itemName}」（剩餘 ${newQty} 份）`, '關閉', { duration: 2500 });
+          this.snackBar.open(`已使用「${item.itemName}」（剩餘 ${newQty} 個）`, '關閉', { duration: 2500 });
           this.loadItems();
         },
         error: () => this.snackBar.open('扣減失敗', '關閉', { duration: 3000 }),
       });
     } else {
       const data: ConfirmDialogData = {
-        title: '使用並用盡消耗品',
-        message: `已使用最後 1 份「${item.itemName}」，要將其從倉庫移除嗎？`,
-        confirmText: '使用並移除',
+        title: '使用物品確認',
+        message: `「${item.itemName}」僅剩最後 1 個，使用後將從倉庫清單中移除，確定要使用嗎？`,
+        confirmText: '確定使用',
         cancelText: '取消',
       };
       this.dialog.open(ConfirmDialogComponent, { data, width: '380px' })
@@ -288,7 +289,7 @@ export class InventoryListComponent implements OnInit {
           if (!confirmed) return;
           this.inventoryService.delete(this.characterId, item.id).subscribe({
             next: () => {
-              this.snackBar.open(`已使用完「${item.itemName}」`, '關閉', { duration: 2500 });
+              this.snackBar.open(`已使用並從倉庫移除「${item.itemName}」`, '關閉', { duration: 2500 });
               this.loadItems();
             },
             error: () => this.snackBar.open('操作失敗', '關閉', { duration: 3000 }),
@@ -310,7 +311,7 @@ export class InventoryListComponent implements OnInit {
       notes: item.notes,
     }).subscribe({
       next: () => {
-        this.snackBar.open(`已增加「${item.itemName}」（目前 ${newQty} 份）`, undefined, { duration: 1500 });
+        this.snackBar.open(`已增加「${item.itemName}」（目前 ${newQty} 個）`, undefined, { duration: 1500 });
         this.loadItems();
       },
       error: () => this.snackBar.open('增加數量失敗', '關閉', { duration: 3000 }),

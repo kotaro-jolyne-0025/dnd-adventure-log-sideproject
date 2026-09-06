@@ -191,13 +191,13 @@
             <div class="row-qty-col" (click)="$event.stopPropagation()">
               <div class="qty-stepper">
                 <button type="button" class="stepper-btn minus"
-                  matTooltip="使用 1 份"
+                  aria-label="減少數量"
                   (click)="onQuickConsume($event, item)">
                   <svg lucideMinus [size]="12"></svg>
                 </button>
                 <span class="stepper-val">{{ item.quantity || 1 }}</span>
                 <button type="button" class="stepper-btn plus"
-                  matTooltip="增加 1 份"
+                  aria-label="增加數量"
                   (click)="onQuickAdd($event, item)">
                   <svg lucidePlus [size]="12"></svg>
                 </button>
