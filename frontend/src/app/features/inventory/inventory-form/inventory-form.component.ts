@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideArrowLeft, LucideSave } from '@lucide/angular';
@@ -27,6 +28,7 @@ import {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatCheckboxModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     LucideArrowLeft,
@@ -56,6 +58,7 @@ export class InventoryFormComponent implements OnInit {
     itemName: ['', Validators.required],
     itemType: ['PERMANENT', Validators.required],
     rarity: [''],
+    requiresAttunement: [false],
     quantity: [1],
     source: [''],
     notes: [''],
@@ -93,6 +96,7 @@ export class InventoryFormComponent implements OnInit {
           itemName: item.itemName,
           itemType: item.itemType,
           rarity: item.rarity ?? '',
+          requiresAttunement: Boolean(item.requiresAttunement),
           quantity: item.quantity,
           source: item.source ?? '',
           notes: item.notes ?? '',
@@ -112,10 +116,12 @@ export class InventoryFormComponent implements OnInit {
     }
     this.isSaving.set(true);
     const raw = this.form.getRawValue();
+    const isPermanent = raw.itemType === 'PERMANENT';
     const req: InventoryItemRequest = {
       itemName: raw.itemName.trim(),
       itemType: raw.itemType as ItemType,
       rarity: raw.rarity || null,
+      requiresAttunement: isPermanent ? Boolean(raw.requiresAttunement) : false,
       quantity: raw.quantity ? Number(raw.quantity) : 1,
       source: raw.source?.trim() || null,
       notes: raw.notes?.trim() || null,

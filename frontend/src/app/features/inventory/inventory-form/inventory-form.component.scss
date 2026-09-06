@@ -70,6 +70,19 @@
   }
 }
 
+.checkbox-row {
+  margin: -4px 0 14px 2px;
+  display: flex;
+  align-items: center;
+
+  ::ng-deep .mdc-label {
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;

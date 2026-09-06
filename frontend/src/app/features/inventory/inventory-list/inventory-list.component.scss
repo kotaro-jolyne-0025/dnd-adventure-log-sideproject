@@ -332,11 +332,13 @@
   }
 }
 
-/* 2. 中間：稀有度標籤 */
+/* 2. 中間：稀有度與同調標籤 */
 .row-center-tags {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
   flex: 1;
   flex-shrink: 0;
 

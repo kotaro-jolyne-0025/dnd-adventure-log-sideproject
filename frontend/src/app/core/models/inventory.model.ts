@@ -32,6 +32,7 @@ export interface InventoryItem {
   itemName: string;
   itemType: ItemType;
   rarity?: ItemRarity;
+  requiresAttunement?: boolean;
   quantity: number;
   source?: string;
   notes?: string;
@@ -45,6 +46,7 @@ export interface InventoryItemRequest {
   itemName: string;
   itemType: ItemType;
   rarity?: ItemRarity | null;
+  requiresAttunement?: boolean;
   quantity?: number;
   source?: string | null;
   notes?: string | null;

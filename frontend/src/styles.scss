@@ -267,6 +267,20 @@ body {
   &.rarity-artifact { color: var(--rarity-artifact); }
 }
 
+// 同調標籤 (Attunement Pill)
+.attunement-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #b45309;
+  background-color: #fef3c7;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+}
+
 // 狀態徽章 (Badge)
 .stat-badge {
   display: inline-flex;
