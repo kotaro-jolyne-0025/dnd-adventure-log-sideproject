@@ -209,16 +209,22 @@ export class InventoryListComponent implements OnInit {
     });
   }
 
-  private loadItems(): void {
-    this.isLoading.set(true);
+  private loadItems(silent: boolean = false): void {
+    if (!silent) {
+      this.isLoading.set(true);
+    }
     this.inventoryService.getAllByCharacter(this.characterId).subscribe({
       next: (items) => {
         this.allItems.set(items);
-        this.isLoading.set(false);
+        if (!silent) {
+          this.isLoading.set(false);
+        }
       },
       error: () => {
         this.snackBar.open('載入倉庫失敗', '關閉', { duration: 3000 });
-        this.isLoading.set(false);
+        if (!silent) {
+          this.isLoading.set(false);
+        }
       },
     });
   }
@@ -245,12 +251,16 @@ export class InventoryListComponent implements OnInit {
       .afterClosed()
       .subscribe((confirmed) => {
         if (!confirmed) return;
+        // 樂觀更新：立即從本地移除
+        this.allItems.update((items) => items.filter((i) => i.id !== item.id));
         this.inventoryService.delete(this.characterId, item.id).subscribe({
           next: () => {
             this.snackBar.open(`已刪除「${item.itemName}」`, '關閉', { duration: 2500 });
-            this.loadItems();
           },
-          error: () => this.snackBar.open('刪除失敗', '關閉', { duration: 3000 }),
+          error: () => {
+            this.snackBar.open('刪除失敗', '關閉', { duration: 3000 });
+            this.loadItems(true);
+          },
         });
       });
   }
@@ -261,6 +271,11 @@ export class InventoryListComponent implements OnInit {
 
     if (currentQty > 1) {
       const newQty = currentQty - 1;
+      // 樂觀更新：立即更新本地 Signal，零延遲響應
+      this.allItems.update((items) =>
+        items.map((i) => (i.id === item.id ? { ...i, quantity: newQty } : i))
+      );
+
       this.inventoryService.update(this.characterId, item.id, {
         itemName: item.itemName,
         itemType: item.itemType,
@@ -272,9 +287,14 @@ export class InventoryListComponent implements OnInit {
       }).subscribe({
         next: () => {
           this.snackBar.open(`已使用「${item.itemName}」（剩餘 ${newQty} 個）`, '關閉', { duration: 2500 });
-          this.loadItems();
         },
-        error: () => this.snackBar.open('扣減失敗', '關閉', { duration: 3000 }),
+        error: () => {
+          this.snackBar.open('扣減失敗', '關閉', { duration: 3000 });
+          // 失敗回滾
+          this.allItems.update((items) =>
+            items.map((i) => (i.id === item.id ? { ...i, quantity: currentQty } : i))
+          );
+        },
       });
     } else {
       const data: ConfirmDialogData = {
@@ -287,12 +307,17 @@ export class InventoryListComponent implements OnInit {
         .afterClosed()
         .subscribe((confirmed) => {
           if (!confirmed) return;
+          // 樂觀更新：立即從本地移除該卡片
+          this.allItems.update((items) => items.filter((i) => i.id !== item.id));
+
           this.inventoryService.delete(this.characterId, item.id).subscribe({
             next: () => {
               this.snackBar.open(`已使用並從倉庫移除「${item.itemName}」`, '關閉', { duration: 2500 });
-              this.loadItems();
             },
-            error: () => this.snackBar.open('操作失敗', '關閉', { duration: 3000 }),
+            error: () => {
+              this.snackBar.open('操作失敗', '關閉', { duration: 3000 });
+              this.loadItems(true);
+            },
           });
         });
     }
@@ -300,7 +325,13 @@ export class InventoryListComponent implements OnInit {
 
   protected onQuickAdd(event: Event, item: InventoryItem): void {
     event.stopPropagation();
-    const newQty = (item.quantity || 1) + 1;
+    const currentQty = item.quantity || 1;
+    const newQty = currentQty + 1;
+    // 樂觀更新：立即更新本地 Signal，零延遲響應
+    this.allItems.update((items) =>
+      items.map((i) => (i.id === item.id ? { ...i, quantity: newQty } : i))
+    );
+
     this.inventoryService.update(this.characterId, item.id, {
       itemName: item.itemName,
       itemType: item.itemType,
@@ -312,9 +343,14 @@ export class InventoryListComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.snackBar.open(`已增加「${item.itemName}」（目前 ${newQty} 個）`, undefined, { duration: 1500 });
-        this.loadItems();
       },
-      error: () => this.snackBar.open('增加數量失敗', '關閉', { duration: 3000 }),
+      error: () => {
+        this.snackBar.open('增加數量失敗', '關閉', { duration: 3000 });
+        // 失敗回滾
+        this.allItems.update((items) =>
+          items.map((i) => (i.id === item.id ? { ...i, quantity: currentQty } : i))
+        );
+      },
     });
   }
 
