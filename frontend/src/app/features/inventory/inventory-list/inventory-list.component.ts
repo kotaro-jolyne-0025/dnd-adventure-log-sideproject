@@ -21,6 +21,9 @@ import {
   ConfirmDialogComponent,
   ConfirmDialogData,
 } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import {
+  ConsumeDialogComponent,
+} from '../consume-dialog/consume-dialog.component';
 
 import {
   LucideSparkles,
@@ -33,7 +36,6 @@ import {
   LucideBookmark,
   LucidePencil,
   LucideTrash2,
-  LucideMinus,
   LucideSlidersHorizontal,
   LucideChevronDown,
 } from '@lucide/angular';
@@ -72,7 +74,6 @@ const RARITY_WEIGHT: Record<string, number> = {
     LucideBookmark,
     LucidePencil,
     LucideTrash2,
-    LucideMinus,
     LucideSlidersHorizontal,
     LucideChevronDown,
   ],
@@ -265,92 +266,58 @@ export class InventoryListComponent implements OnInit {
       });
   }
 
-  protected onQuickConsume(event: Event, item: InventoryItem): void {
+  protected onOpenConsumeDialog(event: Event, item: InventoryItem): void {
     event.stopPropagation();
     const currentQty = item.quantity || 1;
 
-    if (currentQty > 1) {
-      const newQty = currentQty - 1;
-      // 樂觀更新：立即更新本地 Signal，零延遲響應
-      this.allItems.update((items) =>
-        items.map((i) => (i.id === item.id ? { ...i, quantity: newQty } : i))
-      );
-
-      this.inventoryService.update(this.characterId, item.id, {
+    this.dialog.open(ConsumeDialogComponent, {
+      data: {
         itemName: item.itemName,
-        itemType: item.itemType,
-        rarity: item.rarity,
-        requiresAttunement: item.requiresAttunement,
-        quantity: newQty,
-        source: item.source,
-        notes: item.notes,
-      }).subscribe({
-        next: () => {
-          this.snackBar.open(`已使用「${item.itemName}」（剩餘 ${newQty} 個）`, '關閉', { duration: 2500 });
-        },
-        error: () => {
-          this.snackBar.open('扣減失敗', '關閉', { duration: 3000 });
-          // 失敗回滾
-          this.allItems.update((items) =>
-            items.map((i) => (i.id === item.id ? { ...i, quantity: currentQty } : i))
-          );
-        },
-      });
-    } else {
-      const data: ConfirmDialogData = {
-        title: '使用物品確認',
-        message: `「${item.itemName}」僅剩最後 1 個，使用後將從倉庫清單中移除，確定要使用嗎？`,
-        confirmText: '確定使用',
-        cancelText: '取消',
-      };
-      this.dialog.open(ConfirmDialogComponent, { data, width: '380px' })
-        .afterClosed()
-        .subscribe((confirmed) => {
-          if (!confirmed) return;
-          // 樂觀更新：立即從本地移除該卡片
-          this.allItems.update((items) => items.filter((i) => i.id !== item.id));
+        currentQuantity: currentQty,
+      },
+      width: '400px',
+    }).afterClosed().subscribe((consumeQty: number | undefined) => {
+      if (!consumeQty || consumeQty <= 0) return;
 
-          this.inventoryService.delete(this.characterId, item.id).subscribe({
-            next: () => {
-              this.snackBar.open(`已使用並從倉庫移除「${item.itemName}」`, '關閉', { duration: 2500 });
-            },
-            error: () => {
-              this.snackBar.open('操作失敗', '關閉', { duration: 3000 });
-              this.loadItems(true);
-            },
-          });
+      const remainingQty = currentQty - consumeQty;
+
+      if (remainingQty <= 0) {
+        // 樂觀更新：立即從本地清單移除
+        this.allItems.update((items) => items.filter((i) => i.id !== item.id));
+
+        this.inventoryService.delete(this.characterId, item.id).subscribe({
+          next: () => {
+            this.snackBar.open(`已使用完「${item.itemName}」並自倉庫移除`, '關閉', { duration: 2500 });
+          },
+          error: () => {
+            this.snackBar.open('操作失敗', '關閉', { duration: 3000 });
+            this.loadItems(true);
+          },
         });
-    }
-  }
-
-  protected onQuickAdd(event: Event, item: InventoryItem): void {
-    event.stopPropagation();
-    const currentQty = item.quantity || 1;
-    const newQty = currentQty + 1;
-    // 樂觀更新：立即更新本地 Signal，零延遲響應
-    this.allItems.update((items) =>
-      items.map((i) => (i.id === item.id ? { ...i, quantity: newQty } : i))
-    );
-
-    this.inventoryService.update(this.characterId, item.id, {
-      itemName: item.itemName,
-      itemType: item.itemType,
-      rarity: item.rarity,
-      requiresAttunement: item.requiresAttunement,
-      quantity: newQty,
-      source: item.source,
-      notes: item.notes,
-    }).subscribe({
-      next: () => {
-        this.snackBar.open(`已增加「${item.itemName}」（目前 ${newQty} 個）`, undefined, { duration: 1500 });
-      },
-      error: () => {
-        this.snackBar.open('增加數量失敗', '關閉', { duration: 3000 });
-        // 失敗回滾
+      } else {
+        // 樂觀更新：立即更新本地 Signal 數量
         this.allItems.update((items) =>
-          items.map((i) => (i.id === item.id ? { ...i, quantity: currentQty } : i))
+          items.map((i) => (i.id === item.id ? { ...i, quantity: remainingQty } : i))
         );
-      },
+
+        this.inventoryService.update(this.characterId, item.id, {
+          itemName: item.itemName,
+          itemType: item.itemType,
+          rarity: item.rarity,
+          requiresAttunement: item.requiresAttunement,
+          quantity: remainingQty,
+          source: item.source,
+          notes: item.notes,
+        }).subscribe({
+          next: () => {
+            this.snackBar.open(`已使用 ${consumeQty} 個「${item.itemName}」（剩餘 ${remainingQty} 個）`, '關閉', { duration: 2500 });
+          },
+          error: () => {
+            this.snackBar.open('扣減失敗', '關閉', { duration: 3000 });
+            this.loadItems(true);
+          },
+        });
+      }
     });
   }
 

@@ -188,20 +188,10 @@
             </div>
 
             <!-- 2. 獨立數量欄位（垂直齊頭對齊） -->
-            <div class="row-qty-col" (click)="$event.stopPropagation()">
-              <div class="qty-stepper">
-                <button type="button" class="stepper-btn minus"
-                  aria-label="減少數量"
-                  (click)="onQuickConsume($event, item)">
-                  <svg lucideMinus [size]="12"></svg>
-                </button>
-                <span class="stepper-val">{{ item.quantity || 1 }}</span>
-                <button type="button" class="stepper-btn plus"
-                  aria-label="增加數量"
-                  (click)="onQuickAdd($event, item)">
-                  <svg lucidePlus [size]="12"></svg>
-                </button>
-              </div>
+            <div class="row-qty-col">
+              <span class="qty-badge" [matTooltip]="'庫存數量：' + (item.quantity || 1)">
+                <span class="qty-x">×</span>{{ item.quantity || 1 }}
+              </span>
             </div>
 
             <!-- 3. 中間：稀有度標籤 -->
@@ -213,7 +203,7 @@
               }
             </div>
 
-            <!-- 3. 右側：取得時間 + 編輯/刪除按鈕 -->
+            <!-- 4. 右側：取得時間 + 使用/編輯/刪除按鈕 -->
             <div class="row-right-actions" (click)="$event.stopPropagation()">
               @if (item.createdAt) {
                 <span class="date-text">
@@ -223,6 +213,9 @@
               }
 
               <div class="crud-btns">
+                <button mat-icon-button class="action-btn consume-btn" matTooltip="使用物品" (click)="onOpenConsumeDialog($event, item)">
+                  <svg lucideFlaskConical [size]="16"></svg>
+                </button>
                 <button mat-icon-button class="action-btn" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
                   <svg lucidePencil [size]="16"></svg>
                 </button>

@@ -252,12 +252,12 @@
     gap: 16px;
   }
 
-  /* 消耗品卡片專用 4 欄 Grid：名稱 ➔ 獨立數量欄 ➔ 稀有度 ➔ 日期/操作 */
+  /* 消耗品卡片專用 4 欄 Grid：名稱 ➔ 獨立數量徽章 ➔ 稀有度 ➔ 日期/操作 */
   &.consumable-row-card {
-    grid-template-columns: minmax(0, 1fr) 96px 180px auto;
+    grid-template-columns: minmax(0, 1fr) 56px 180px auto;
 
     @media (max-width: 900px) {
-      grid-template-columns: minmax(0, 1fr) 88px 150px auto;
+      grid-template-columns: minmax(0, 1fr) 50px 150px auto;
       gap: 14px;
     }
   }
@@ -327,7 +327,7 @@
   }
 }
 
-/* 2. 獨立數量欄位（垂直齊頭對齊，維持固定 X 座標） */
+/* 2. 獨立數量欄位（垂直齊頭對齊） */
 .row-qty-col {
   display: flex;
   align-items: center;
@@ -339,62 +339,33 @@
   }
 }
 
-/* 數量步進器元件 */
-.qty-stepper {
+/* 數量標籤徽章 */
+.qty-badge {
   display: inline-flex;
   align-items: center;
-  height: 24px;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-medium);
-  overflow: hidden;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #2563eb;
   user-select: none;
-  flex-shrink: 0;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 1px 4px rgba(79, 70, 229, 0.12);
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.35);
   }
 
-  .stepper-btn {
-    width: 22px;
-    height: 100%;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transition: background-color 0.15s ease, color 0.15s ease;
-
-    &:hover {
-      background: var(--bg-surface-hover);
-      color: var(--text-primary);
-    }
-
-    &.minus:hover {
-      background: #fee2e2;
-      color: #ef4444;
-    }
-
-    &.plus:hover {
-      background: #ecfdf5;
-      color: #059669;
-    }
-  }
-
-  .stepper-val {
-    font-size: 0.78rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-primary);
-    padding: 0 4px;
-    min-width: 18px;
-    text-align: center;
-    line-height: 24px;
+  .qty-x {
+    font-size: 0.68rem;
+    font-weight: 500;
+    opacity: 0.8;
+    margin-right: 1px;
   }
 }
 
@@ -450,6 +421,14 @@
       &:hover {
         background: var(--bg-surface-elevated);
         color: var(--color-primary);
+      }
+
+      &.consume-btn {
+        color: #2563eb;
+        &:hover {
+          background: rgba(37, 99, 235, 0.1);
+          color: #1d4ed8;
+        }
       }
 
       &.delete-btn:hover {
