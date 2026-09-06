@@ -932,8 +932,26 @@
   - [x] 資料庫 Migration V10 建立與文檔更新
   - [x] 後端 Entity、DTO、Service、Mapper 調整
   - [x] 建立 `AvatarCropperDialogComponent` 互動裁切元件
-  - [x] 前端角色表單、列表卡片（風格 A 大肖像）與 Shell 標頭圓角正方形樣式與圖片整合
-  - [x] 前端建置 (`npm run build`) 與後端編譯 (`mvn compile`) 驗證通過
+### T39 — 全站 UI/UX 優化與魔法物品「是否需同調 (requiresAttunement)」欄位支援
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **全站 UI/UX 改善（Commit `ed2615c`）**：
+     - 頂部導覽列整合全域返回按鈕（`NavigationEnd` 偵測內頁顯示），移除內頁卡片重複返回鍵。
+     - 全站四大資源（等級=靛藍、金幣=琥珀金、休整期=翡翠綠、魔法物品=奧術紫）色調與語義對齊。
+     - 等級（Level）在 HUD、冒險清單與角色列表中全面去除圖示，純文字呈現更俐落。
+     - 角色卡片 RWD 對齊微調，長名稱 ellipsis 防破版，右上角編輯/刪除觸控區域加寬。
+     - 倉庫物品清單改採「方案 4：橫向條列卡片（Row-Card）」，解決舊版名稱擠壓與右側留白問題。
+  2. **資料庫與後端同調支援（Commit `ef8d438`）**：
+     - 新增 Flyway Migration 11 (`V11__add_requires_attunement_to_inventory_item.sql`)：`ALTER TABLE inventory_item ADD COLUMN IF NOT EXISTS requires_attunement BOOLEAN DEFAULT FALSE;`。
+     - 更新 `database-schema.md` 與 `system-requirements-spec.md`。
+     - `InventoryItem` Entity、Request/Response DTO 新增 `requiresAttunement` 欄位。
+     - `InventoryItemMapper.xml` 更新 `resultMap`、`insert` 與 `update`。
+     - `InventoryItemService` 處理同調屬性映射。
+  3. **前端同調功能串接（Commit `21403db`）**：
+     - TypeScript 模型 `InventoryItem` 新增 `requiresAttunement?: boolean`。
+     - `inventory-form` 新增「需要同調 (Requires Attunement)」核取方塊（`mat-checkbox`，僅魔法物品顯示）。
+     - `inventory-list` 條列卡片於稀有度旁顯示精緻琥珀色「需同調」膠囊標籤。
+     - `styles.scss` 定義全域 `.attunement-pill` 樣式。
 
 ---
 
