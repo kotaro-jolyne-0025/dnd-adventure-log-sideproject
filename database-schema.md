@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS character (
     character_name VARCHAR(100) NOT NULL,
     player_name VARCHAR(100) NOT NULL,
     race VARCHAR(100) NOT NULL,
+    subclass VARCHAR(100),
     faction VARCHAR(100),
+    avatar_url TEXT,
     current_classes_string VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -365,6 +367,20 @@ FROM adventure_gained_item agi
 WHERE i.adventure_entry_id = agi.adventure_entry_id
   AND i.item_name = agi.item_name
   AND i.adventure_gained_item_id IS NULL;
+---
+
+## Migration 9（角色資料表新增子職欄位 subclass）：
+```sql
+ALTER TABLE "character" 
+    ADD COLUMN IF NOT EXISTS subclass VARCHAR(100);
+```
+
+---
+
+## Migration 10（角色資料表新增頭像欄位 avatar_url）：
+```sql
+ALTER TABLE "character" 
+    ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ```
 
 ---

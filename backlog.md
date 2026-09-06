@@ -895,8 +895,45 @@
   - [x] 後端 Controllers、Services、Config、Exception Handler 程式碼更新
   - [x] 前端 `auth.interceptor.ts` 白名單化更新
   - [x] 後端 `./mvnw clean package -DskipTests` 打包驗證通過
-  - [x] 前端 `npm run build` 打包驗證通過
-  - [x] 正式環境 CORS 網域防呆與認證 Interceptor 修正
+---
+
+### T37 — 角色卡片純文字條列佈局與子職（Subclass）欄位支援
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **規格與資料庫**：
+     - 更新 `system-requirements-spec.md` 與 `database-schema.md`。
+     - 新增 Migration 9 (`V9__add_subclass_to_character.sql`)：`ALTER TABLE "character" ADD COLUMN IF NOT EXISTS subclass VARCHAR(100);`。
+  2. **後端 (Spring Boot / MyBatis)**：
+     - `Character` Entity、`CharacterRequest`、`CharacterResponse` 新增 `subclass` 欄位。
+     - `CharacterService` 在 create、update 及 toResponse 中正確映射 `subclass` 與 `faction`。
+     - `CharacterMapper.xml` 於 `resultMap`、所有 `SELECT`、`INSERT` 與 `UPDATE` 語句補齊 `subclass` 欄位。
+  3. **前端 (Angular 22)**：
+     - `character.model.ts` 新增 `subclass?: string | null`。
+     - `character-form` 新增「子職（選填）」輸入框，完整支援建立與編輯角色時儲存/載入。
+     - `character-list` 依照需求移除 icon 標籤，改為整齊俐落的純文字條列式呈現（種族、職業、子職、派系）。
+     - `character-shell` 頂部 meta 亦支援展示子職。
+---
+
+### T38 — 角色自訂大頭照上傳、互動裁切視窗與圓角正方形肖像卡牌風格
+- **狀態：** `[x] 已完成`
+- **變更摘要：**
+  1. **規格與資料庫**：
+     - 更新 `system-requirements-spec.md` 與 `database-schema.md`。
+     - 新增 Migration 10 (`V10__add_avatar_url_to_character.sql`)：`ALTER TABLE "character" ADD COLUMN IF NOT EXISTS avatar_url TEXT;`。
+  2. **後端 (Spring Boot / MyBatis)**：
+     - `Character` Entity、`CharacterRequest`、`CharacterResponse` 新增 `avatarUrl` 欄位。
+     - `CharacterService` 與 `CharacterMapper.xml` 於所有查詢、INSERT 與 UPDATE 完整支援 `avatar_url` 持久化。
+  3. **前端 (Angular 22)**：
+     - 新增獨立裁切視窗 `AvatarCropperDialogComponent`，支援圖片平移拖曳、雙向滑桿/滾輪縮放、圓角正方形遮罩預覽，輸出 300x300 高解析 WebP 壓縮圖。
+     - `character-form` 整合肖像上傳預覽區塊、更換圖片與移除功能。
+     - `character-list` 採用 **風格 A（左側大肖像 Hero Portrait 卡牌風，104x124px）**，右側整齊條列各項角色資料與等級。
+     - `character-shell` 全面升級為「圓角正方形（RPG 肖像徽章風格）」，支援立繪展示與文字 Fallback 渲染。
+- **完成項目：**
+  - [x] 資料庫 Migration V10 建立與文檔更新
+  - [x] 後端 Entity、DTO、Service、Mapper 調整
+  - [x] 建立 `AvatarCropperDialogComponent` 互動裁切元件
+  - [x] 前端角色表單、列表卡片（風格 A 大肖像）與 Shell 標頭圓角正方形樣式與圖片整合
+  - [x] 前端建置 (`npm run build`) 與後端編譯 (`mvn compile`) 驗證通過
 
 ---
 
