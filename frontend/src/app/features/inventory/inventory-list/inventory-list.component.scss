@@ -322,8 +322,7 @@
         align-items: center;
         gap: 3px;
         color: var(--text-muted);
-        flex-shrink: 0;
-        max-width: 55%;
+        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -331,21 +330,6 @@
         .source-icon {
           color: var(--text-secondary);
           flex-shrink: 0;
-        }
-      }
-
-      .meta-notes {
-        color: var(--text-secondary);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
-        flex: 1;
-
-        &::before {
-          content: '・';
-          margin-right: 2px;
-          color: var(--text-muted);
         }
       }
     }
