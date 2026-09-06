@@ -40,6 +40,8 @@ import {
 
 export type InventorySortField = 'createdAt' | 'rarity';
 
+
+
 const RARITY_WEIGHT: Record<string, number> = {
   COMMON: 1,
   UNCOMMON: 2,
@@ -94,7 +96,7 @@ export class InventoryListComponent implements OnInit {
 
   // 排序欄位與方向
   protected readonly sortField = signal<InventorySortField>(
-    (localStorage.getItem(this.SORT_FIELD_KEY) as InventorySortField) === 'rarity' ? 'rarity' : 'createdAt'
+    (localStorage.getItem(this.SORT_FIELD_KEY) as InventorySortField) === 'createdAt' ? 'createdAt' : 'rarity'
   );
   protected readonly sortOrder = signal<'desc' | 'asc'>(
     (localStorage.getItem(this.SORT_ORDER_KEY) as 'desc' | 'asc') || 'desc'
@@ -158,36 +160,52 @@ export class InventoryListComponent implements OnInit {
     localStorage.setItem(this.SORT_ORDER_KEY, next);
   }
 
+  /**
+   * 排序邏輯（稀有度永遠是主排序）：
+   *
+   *   「稀有度」模式：
+   *     主排序 — 稀有度（方向由 order 控制）
+   *     次排序 — 取得時間（固定由新至舊）
+   *
+   *   「取得時間」模式：
+   *     主排序 — 稀有度（固定高→低）
+   *     次排序 — 取得時間（方向由 order 控制）
+   *
+   *   末排序 — 物品名稱 → ID（穩定排序）
+   */
   private sortItems(
     items: InventoryItem[],
     field: InventorySortField,
     order: 'desc' | 'asc'
   ): InventoryItem[] {
     return [...items].sort((a, b) => {
-      let diff = 0;
-      if (field === 'createdAt') {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        const validTimeA = isNaN(timeA) ? 0 : timeA;
-        const validTimeB = isNaN(timeB) ? 0 : timeB;
-        diff = validTimeB - validTimeA;
-      } else if (field === 'rarity') {
-        const rA = a.rarity ? (RARITY_WEIGHT[a.rarity] ?? 0) : 0;
-        const rB = b.rarity ? (RARITY_WEIGHT[b.rarity] ?? 0) : 0;
-        diff = rB - rA;
+      // 主排序：稀有度
+      const rA = a.rarity ? (RARITY_WEIGHT[a.rarity] ?? 0) : 0;
+      const rB = b.rarity ? (RARITY_WEIGHT[b.rarity] ?? 0) : 0;
+      if (rA !== rB) {
+        // 「稀有度」模式：方向由 order 控制；「取得時間」模式：固定高→低
+        return field === 'rarity'
+          ? (order === 'desc' ? rB - rA : rA - rB)
+          : rB - rA;
       }
 
-      // 次要排序 (Tie-breaker): 若主要欄位相同，依物品名稱與 ID 排序
-      if (diff === 0) {
-        const nameDiff = (a.itemName || '').localeCompare(b.itemName || '', 'zh-Hant');
-        if (nameDiff !== 0) {
-          return order === 'desc' ? -nameDiff : nameDiff;
-        }
-        const idDiff = (a.id || '').localeCompare(b.id || '');
-        return order === 'desc' ? -idDiff : idDiff;
+      // 次排序：取得時間
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const validTimeA = isNaN(timeA) ? 0 : timeA;
+      const validTimeB = isNaN(timeB) ? 0 : timeB;
+      const timeDiff = validTimeB - validTimeA;
+      if (timeDiff !== 0) {
+        // 「取得時間」模式：方向由 order 控制；「稀有度」模式：固定由新至舊
+        return field === 'createdAt'
+          ? (order === 'desc' ? timeDiff : -timeDiff)
+          : timeDiff;
       }
 
-      return order === 'desc' ? diff : -diff;
+      // 末排序：物品名稱 → ID（穩定排序）
+      const nameDiff = (a.itemName || '').localeCompare(b.itemName || '', 'zh-Hant');
+      if (nameDiff !== 0) return nameDiff;
+      return (a.id || '').localeCompare(b.id || '');
     });
   }
 
