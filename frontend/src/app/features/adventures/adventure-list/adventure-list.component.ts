@@ -35,6 +35,7 @@ export type AdventureSortField = 'playDate' | 'createdAt';
     CommonModule,
     DatePipe,
     MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
     LucideCoins,

@@ -71,9 +71,13 @@
 }
 
 .checkbox-row {
-  margin: -4px 0 14px 2px;
+  margin: -10px 0 22px 2px;
   display: flex;
   align-items: center;
+
+  ::ng-deep .mdc-checkbox {
+    margin-left: -4px;
+  }
 
   ::ng-deep .mdc-label {
     font-size: 0.92rem;

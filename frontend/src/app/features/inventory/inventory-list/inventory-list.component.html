@@ -46,9 +46,9 @@
         </button>
       </div>
 
-      <button mat-flat-button color="primary" (click)="onAddItem()" class="btn-add-item">
-        <svg lucidePlus [size]="18" class="btn-icon"></svg>
-        <span>新增{{ activeTab() === 0 ? '魔法物品' : '消耗品' }}</span>
+      <button mat-flat-button color="primary" class="btn-add-item" (click)="onAddItem()">
+        <mat-icon>add</mat-icon>
+        新增{{ activeTab() === 0 ? '魔法物品' : '消耗品' }}
       </button>
     </div>
   </div>

@@ -55,6 +55,7 @@
           
           <!-- Card Top-Right Actions -->
           <div class="card-top-actions" (click)="$event.stopPropagation()">
+            <span class="level-badge">Lv. {{ parseTotalLevel(char.currentClassesString) }}</span>
             <button mat-icon-button class="action-btn"
               matTooltip="編輯角色"
               (click)="onEditCharacter($event, char.id)">
@@ -81,7 +82,6 @@
             <div class="char-content-col">
               <div class="char-name-row">
                 <h3 class="char-name">{{ char.characterName }}</h3>
-                <span class="level-badge">Lv. {{ parseTotalLevel(char.currentClassesString) }}</span>
               </div>
 
               <div class="char-info-list">

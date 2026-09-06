@@ -58,6 +58,7 @@ const RARITY_WEIGHT: Record<string, number> = {
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTooltipModule,

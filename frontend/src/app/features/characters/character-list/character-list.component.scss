@@ -98,13 +98,14 @@
   top: 10px;
   right: 10px;
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 4px;
   z-index: 2;
 
   @media (max-width: 600px) {
     top: 8px;
     right: 8px;
-    gap: 4px;
+    gap: 3px;
   }
 
   .action-btn {
@@ -240,13 +241,13 @@
   gap: 8px;
   line-height: 24px;
   flex-wrap: nowrap;
-  padding-right: 64px;
+  padding-right: 110px;
 
   @media (max-width: 600px) {
     height: 22px;
     line-height: 22px;
     gap: 6px;
-    padding-right: 70px;
+    padding-right: 105px;
   }
 }
 
@@ -267,16 +268,17 @@
 }
 
 .level-badge {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  background: var(--color-gold-bg);
-  color: var(--color-gold);
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--color-info-bg);
+  color: var(--color-info);
+  border: 1px solid rgba(2, 132, 199, 0.25);
   letter-spacing: 0.3px;
   flex-shrink: 0;
   line-height: 1.2;
+  user-select: none;
 }
 
 .char-info-list {

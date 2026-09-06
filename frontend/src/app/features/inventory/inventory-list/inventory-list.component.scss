@@ -174,17 +174,9 @@
 }
 
 .btn-add-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   font-weight: 600;
   height: 40px;
-
-  .btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
+  padding: 0 18px;
 
   @media (max-width: 600px) {
     width: 100%;
@@ -269,6 +261,22 @@
     align-items: stretch;
     gap: 10px;
     padding: 14px 12px;
+
+    /* 手機版消耗品卡片：數量徽章固定於右上角，釋放多餘行空間 */
+    &.consumable-row-card {
+      position: relative;
+
+      .row-left-main {
+        padding-right: 56px; // 避免長品名與右上角數量徽章重疊
+      }
+
+      .row-qty-col {
+        position: absolute;
+        top: 14px;
+        right: 12px;
+        justify-content: flex-end;
+      }
+    }
   }
 }
 
