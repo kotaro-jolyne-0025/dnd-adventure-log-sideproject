@@ -33,7 +33,7 @@ import {
   LucideBookmark,
   LucidePencil,
   LucideTrash2,
-  LucideDroplet,
+  LucideMinus,
   LucideSlidersHorizontal,
   LucideChevronDown,
 } from '@lucide/angular';
@@ -72,7 +72,7 @@ const RARITY_WEIGHT: Record<string, number> = {
     LucideBookmark,
     LucidePencil,
     LucideTrash2,
-    LucideDroplet,
+    LucideMinus,
     LucideSlidersHorizontal,
     LucideChevronDown,
   ],
@@ -295,6 +295,26 @@ export class InventoryListComponent implements OnInit {
           });
         });
     }
+  }
+
+  protected onQuickAdd(event: Event, item: InventoryItem): void {
+    event.stopPropagation();
+    const newQty = (item.quantity || 1) + 1;
+    this.inventoryService.update(this.characterId, item.id, {
+      itemName: item.itemName,
+      itemType: item.itemType,
+      rarity: item.rarity,
+      requiresAttunement: item.requiresAttunement,
+      quantity: newQty,
+      source: item.source,
+      notes: item.notes,
+    }).subscribe({
+      next: () => {
+        this.snackBar.open(`已增加「${item.itemName}」（目前 ${newQty} 份）`, undefined, { duration: 1500 });
+        this.loadItems();
+      },
+      error: () => this.snackBar.open('增加數量失敗', '關閉', { duration: 3000 }),
+    });
   }
 
   protected getRarityColor(item: InventoryItem): string {

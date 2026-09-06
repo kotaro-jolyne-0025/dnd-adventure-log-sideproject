@@ -296,15 +296,62 @@
       white-space: nowrap;
     }
 
-    .qty-pill {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 1px 7px;
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
       border-radius: var(--radius-full);
       background: var(--bg-surface-elevated);
-      color: var(--text-primary);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--border-medium);
+      overflow: hidden;
+      user-select: none;
       flex-shrink: 0;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 1px 4px rgba(79, 70, 229, 0.12);
+      }
+
+      .stepper-btn {
+        width: 22px;
+        height: 100%;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: background-color 0.15s ease, color 0.15s ease;
+
+        &:hover {
+          background: var(--bg-surface-hover);
+          color: var(--text-primary);
+        }
+
+        &.minus:hover {
+          background: #fee2e2;
+          color: #ef4444;
+        }
+
+        &.plus:hover {
+          background: #ecfdf5;
+          color: #059669;
+        }
+      }
+
+      .stepper-val {
+        font-size: 0.78rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-primary);
+        padding: 0 4px;
+        min-width: 18px;
+        text-align: center;
+        line-height: 24px;
+      }
     }
 
     .sub-info-line {
@@ -350,7 +397,7 @@
   }
 }
 
-/* 3. 右側：時間 + 快速消耗 + 編輯/刪除 */
+/* 3. 右側：時間 + 編輯/刪除 */
 .row-right-actions {
   display: flex;
   align-items: center;
@@ -371,23 +418,6 @@
     align-items: center;
     gap: 4px;
     white-space: nowrap;
-  }
-
-  .btn-quick-consume {
-    font-size: 0.78rem;
-    font-weight: 600;
-    height: 30px;
-    padding: 0 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    border-color: var(--color-positive);
-    color: var(--color-positive);
-    border-radius: var(--radius-full);
-
-    &:hover {
-      background: rgba(16, 185, 129, 0.08);
-    }
   }
 
   .crud-btns {
