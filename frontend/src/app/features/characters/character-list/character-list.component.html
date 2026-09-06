@@ -53,58 +53,59 @@
       @for (char of characters(); track char.id) {
         <div class="char-card clean-card clickable" (click)="onViewCharacter(char.id)">
           
-          <!-- Card Top Bar -->
-          <div class="card-header-bar">
-            <div class="avatar-group">
-              <div class="char-avatar">{{ getInitial(char.characterName) }}</div>
-              <div class="char-titles">
-                <div class="char-name-row">
-                  <h3 class="char-name">{{ char.characterName }}</h3>
-                  <span class="level-badge">Lv. {{ parseTotalLevel(char.currentClassesString) }}</span>
-                </div>
-                <span class="player-name">玩家：{{ char.playerName }}</span>
-              </div>
-            </div>
+          <!-- Card Top-Right Actions -->
+          <div class="card-top-actions" (click)="$event.stopPropagation()">
+            <button mat-icon-button class="action-btn"
+              matTooltip="編輯角色"
+              (click)="onEditCharacter($event, char.id)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button class="action-btn delete-btn"
+              matTooltip="刪除角色"
+              (click)="onDeleteCharacter($event, char)">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
 
-          <!-- Card Body / Meta -->
-          <div class="card-body">
-            <div class="meta-tags-row">
-              <span class="meta-tag race-tag">
-                <mat-icon class="tag-icon">fingerprint</mat-icon>
-                {{ char.race }}
-              </span>
-              @if (char.faction) {
-                <span class="meta-tag faction-tag">
-                  <mat-icon class="tag-icon">shield</mat-icon>
-                  {{ char.faction }}
-                </span>
+          <div class="card-hero-layout">
+            <!-- 左側大肖像 -->
+            <div class="char-portrait-token">
+              @if (char.avatarUrl) {
+                <img [src]="char.avatarUrl" [alt]="char.characterName" class="char-avatar-img" />
+              } @else {
+                <div class="char-avatar-fallback">{{ getInitial(char.characterName) }}</div>
               }
             </div>
 
-            <div class="class-summary">
-              <span class="class-label">職業：</span>
-              <span class="class-value">{{ formatClasses(char) }}</span>
-            </div>
-          </div>
+            <!-- 右側標題與資料 -->
+            <div class="char-content-col">
+              <div class="char-name-row">
+                <h3 class="char-name">{{ char.characterName }}</h3>
+                <span class="level-badge">Lv. {{ parseTotalLevel(char.currentClassesString) }}</span>
+              </div>
 
-          <!-- Card Footer Actions -->
-          <div class="card-footer" (click)="$event.stopPropagation()">
-            <button mat-stroked-button class="btn-enter-char" (click)="onViewCharacter(char.id)">
-              <span>冒險紀錄表</span>
-              <mat-icon class="enter-icon">chevron_right</mat-icon>
-            </button>
-            <div class="action-buttons">
-              <button mat-icon-button color="primary"
-                matTooltip="編輯角色"
-                (click)="onEditCharacter($event, char.id)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn"
-                matTooltip="刪除角色"
-                (click)="onDeleteCharacter($event, char)">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <div class="char-info-list">
+                <div class="info-row">
+                  <span class="info-label">種族：</span>
+                  <span class="info-value">{{ char.race }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">職業：</span>
+                  <span class="info-value">{{ formatClasses(char) }}</span>
+                </div>
+                @if (char.subclass) {
+                  <div class="info-row">
+                    <span class="info-label">子職：</span>
+                    <span class="info-value">{{ char.subclass }}</span>
+                  </div>
+                }
+                @if (char.faction) {
+                  <div class="info-row">
+                    <span class="info-label">派系：</span>
+                    <span class="info-value">{{ char.faction }}</span>
+                  </div>
+                }
+              </div>
             </div>
           </div>
 

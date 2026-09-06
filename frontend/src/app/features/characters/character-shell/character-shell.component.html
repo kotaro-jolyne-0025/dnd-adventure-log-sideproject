@@ -9,29 +9,37 @@
     
     <!-- Character Header Card & Navigation -->
     <div class="char-hero-card clean-card">
+
+      <!-- Hero Portrait + Identity & Actions -->
       <div class="char-hero-top">
         <div class="hero-identity">
-          <button mat-icon-button class="btn-back" (click)="onBack()" matTooltip="返回角色列表">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          
-          <div class="char-avatar-hero">{{ getInitial(character()!.characterName) }}</div>
+          <div class="char-avatar-hero">
+            @if (character()!.avatarUrl) {
+              <img [src]="character()!.avatarUrl" [alt]="character()!.characterName" class="char-hero-img" />
+            } @else {
+              <div class="char-hero-fallback">{{ getInitial(character()!.characterName) }}</div>
+            }
+          </div>
 
           <div class="char-identity-text">
             <div class="name-line">
-              <h1 class="char-name">{{ character()!.characterName }}</h1>
-              <span class="level-badge-hero">Lv. {{ parseTotalLevel() }}</span>
+              <h1 class="char-name" [matTooltip]="character()!.characterName">{{ character()!.characterName }}</h1>
+              <button mat-icon-button (click)="onEdit()" class="btn-edit-mobile" matTooltip="編輯角色">
+                <mat-icon>edit</mat-icon>
+              </button>
             </div>
             <p class="char-meta">
               <span>{{ character()!.race }}</span>
               <span class="meta-dot">・</span>
               <span class="meta-classes">{{ formatClasses(character()!) }}</span>
+              @if (character()!.subclass) {
+                <span class="meta-dot">・</span>
+                <span class="meta-subclass">{{ character()!.subclass }}</span>
+              }
               @if (character()!.faction) {
                 <span class="meta-dot">・</span>
                 <span class="meta-faction">{{ character()!.faction }}</span>
               }
-              <span class="meta-dot">・</span>
-              <span class="meta-player">玩家：{{ character()!.playerName }}</span>
             </p>
           </div>
         </div>
@@ -49,7 +57,6 @@
         
         <div class="hud-stat-box">
           <div class="hud-stat-header">
-            <mat-icon class="hud-icon stat-level-icon">military_tech</mat-icon>
             <span class="hud-label">當前等級</span>
           </div>
           <span class="hud-value stat-level">Lv. {{ parseTotalLevel() }}</span>

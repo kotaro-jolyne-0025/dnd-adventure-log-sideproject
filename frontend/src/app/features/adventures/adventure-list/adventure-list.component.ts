@@ -24,7 +24,6 @@ import {
   LucideCalendar,
   LucideUser,
   LucideChevronRight,
-  LucideTrendingUp,
 } from '@lucide/angular';
 
 export type AdventureSortField = 'playDate' | 'createdAt';
@@ -51,7 +50,6 @@ export type AdventureSortField = 'playDate' | 'createdAt';
     LucideCalendar,
     LucideUser,
     LucideChevronRight,
-    LucideTrendingUp,
   ],
   templateUrl: './adventure-list.component.html',
   styleUrl: './adventure-list.component.scss',

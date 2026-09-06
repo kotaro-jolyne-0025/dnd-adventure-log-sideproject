@@ -161,6 +161,13 @@ export class CharacterFormComponent implements OnInit {
         input.value = '';
         return;
       }
+      // 限制原始檔案大小（5MB），避免大圖解碼佔用過多記憶體導致裁切卡頓
+      const MAX_FILE_SIZE = 5 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        this.snackBar.open('圖片檔案過大，請選擇 5MB 以下的圖片', '關閉', { duration: 3000 });
+        input.value = '';
+        return;
+      }
       this.openCropper(file);
       input.value = ''; // 重置 input 讓同檔名可重複觸發
     }

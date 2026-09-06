@@ -75,12 +75,12 @@
 
   <!-- Loading -->
   @if (isLoading()) {
-    <div class="items-grid">
-      @for (item of [1, 2, 3]; track $index) {
-        <div class="clean-card item-card skeleton-card">
-          <div class="skeleton-box" style="width: 50%; height: 20px; margin-bottom: 8px;"></div>
-          <div class="skeleton-box" style="width: 30%; height: 16px; margin-bottom: 12px;"></div>
-          <div class="skeleton-box" style="width: 100%; height: 36px;"></div>
+    <div class="items-list">
+      @for (item of [1, 2, 3, 4]; track $index) {
+        <div class="clean-card item-row-card skeleton-row">
+          <div class="skeleton-box" style="width: 40%; height: 20px;"></div>
+          <div class="skeleton-box" style="width: 80px; height: 24px; border-radius: 9999px;"></div>
+          <div class="skeleton-box" style="width: 100px; height: 20px;"></div>
         </div>
       }
     </div>
@@ -101,14 +101,29 @@
         </button>
       </div>
     } @else {
-      <div class="items-grid">
+      <div class="items-list">
         @for (item of permanentItems(); track item.id) {
-          <div class="clean-card item-card clickable" (click)="onEditItem($event, item.id)">
-            <div class="item-card-header">
-              <div class="item-name-group">
-                <svg lucideSparkles class="magic-icon magic" [size]="18"></svg>
+          <div class="clean-card item-row-card clickable" (click)="onEditItem($event, item.id)">
+            <!-- 1. 左側主體：物品名稱 + 來源與備註 -->
+            <div class="row-left-main">
+              <div class="name-block">
                 <h4 class="item-title">{{ item.itemName }}</h4>
+                <div class="sub-info-line">
+                  @if (item.source) {
+                    <span class="meta-item">
+                      <svg lucideBookmark [size]="12" class="source-icon"></svg>
+                      <span>來源：{{ item.source }}</span>
+                    </span>
+                  }
+                  @if (item.notes) {
+                    <span class="meta-notes" [title]="item.notes">{{ item.notes }}</span>
+                  }
+                </div>
               </div>
+            </div>
+
+            <!-- 2. 中間：稀有度標籤 -->
+            <div class="row-center-tags">
               @if (item.rarity) {
                 <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">
                   {{ rarityLabels[item.rarity] }}
@@ -116,32 +131,22 @@
               }
             </div>
 
-            <div class="item-meta-row">
-              @if (item.source) {
-                <div class="item-source-tag">
-                  <svg lucideBookmark [size]="13" class="source-icon"></svg>
-                  <span>來源：{{ item.source }}</span>
-                </div>
-              }
+            <!-- 3. 右側：取得時間 + 編輯/刪除按鈕 -->
+            <div class="row-right-actions" (click)="$event.stopPropagation()">
               @if (item.createdAt) {
-                <div class="item-date-tag">
-                  <svg lucideClock [size]="13" class="date-icon"></svg>
-                  <span>取得時間：{{ item.createdAt | date:'yyyy/MM/dd' }}</span>
-                </div>
+                <span class="date-text">
+                  <svg lucideClock [size]="12" class="date-icon"></svg>
+                  <span>{{ item.createdAt | date:'yyyy/MM/dd' }}</span>
+                </span>
               }
-            </div>
-
-            @if (item.notes) {
-              <p class="item-notes-text">{{ item.notes }}</p>
-            }
-
-            <div class="item-actions" (click)="$event.stopPropagation()">
-              <button mat-icon-button color="primary" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
-                <svg lucidePencil [size]="17"></svg>
-              </button>
-              <button mat-icon-button color="warn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
-                <svg lucideTrash2 [size]="17"></svg>
-              </button>
+              <div class="crud-btns">
+                <button mat-icon-button class="action-btn" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
+                  <svg lucidePencil [size]="16"></svg>
+                </button>
+                <button mat-icon-button class="action-btn delete-btn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
+                  <svg lucideTrash2 [size]="16"></svg>
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -164,15 +169,32 @@
         </button>
       </div>
     } @else {
-      <div class="items-grid">
+      <div class="items-list">
         @for (item of consumableItems(); track item.id) {
-          <div class="clean-card item-card clickable" (click)="onEditItem($event, item.id)">
-            <div class="item-card-header">
-              <div class="item-name-group">
-                <svg lucideFlaskConical class="magic-icon consumable" [size]="18"></svg>
-                <h4 class="item-title">{{ item.itemName }}</h4>
-                <span class="qty-pill">× {{ item.quantity || 1 }}</span>
+          <div class="clean-card item-row-card clickable" (click)="onEditItem($event, item.id)">
+            <!-- 1. 左側主體：物品名稱 + 數量 + 來源與備註 -->
+            <div class="row-left-main">
+              <div class="name-block">
+                <div class="title-with-qty">
+                  <h4 class="item-title">{{ item.itemName }}</h4>
+                  <span class="qty-pill">× {{ item.quantity || 1 }}</span>
+                </div>
+                <div class="sub-info-line">
+                  @if (item.source) {
+                    <span class="meta-item">
+                      <svg lucideBookmark [size]="12" class="source-icon"></svg>
+                      <span>來源：{{ item.source }}</span>
+                    </span>
+                  }
+                  @if (item.notes) {
+                    <span class="meta-notes" [title]="item.notes">{{ item.notes }}</span>
+                  }
+                </div>
               </div>
+            </div>
+
+            <!-- 2. 中間：稀有度標籤 -->
+            <div class="row-center-tags">
               @if (item.rarity) {
                 <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">
                   {{ rarityLabels[item.rarity] }}
@@ -180,39 +202,28 @@
               }
             </div>
 
-            <div class="item-meta-row">
-              @if (item.source) {
-                <div class="item-source-tag">
-                  <svg lucideBookmark [size]="13" class="source-icon"></svg>
-                  <span>來源：{{ item.source }}</span>
-                </div>
-              }
-              @if (item.createdAt) {
-                <div class="item-date-tag">
-                  <svg lucideClock [size]="13" class="date-icon"></svg>
-                  <span>取得時間：{{ item.createdAt | date:'yyyy/MM/dd' }}</span>
-                </div>
-              }
-            </div>
-
-            @if (item.notes) {
-              <p class="item-notes-text">{{ item.notes }}</p>
-            }
-
-            <div class="item-actions-bottom" (click)="$event.stopPropagation()">
-              <button mat-stroked-button color="accent" class="btn-quick-consume"
+            <!-- 3. 右側：快速使用 + 取得時間 + 編輯/刪除按鈕 -->
+            <div class="row-right-actions" (click)="$event.stopPropagation()">
+              <button mat-stroked-button class="btn-quick-consume"
                 matTooltip="使用 1 個此物品"
                 (click)="onQuickConsume($event, item)">
-                <svg lucideDroplet [size]="16" class="btn-icon"></svg>
+                <svg lucideDroplet [size]="14" class="btn-icon"></svg>
                 <span>使用 ( -1 )</span>
               </button>
 
+              @if (item.createdAt) {
+                <span class="date-text">
+                  <svg lucideClock [size]="12" class="date-icon"></svg>
+                  <span>{{ item.createdAt | date:'yyyy/MM/dd' }}</span>
+                </span>
+              }
+
               <div class="crud-btns">
-                <button mat-icon-button color="primary" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
-                  <svg lucidePencil [size]="17"></svg>
+                <button mat-icon-button class="action-btn" matTooltip="編輯物品" (click)="onEditItem($event, item.id)">
+                  <svg lucidePencil [size]="16"></svg>
                 </button>
-                <button mat-icon-button color="warn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
-                  <svg lucideTrash2 [size]="17"></svg>
+                <button mat-icon-button class="action-btn delete-btn" matTooltip="刪除物品" (click)="onDeleteItem($event, item)">
+                  <svg lucideTrash2 [size]="16"></svg>
                 </button>
               </div>
             </div>

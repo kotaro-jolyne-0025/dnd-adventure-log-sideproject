@@ -120,31 +120,28 @@
 
           <!-- Deltas / Resource Badges -->
           <div class="badges-row">
-            <!-- Level badge -->
-            <span class="delta-badge" [class.badge-level-up]="row.endingLevel && row.startingLevel && row.endingLevel > row.startingLevel">
-              <svg lucideTrendingUp [size]="13" class="badge-icon"></svg>
+            <!-- Level badge (純文字無 icon，清晰俐落) -->
+            <span class="delta-badge badge-level" [class.badge-level-up]="row.endingLevel && row.startingLevel && row.endingLevel > row.startingLevel">
               {{ getLevelProgress(row) }}
             </span>
 
-            <!-- Gold change -->
+            <!-- Gold change (琥珀金) -->
             @if (formatGoldChange(row); as gold) {
-              <span class="delta-badge" [class.badge-positive]="(row.goldChange ?? 0) + (row.goldDowntimeChange ?? 0) > 0"
-                                       [class.badge-negative]="(row.goldChange ?? 0) + (row.goldDowntimeChange ?? 0) < 0">
+              <span class="delta-badge badge-gold">
                 <svg lucideCoins [size]="13" class="badge-icon"></svg>
                 {{ gold }}
               </span>
             }
 
-            <!-- Downtime change -->
+            <!-- Downtime change (翡翠綠) -->
             @if (formatDowntimeChange(row); as dt) {
-              <span class="delta-badge" [class.badge-positive]="(row.downtimeChange ?? 0) + (row.downtimeDowntimeChange ?? 0) > 0"
-                                       [class.badge-negative]="(row.downtimeChange ?? 0) + (row.downtimeDowntimeChange ?? 0) < 0">
+              <span class="delta-badge badge-downtime">
                 <svg lucideTent [size]="13" class="badge-icon"></svg>
                 {{ dt }}
               </span>
             }
 
-            <!-- Magic item change -->
+            <!-- Magic item change (奧術紫) -->
             @if (formatMagicItemChange(row); as mi) {
               <span class="delta-badge badge-magic">
                 <svg lucideSparkles [size]="13" class="badge-icon"></svg>
