@@ -252,9 +252,19 @@
     gap: 16px;
   }
 
+  /* 消耗品卡片專用 4 欄 Grid：名稱 ➔ 獨立數量欄 ➔ 稀有度 ➔ 日期/操作 */
+  &.consumable-row-card {
+    grid-template-columns: minmax(0, 1fr) 96px 180px auto;
+
+    @media (max-width: 900px) {
+      grid-template-columns: minmax(0, 1fr) 88px 150px auto;
+      gap: 14px;
+    }
+  }
+
   /* 手機版響應式結構：自適應多行流動 */
   @media (max-width: 640px) {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
@@ -277,14 +287,6 @@
     width: 100%;
     overflow: hidden;
 
-    .title-with-qty {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      overflow: hidden;
-    }
-
     .item-title {
       font-size: 1rem;
       font-weight: 700;
@@ -294,64 +296,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .qty-stepper {
-      display: inline-flex;
-      align-items: center;
-      height: 24px;
-      border-radius: var(--radius-full);
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-medium);
-      overflow: hidden;
-      user-select: none;
-      flex-shrink: 0;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-
-      &:hover {
-        border-color: var(--color-primary);
-        box-shadow: 0 1px 4px rgba(79, 70, 229, 0.12);
-      }
-
-      .stepper-btn {
-        width: 22px;
-        height: 100%;
-        border: none;
-        background: transparent;
-        color: var(--text-muted);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        transition: background-color 0.15s ease, color 0.15s ease;
-
-        &:hover {
-          background: var(--bg-surface-hover);
-          color: var(--text-primary);
-        }
-
-        &.minus:hover {
-          background: #fee2e2;
-          color: #ef4444;
-        }
-
-        &.plus:hover {
-          background: #ecfdf5;
-          color: #059669;
-        }
-      }
-
-      .stepper-val {
-        font-size: 0.78rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        color: var(--text-primary);
-        padding: 0 4px;
-        min-width: 18px;
-        text-align: center;
-        line-height: 24px;
-      }
     }
 
     .sub-info-line {
@@ -380,6 +324,77 @@
         }
       }
     }
+  }
+}
+
+/* 2. 獨立數量欄位（垂直齊頭對齊，維持固定 X 座標） */
+.row-qty-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    justify-content: flex-start;
+  }
+}
+
+/* 數量步進器元件 */
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 1px 4px rgba(79, 70, 229, 0.12);
+  }
+
+  .stepper-btn {
+    width: 22px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+    }
+
+    &.minus:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    &.plus:hover {
+      background: #ecfdf5;
+      color: #059669;
+    }
+  }
+
+  .stepper-val {
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    padding: 0 4px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 24px;
   }
 }
 

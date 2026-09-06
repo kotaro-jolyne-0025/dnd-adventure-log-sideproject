@@ -171,26 +171,11 @@
     } @else {
       <div class="items-list">
         @for (item of consumableItems(); track item.id) {
-          <div class="clean-card item-row-card clickable" (click)="onEditItem($event, item.id)">
-            <!-- 1. 左側主體：物品名稱 + 數量 + 來源與備註 -->
+          <div class="clean-card item-row-card consumable-row-card clickable" (click)="onEditItem($event, item.id)">
+            <!-- 1. 左側主體：物品名稱 + 來源 -->
             <div class="row-left-main">
               <div class="name-block">
-                <div class="title-with-qty">
-                  <h4 class="item-title" [matTooltip]="item.itemName">{{ item.itemName }}</h4>
-                  <div class="qty-stepper" (click)="$event.stopPropagation()">
-                    <button type="button" class="stepper-btn minus"
-                      matTooltip="使用 1 份"
-                      (click)="onQuickConsume($event, item)">
-                      <svg lucideMinus [size]="12"></svg>
-                    </button>
-                    <span class="stepper-val">{{ item.quantity || 1 }}</span>
-                    <button type="button" class="stepper-btn plus"
-                      matTooltip="增加 1 份"
-                      (click)="onQuickAdd($event, item)">
-                      <svg lucidePlus [size]="12"></svg>
-                    </button>
-                  </div>
-                </div>
+                <h4 class="item-title" [matTooltip]="item.itemName">{{ item.itemName }}</h4>
                 @if (item.source) {
                   <div class="sub-info-line" [matTooltip]="'來源：' + item.source">
                     <span class="meta-item">
@@ -202,7 +187,24 @@
               </div>
             </div>
 
-            <!-- 2. 中間：稀有度標籤 -->
+            <!-- 2. 獨立數量欄位（垂直齊頭對齊） -->
+            <div class="row-qty-col" (click)="$event.stopPropagation()">
+              <div class="qty-stepper">
+                <button type="button" class="stepper-btn minus"
+                  matTooltip="使用 1 份"
+                  (click)="onQuickConsume($event, item)">
+                  <svg lucideMinus [size]="12"></svg>
+                </button>
+                <span class="stepper-val">{{ item.quantity || 1 }}</span>
+                <button type="button" class="stepper-btn plus"
+                  matTooltip="增加 1 份"
+                  (click)="onQuickAdd($event, item)">
+                  <svg lucidePlus [size]="12"></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. 中間：稀有度標籤 -->
             <div class="row-center-tags">
               @if (item.rarity) {
                 <span class="rarity-pill" [class]="'rarity-' + item.rarity.toLowerCase().replace('_', '-')">
