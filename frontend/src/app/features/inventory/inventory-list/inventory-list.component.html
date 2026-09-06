@@ -107,8 +107,8 @@
             <!-- 1. 左側主體：物品名稱 + 來源與備註 -->
             <div class="row-left-main">
               <div class="name-block">
-                <h4 class="item-title">{{ item.itemName }}</h4>
-                <div class="sub-info-line">
+                <h4 class="item-title" [matTooltip]="item.itemName">{{ item.itemName }}</h4>
+                <div class="sub-info-line" [matTooltip]="(item.source ? ('來源：' + item.source + ' ') : '') + (item.notes ? ('備註：' + item.notes) : '')">
                   @if (item.source) {
                     <span class="meta-item">
                       <svg lucideBookmark [size]="12" class="source-icon"></svg>
@@ -116,7 +116,7 @@
                     </span>
                   }
                   @if (item.notes) {
-                    <span class="meta-notes" [title]="item.notes">{{ item.notes }}</span>
+                    <span class="meta-notes">{{ item.notes }}</span>
                   }
                 </div>
               </div>
@@ -179,10 +179,10 @@
             <div class="row-left-main">
               <div class="name-block">
                 <div class="title-with-qty">
-                  <h4 class="item-title">{{ item.itemName }}</h4>
+                  <h4 class="item-title" [matTooltip]="item.itemName">{{ item.itemName }}</h4>
                   <span class="qty-pill">× {{ item.quantity || 1 }}</span>
                 </div>
-                <div class="sub-info-line">
+                <div class="sub-info-line" [matTooltip]="(item.source ? ('來源：' + item.source + ' ') : '') + (item.notes ? ('備註：' + item.notes) : '')">
                   @if (item.source) {
                     <span class="meta-item">
                       <svg lucideBookmark [size]="12" class="source-icon"></svg>
@@ -190,7 +190,7 @@
                     </span>
                   }
                   @if (item.notes) {
-                    <span class="meta-notes" [title]="item.notes">{{ item.notes }}</span>
+                    <span class="meta-notes">{{ item.notes }}</span>
                   }
                 </div>
               </div>

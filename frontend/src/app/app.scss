@@ -80,21 +80,6 @@
       font-size: 1.05rem;
     }
   }
-
-  .brand-badge {
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: var(--radius-sm);
-    background: var(--color-gold-bg);
-    color: var(--color-gold);
-    border: 1px solid rgba(217, 119, 6, 0.3);
-    letter-spacing: 0.5px;
-
-    @media (max-width: 420px) {
-      display: none;
-    }
-  }
 }
 
 .spacer {

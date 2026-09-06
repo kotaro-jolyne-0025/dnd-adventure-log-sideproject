@@ -225,10 +225,10 @@
 
 .item-row-card {
   padding: 12px 18px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   border-radius: var(--radius-md);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 
@@ -247,8 +247,14 @@
     }
   }
 
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr) 200px auto;
+    gap: 16px;
+  }
+
   /* 手機版響應式結構：自適應多行流動 */
   @media (max-width: 640px) {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
@@ -256,12 +262,12 @@
   }
 }
 
-/* 1. 左側主體：標題 + 來源/備註 */
+/* 1. 左側主體：標題 + 來源/備註（充分利用寬度，溢出 ... 省略） */
 .row-left-main {
   display: flex;
   flex-direction: column;
-  flex: 2;
   min-width: 0;
+  overflow: hidden;
 
   .name-block {
     display: flex;
@@ -269,12 +275,14 @@
     gap: 3px;
     min-width: 0;
     width: 100%;
+    overflow: hidden;
 
     .title-with-qty {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .item-title {
@@ -283,7 +291,9 @@
       margin: 0;
       color: var(--text-primary);
       line-height: 1.35;
-      word-break: break-word;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .qty-pill {
@@ -294,33 +304,43 @@
       background: var(--bg-surface-elevated);
       color: var(--text-primary);
       border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
     }
 
     .sub-info-line {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       font-size: 0.76rem;
       color: var(--text-muted);
-      flex-wrap: wrap;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
 
       .meta-item {
         display: inline-flex;
         align-items: center;
         gap: 3px;
         color: var(--text-muted);
+        flex-shrink: 0;
+        max-width: 55%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
 
         .source-icon {
           color: var(--text-secondary);
+          flex-shrink: 0;
         }
       }
 
       .meta-notes {
         color: var(--text-secondary);
-        max-width: 280px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        min-width: 0;
+        flex: 1;
 
         &::before {
           content: '・';
@@ -332,15 +352,14 @@
   }
 }
 
-/* 2. 中間：稀有度與同調標籤 */
+/* 2. 中間：稀有度與同調標籤（靠左齊頭對齊，保證多卡片間水平位置嚴格一致） */
 .row-center-tags {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  flex: 1;
+  justify-content: flex-start;
+  gap: 8px;
   flex-shrink: 0;
+  white-space: nowrap;
 
   @media (max-width: 640px) {
     justify-content: flex-start;
@@ -353,7 +372,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  flex: 1.5;
   flex-shrink: 0;
 
   @media (max-width: 640px) {
