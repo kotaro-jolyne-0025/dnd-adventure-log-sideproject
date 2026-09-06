@@ -21,9 +21,6 @@ import {
   ConfirmDialogComponent,
   ConfirmDialogData,
 } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import {
-  ConsumeDialogComponent,
-} from '../consume-dialog/consume-dialog.component';
 
 import {
   LucideSparkles,
@@ -266,60 +263,7 @@ export class InventoryListComponent implements OnInit {
       });
   }
 
-  protected onOpenConsumeDialog(event: Event, item: InventoryItem): void {
-    event.stopPropagation();
-    const currentQty = item.quantity || 1;
 
-    this.dialog.open(ConsumeDialogComponent, {
-      data: {
-        itemName: item.itemName,
-        currentQuantity: currentQty,
-      },
-      width: '400px',
-    }).afterClosed().subscribe((consumeQty: number | undefined) => {
-      if (!consumeQty || consumeQty <= 0) return;
-
-      const remainingQty = currentQty - consumeQty;
-
-      if (remainingQty <= 0) {
-        // 樂觀更新：立即從本地清單移除
-        this.allItems.update((items) => items.filter((i) => i.id !== item.id));
-
-        this.inventoryService.delete(this.characterId, item.id).subscribe({
-          next: () => {
-            this.snackBar.open(`已使用完「${item.itemName}」並自倉庫移除`, '關閉', { duration: 2500 });
-          },
-          error: () => {
-            this.snackBar.open('操作失敗', '關閉', { duration: 3000 });
-            this.loadItems(true);
-          },
-        });
-      } else {
-        // 樂觀更新：立即更新本地 Signal 數量
-        this.allItems.update((items) =>
-          items.map((i) => (i.id === item.id ? { ...i, quantity: remainingQty } : i))
-        );
-
-        this.inventoryService.update(this.characterId, item.id, {
-          itemName: item.itemName,
-          itemType: item.itemType,
-          rarity: item.rarity,
-          requiresAttunement: item.requiresAttunement,
-          quantity: remainingQty,
-          source: item.source,
-          notes: item.notes,
-        }).subscribe({
-          next: () => {
-            this.snackBar.open(`已使用 ${consumeQty} 個「${item.itemName}」（剩餘 ${remainingQty} 個）`, '關閉', { duration: 2500 });
-          },
-          error: () => {
-            this.snackBar.open('扣減失敗', '關閉', { duration: 3000 });
-            this.loadItems(true);
-          },
-        });
-      }
-    });
-  }
 
   protected getRarityColor(item: InventoryItem): string {
     return item.rarity ? this.rarityColors[item.rarity] : '#9e9e9e';
