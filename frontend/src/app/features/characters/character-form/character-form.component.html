@@ -14,6 +14,42 @@
         <section class="form-section">
           <h2 class="section-title">基本資料</h2>
 
+          <!-- 角色大頭貼上傳區 -->
+          <div class="avatar-upload-box">
+            <div class="avatar-preview-wrapper">
+              @if (avatarUrl()) {
+              <img [src]="avatarUrl()" alt="角色大頭照" class="avatar-preview-img" />
+              } @else {
+              <div class="avatar-placeholder">
+                <mat-icon class="placeholder-icon">add_photo_alternate</mat-icon>
+                <span class="placeholder-text">未設定</span>
+              </div>
+              }
+            </div>
+
+            <div class="avatar-actions-col">
+              <div class="avatar-btn-row">
+                <input #fileInput type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display: none"
+                  (change)="onAvatarFileSelected($event)" />
+                <button type="button" mat-stroked-button color="primary" (click)="fileInput.click()"
+                  class="btn-upload-avatar">
+                  <mat-icon>{{ avatarUrl() ? 'sync' : 'upload' }}</mat-icon>
+                  <span>{{ avatarUrl() ? '更換大頭照' : '上傳角色大頭照' }}</span>
+                </button>
+
+                @if (avatarUrl()) {
+                <button type="button" mat-button color="warn" (click)="removeAvatar()" class="btn-remove-avatar">
+                  <mat-icon>delete_outline</mat-icon>
+                  <span>移除</span>
+                </button>
+                }
+              </div>
+              <p class="avatar-tip">
+                支援 PNG、JPG、WebP。上傳後可手動縮放與調整 1:1 肖像範圍。
+              </p>
+            </div>
+          </div>
+
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>角色名稱 *</mat-label>
             <input matInput formControlName="characterName" />
@@ -36,6 +72,11 @@
             @if (form.get('race')?.hasError('required') && form.get('race')?.touched) {
             <mat-error>種族為必填</mat-error>
             }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>子職（選填）</mat-label>
+            <input matInput formControlName="subclass" />
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
