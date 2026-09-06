@@ -77,6 +77,7 @@ public class InventoryItemService {
         item.setItemName(request.getItemName());
         item.setItemType(request.getItemType());
         item.setRarity(request.getRarity());
+        item.setRequiresAttunement(Boolean.TRUE.equals(request.getRequiresAttunement()));
         item.setQuantity(request.getQuantity() != null ? request.getQuantity() : 1);
         item.setSource(request.getSource());
         item.setNotes(request.getNotes());
@@ -91,6 +92,7 @@ public class InventoryItemService {
         response.setItemName(item.getItemName());
         response.setItemType(item.getItemType());
         response.setRarity(item.getRarity());
+        response.setRequiresAttunement(item.getRequiresAttunement());
         response.setQuantity(item.getQuantity());
         response.setSource(item.getSource());
         response.setNotes(item.getNotes());

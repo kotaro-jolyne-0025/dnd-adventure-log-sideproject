@@ -385,6 +385,14 @@ ALTER TABLE "character"
 
 ---
 
+## Migration 11（倉庫物品新增是否需同調欄位 requires_attunement）：
+```sql
+ALTER TABLE inventory_item 
+    ADD COLUMN IF NOT EXISTS requires_attunement BOOLEAN DEFAULT FALSE;
+```
+
+---
+
 ## 資料表關聯圖
 
 ```

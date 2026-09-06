@@ -312,11 +312,13 @@
   "itemName": "+1 長劍",
   "itemType": "PERMANENT",
   "rarity": "UNCOMMON",
+  "requiresAttunement": false,
   "quantity": 1,
   "source": "死亡騎士",
   "notes": ""
 }
 ```
+*註：`requiresAttunement`（是否需同調）僅適用於永久魔法物品（`itemType = PERMANENT`），型別為布林值，預設為 `false`。*
 
 ---
 
