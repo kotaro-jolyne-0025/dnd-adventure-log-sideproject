@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS character (
     player_name VARCHAR(100) NOT NULL,
     race VARCHAR(100) NOT NULL,
     faction VARCHAR(100),
+    current_classes_string VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -19,22 +20,7 @@ CREATE TABLE IF NOT EXISTS character (
 
 ---
 
-## Step 2：建立 character_class_level 資料表（職業/等級動態列）
-
-```sql
-CREATE TABLE IF NOT EXISTS character_class_level (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    character_id UUID NOT NULL REFERENCES character(id) ON DELETE CASCADE,
-    class_name VARCHAR(100) NOT NULL,
-    level INTEGER NOT NULL,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
----
-
-## Step 3：建立 adventure_entry 資料表
+## Step 2：建立 adventure_entry 資料表
 
 ```sql
 CREATE TABLE IF NOT EXISTS adventure_entry (
@@ -44,6 +30,10 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     adventure_name VARCHAR(255),
     play_date DATE,
     dm_name VARCHAR(100),
+    starting_level INTEGER,
+    ending_level INTEGER,
+    starting_classes_string VARCHAR(255),
+    ending_classes_string VARCHAR(255),
     starting_gold DECIMAL(10,2),
     gold_change DECIMAL(10,2),
     gold_total DECIMAL(10,2),
@@ -53,12 +43,66 @@ CREATE TABLE IF NOT EXISTS adventure_entry (
     starting_magic_items INTEGER,
     magic_items_change INTEGER,
     magic_items_total INTEGER,
+    gold_downtime_change DECIMAL(10,2),
+    downtime_downtime_change INTEGER,
+    magic_items_downtime_change INTEGER,
+    level_up_class_name VARCHAR(100),
+    catchup_class_name VARCHAR(100),
+    catchup_count INTEGER DEFAULT 0,
     adventure_notes TEXT,
     soul_coin_charges_used VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
+
+> **注意（已部署資料庫的 Migration）：**
+> 若 `adventure_entry` 資料表已存在，請在 Supabase SQL Editor 依序執行以下 ALTER：
+>
+> **Migration 1（T08）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS starting_level INTEGER,
+>     ADD COLUMN IF NOT EXISTS ending_level INTEGER;
+> ```
+>
+> **Migration 2（T10）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS gold_downtime_change DECIMAL(10,2),
+>     ADD COLUMN IF NOT EXISTS downtime_downtime_change INTEGER,
+>     ADD COLUMN IF NOT EXISTS magic_items_downtime_change INTEGER;
+> ```
+>
+> **Migration 3：String-Based Class Levels**
+> ```sql
+> -- 新增字串欄位
+> ALTER TABLE "character" ADD COLUMN IF NOT EXISTS current_classes_string VARCHAR(255);
+> ALTER TABLE "adventure_entry" ADD COLUMN IF NOT EXISTS starting_classes_string VARCHAR(255);
+> ALTER TABLE "adventure_entry" ADD COLUMN IF NOT EXISTS ending_classes_string VARCHAR(255);
+> 
+> -- 刪除不再使用的複雜關聯表
+> DROP TABLE IF EXISTS "adventure_entry_class_snapshot" CASCADE;
+> DROP TABLE IF EXISTS "character_class_level" CASCADE;
+> ```
+>
+> **Migration 4（T14）：**
+> ```sql
+> ALTER TABLE adventure_entry
+>     ADD COLUMN IF NOT EXISTS catchup_class_name VARCHAR(100),
+>     ADD COLUMN IF NOT EXISTS catchup_count INTEGER DEFAULT 0;
+> ```
+
+---
+
+>     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>     adventure_entry_id UUID NOT NULL REFERENCES adventure_entry(id) ON DELETE CASCADE,
+>     snapshot_type VARCHAR(10) NOT NULL,
+>     class_name VARCHAR(100) NOT NULL,
+>     level INTEGER NOT NULL,
+>     sort_order INTEGER DEFAULT 0
+> );
+> ```
 
 ---
 
@@ -139,6 +183,7 @@ CREATE TRIGGER update_inventory_item_updated_at
 character
 ├── character_class_level  (1:N，CASCADE DELETE)
 ├── adventure_entry        (1:N，CASCADE DELETE)
-│   └── downtime_activity  (1:N，CASCADE DELETE)
+│   ├── downtime_activity              (1:N，CASCADE DELETE)
+│   └── adventure_entry_class_snapshot (1:N，CASCADE DELETE)
 └── inventory_item         (1:N，CASCADE DELETE)
 ```

@@ -1,0 +1,229 @@
+.page-container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 16px 16px 80px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* Form Card */
+.form-card {
+  margin-bottom: 16px;
+  padding: 4px 0;
+}
+
+/* Fields */
+.field-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+
+  .flex-1 { flex: 1; min-width: 140px; }
+  .flex-2 { flex: 2; min-width: 200px; }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--mat-sys-outline);
+  margin: 0 0 12px;
+}
+
+/* Resource Row */
+.resource-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.resource-label {
+  min-width: 90px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.num-field {
+  width: 100px;
+  flex: 1;
+  min-width: 80px;
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+/* Level Row — 起始等級 / 升級 Toggle / 升級職業 / 結束等級 */
+.level-row {
+  align-items: center;
+}
+
+.level-up-toggle {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+/* Downtime Activity */
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.activity-text {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.activity-empty {
+  font-size: 0.82rem;
+  color: var(--mat-sys-outline);
+  margin: 4px 0 12px;
+}
+
+.activity-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.activity-input-field {
+  flex: 1;
+}
+
+.ending-level-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 4px 8px;
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  border-radius: 4px;
+  background: var(--mat-sys-surface-variant, #f5f5f5);
+
+  .ending-level-label {
+    font-size: 0.72rem;
+    color: var(--mat-sys-outline);
+    line-height: 1.2;
+  }
+
+  .ending-level-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+}
+
+/* 🎯 升級後職業配置區塊 */
+.class-allocation-section {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low, #f8f9fa);
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .section-title-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .section-sub-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .section-sub-hint {
+    font-size: 0.76rem;
+    color: var(--mat-sys-outline, #757575);
+  }
+}
+
+.level-match-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+
+  .status-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  &.status-match {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+
+  &.status-mismatch {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+  }
+}
+
+.classes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .class-name-field {
+    flex: 2;
+    min-width: 140px;
+  }
+
+  .class-level-field {
+    width: 100px;
+    min-width: 80px;
+  }
+}
